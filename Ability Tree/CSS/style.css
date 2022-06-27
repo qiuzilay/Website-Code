@@ -1,0 +1,466 @@
+.content_top {
+    background-image: url("https://i.imgur.com/C9ZpMOE.png");
+    background-attachment: scroll;
+    background-size: 100% 100%;
+    image-rendering: pixelated;
+}
+
+.content {
+    background-image: url("https://i.imgur.com/KKWQxdo.png");
+    background-attachment: local;
+    background-repeat: repeat-y;
+    background-size: 100%;
+    image-rendering: pixelated;
+}
+
+.content_bottom {
+    background-image: url("https://i.imgur.com/GgN26Dr.png");
+    background-attachment: scroll;
+    background-size: 100% 100%;
+    image-rendering: pixelated;
+}
+
+img.background {
+    visibility: hidden;
+    width: 100%;
+    image-rendering: pixelated;
+}
+
+div.background_block {
+    margin: 0px;
+    position: relative;
+}
+
+/* Style the tab */
+.tab {
+    overflow: hidden;
+    border: none;
+    background-color: #323232;
+    border-radius: 1.5em;
+    text-align: center;
+}
+
+/* Style the buttons that are used to open the tab content */
+.tab button {
+    background-color: inherit;
+    display: inline-block;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 14px 16px;
+    transition: 0.3s;
+    text-align: center;
+    font-family: Roboto;
+    font-weight: bold;
+    font-size: medium;
+    color: #fff;
+    margin: 0px;
+}
+
+/* Change background color of buttons on hover */
+.tab button:hover {
+    background-color: dimgrey;
+}
+
+/* Create an active/current tablink class */
+.tab button.active {
+    background-color: grey;
+}
+
+/* Style the tab content */
+.tabcontent {
+    display: none;
+    border: none;
+    padding-top: 1em;
+    opacity: 0;
+    transition: all 0.5s;
+}
+
+.tabcontent.active {
+    opacity: 1;
+}
+
+div.containerslot {
+    text-align: center;
+    top: 12.5%;
+    width: 87.5%;
+    left: 0px;
+    right: 0px;
+    margin: 0 auto;
+}
+
+.content div.containerslot {
+    position: static;
+}
+
+.content_bottom div.containerslot {
+    position: absolute;
+}
+
+.containerslot table,
+tbody,
+tr,
+td {
+    border: none;
+    /* 邊界在這裡鵝 */
+    border-collapse: collapse;
+    border-spacing: 0;
+    text-align: center;
+    margin: 0px;
+    padding: 0px;
+}
+
+.containerslot table {
+    width: 100%;
+}
+
+.containerslot tbody {
+    width: 100%;
+}
+
+.containerslot tr {
+    width: 100%;
+    margin: 1px 0px;
+    /* 表格上下行距 */
+}
+
+.containerslot td {
+    display: table-cell;
+    width: 9.5%;
+    position: relative;
+}
+
+.containerslot td::after {
+    content: "";
+    display: block;
+    padding-bottom: 100%;
+}
+
+.containerslot td .pointer {
+    visibility: hidden;
+    width: 100%;
+    height: 100%;
+    background-color: white;
+    opacity: 0.5;
+    position: absolute;
+    z-index: 50;
+    display: inline-block;
+    left: 0;
+    top: 0;
+}
+
+.containerslot td:hover .pointer.active {
+    visibility: visible;
+}
+
+.containerslot td .tooltip {
+    overflow: visible;
+    visibility: hidden;
+    width: max-content;
+    max-width: 25vw;
+    background-color: #120312;
+    border: 3px solid #1f0249;
+    border-radius: 3px;
+    text-align: left;
+    color: #aaaaaa;
+    font-family: 'nunito', 'Microsoft JhengHei', sans-serif;
+    font-size: 1em;
+    font-weight: 700;
+    text-shadow: 2px 2px #2a2a2a;
+    position: absolute;
+    z-index: -1;
+    padding: 6px 9px;
+    outline: 3px solid #120312;
+    word-wrap: break-word;
+    display: inline-block;
+    box-sizing: border-box;
+    white-space: pre-line;
+}
+
+.containerslot td:hover .tooltip {
+    visibility: visible;
+    z-index: 99;
+    left: 120%;
+    transform: translate(0%, -20%);
+}
+
+.containerslot td:hover .tooltip.left {
+    visibility: visible;
+    z-index: 99;
+    right: 120%;
+    transform: translate(0%, -20%);
+}
+
+.tooltip .title {
+    display: block;
+    font-size: large;
+    font-weight: bold;
+}
+
+.tooltip .number {
+    color: white;
+}
+
+/* 開關按鈕區*/
+
+.containerslot button.disable, button.enable {
+    border: none;
+    width: 100%;
+    height: 100%;
+    background-color: transparent;
+    position: absolute;
+    z-index: 98;
+    display: inline-block;
+    left: 0;
+    top: 0;
+}
+
+/* 圖片調校區 */
+
+.containerslot img {
+    image-rendering: pixelated;
+    object-fit: contain;
+    object-position: center;
+    display: inline-block;
+    position: absolute;
+    top: 0px;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+    margin: auto;
+    width: 100%;
+    height: 100%;
+}
+
+img.orb {
+    content: url('https://i.imgur.com/XLvzM3x.png');
+    width: 90%;
+}
+
+img.up_arrow {
+    content: url('https://i.imgur.com/zEPF5yQ.png');
+    width: 90%;
+    padding-top: 2.5%;
+}
+
+img.down_arrow {
+    content: url('https://i.imgur.com/GqXS5IL.png');
+    width: 90%;
+    padding-bottom: 2.5%;
+}
+
+
+/* Archetype */
+
+img.archetype {
+    width: 100%;
+    transform: scale(1.2);
+}
+
+img.yellow {
+    content: url('https://i.imgur.com/f1KCcJO.png');
+}
+
+img.purple {
+    content: url('https://i.imgur.com/YhbsD4x.png');
+}
+
+img.green {
+    content: url('https://i.imgur.com/mWOZPXa.png');
+}
+
+/* Ability Button */
+
+button.disable img.button_archer1 {
+    content: url('https://i.imgur.com/wFp19Ie.png');
+}
+
+button.toggle.disable img.button_archer1 {
+    content: url('https://i.imgur.com/vOWXKWh.png');
+}
+
+button.enable img.button_archer1 {
+    content: url('https://i.imgur.com/l6mZKzI.png');
+}
+
+button.disable img.button_ability0 {
+    content: url('https://i.imgur.com/B1d2fQ6.png');
+}
+
+button.toggle.disable img.button_ability0 {
+    content: url('https://i.imgur.com/sdWiC1Z.png');
+}
+
+button.enable img.button_ability0 {
+    content: url('https://i.imgur.com/edJZkta.png');
+}
+
+button.disable img.button_ability1 {
+    content: url('https://i.imgur.com/gWdGgz1.png');
+}
+
+button.toggle.disable img.button_ability1 {
+    content: url('https://i.imgur.com/k6c3vBG.png');
+}
+
+button.enable img.button_ability1 {
+    content: url('https://i.imgur.com/S6qCogP.png');
+}
+
+/* Branch */
+
+img.br_vertical {
+    content: url('https://i.imgur.com/uRaEZKu.png');
+}
+
+img.br_vertical.active {
+    content: url('https://i.imgur.com/ou0omyl.png');
+}
+
+img.br_horizontal {
+    content: url('https://i.imgur.com/ghHIezw.png');
+}
+
+img.br_horizontal.active {
+    content: url('https://i.imgur.com/w1R8YXt.png');
+}
+
+img.br_typeL_RD {
+    content: url('https://i.imgur.com/bfRZX85.png');
+}
+
+img.br_typeL_RD.active {
+    content: url('https://i.imgur.com/MgaKNud.png');
+}
+
+img.br_typeL_LD {
+    content: url('https://i.imgur.com/h4O38N0.png');
+}
+
+img.br_typeL_LD.active {
+    content: url('https://i.imgur.com/wCXX4lG.png');
+}
+
+/* 以下為岔路 (設置圖片時請注意放置方法與上面不同)*/
+
+img.br_typeT_LRD {
+    content: url('https://i.imgur.com/ngnFHKf.png');
+}
+
+img.br_typeT_LRD_active_LRD {
+    z-index: 3;
+    content: url('https://i.imgur.com/j1zLrNd.png');
+}
+
+img.br_typeT_LRD_active_LR {
+    content: url('https://i.imgur.com/5HDy0Rr.png');
+}
+
+img.br_typeT_LRD_active_LD {
+    content: url('https://i.imgur.com/ws4ANRU.png');
+}
+
+img.br_typeT_LRD_active_RD {
+    content: url('https://i.imgur.com/0P51Sl8.png');
+}
+
+img.br_typeX_LRTD {
+    content: url('https://i.imgur.com/VilUk67.png');
+}
+
+img.br_typeX_LRTD_active_LT {
+    content: url('https://i.imgur.com/j4rv939.png');
+    z-index: 7;
+}
+
+img.br_typeX_LRTD_active_LD {
+    content: url('https://i.imgur.com/6MjNxyt.png');
+    z-index: 7;
+}
+
+img.br_typeX_LRTD_active_RT {
+    content: url('https://i.imgur.com/CChRuFS.png');
+    z-index: 7;
+}
+
+img.br_typeX_LRTD_active_RD {
+    content: url('https://i.imgur.com/4sU6PPD.png');
+    z-index: 7;
+}
+
+img.br_typeX_LRTD_active_LR {
+    content: url('https://i.imgur.com/lsiLDk3.png');
+    z-index: 8;
+}
+
+img.br_typeX_LRTD_active_TD {
+    content: url('https://i.imgur.com/6BgwFYR.png');
+    z-index: 8;
+}
+
+img.br_typeX_LRTD_active_LRT {
+    content: url('https://i.imgur.com/D1AfHu0.png');
+    z-index: 9;
+}
+
+img.br_typeX_LRTD_active_LRD {
+    content: url('https://i.imgur.com/hRYEUuD.png');
+    z-index: 9;
+}
+
+img.br_typeX_LRTD_active_RTD {
+    content: url('https://i.imgur.com/EPiJIrV.png');
+    z-index: 9;
+}
+
+img.br_typeX_LRTD_active_LTD {
+    content: url('https://i.imgur.com/C8LMTJU.png');
+    z-index: 9;
+}
+
+img.br_typeX_LRTD_active_LRTD {
+    content: url('https://i.imgur.com/glqWuur.png');
+    z-index: 10;
+}
+
+/* 岔路特別處理 */
+
+img.br_typeT_LRD.active,
+img.br_typeT_LRD_active_LRD,
+img.br_typeT_LRD_active_LR,
+img.br_typeT_LRD_active_LD,
+img.br_typeT_LRD_active_RD,
+img.br_typeX_LRTD.active,
+img.br_typeX_LRTD_active_LT,
+img.br_typeX_LRTD_active_LD,
+img.br_typeX_LRTD_active_RT,
+img.br_typeX_LRTD_active_RD,
+img.br_typeX_LRTD_active_LR,
+img.br_typeX_LRTD_active_TD,
+img.br_typeX_LRTD_active_LRT,
+img.br_typeX_LRTD_active_LRD,
+img.br_typeX_LRTD_active_RTD,
+img.br_typeX_LRTD_active_LTD,
+img.br_typeX_LRTD_active_LRTD {
+    visibility: hidden;
+}
+
+img.br_typeT_LRD,
+img.br_typeT_LRD_active_LRD.active,
+img.br_typeT_LRD_active_LR.active,
+img.br_typeT_LRD_active_LD.active,
+img.br_typeT_LRD_active_RD.active,
+img.br_typeX_LRTD,
+img.br_typeX_LRTD_active_LT.active,
+img.br_typeX_LRTD_active_LD.active,
+img.br_typeX_LRTD_active_RT.active,
+img.br_typeX_LRTD_active_RD.active,
+img.br_typeX_LRTD_active_LR.active,
+img.br_typeX_LRTD_active_TD.active,
+img.br_typeX_LRTD_active_LRT.active,
+img.br_typeX_LRTD_active_LRD.active,
+img.br_typeX_LRTD_active_RTD.active,
+img.br_typeX_LRTD_active_LTD.active,
+img.br_typeX_LRTD_active_LRTD.active {
+    visibility: visible;
+}
