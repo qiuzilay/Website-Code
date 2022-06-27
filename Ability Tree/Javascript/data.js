@@ -7,11 +7,13 @@ $(document).ready(function(){
         let get_dataName = $(this).data('name');
         let get_dataClass = $(this).closest('div.tabcontent').prop('id');
         let data_URL = "https://cdn.jsdelivr.net/gh/qiuzilay/Website-Code/Ability%20Tree/storage/tooltip/" + get_dataClass + "/" + get_dataName + ".txt";
+        let tooltip_block = $(document.createElement('span')).addClass('tooltip');
+        $(self).before(tooltip_block);
         $.ajax({
             url : data_URL,
             dataType: "text",
             success : function (data) {
-                $(self).html(data);
+                $(tooltip_block).html(data);
             }
         });
     });
