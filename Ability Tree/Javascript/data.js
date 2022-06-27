@@ -1,4 +1,22 @@
 $(document).ready(function(){
+    console.log('Start loading Class Information......');
+    $('div#Warrior').load('https://cdn.jsdelivr.net/gh/qiuzilay/Website-Code/Ability%20Tree/HTML/class/Warrior.html', function(){
+        console.log('Warrior Loaded.');
+    });
+    $('div#Archer').load('https://cdn.jsdelivr.net/gh/qiuzilay/Website-Code/Ability%20Tree/HTML/class/Archer.html', function(){
+        console.log('Archer Loaded.');
+    });
+    $('div#Mage').load('https://cdn.jsdelivr.net/gh/qiuzilay/Website-Code/Ability%20Tree/HTML/class/Mage.html', function(){
+        console.log('Mage Loaded.');
+    });
+    $('div#Assassin').load('https://cdn.jsdelivr.net/gh/qiuzilay/Website-Code/Ability%20Tree/HTML/class/Assassin.html', function(){
+        console.log('Assassin Loaded.');
+    });
+    $('div#Shaman').load('https://cdn.jsdelivr.net/gh/qiuzilay/Website-Code/Ability%20Tree/HTML/class/Shaman.html', function(){
+        console.log('Shaman Loaded.');
+    });
+    
+
     console.log('Start loading Tooltip......');
 
     var all_button = $('button[data-name]');
@@ -18,7 +36,8 @@ $(document).ready(function(){
         });
     });
 
-    console.log('Finish loading all Tooltip.\nStart converting color code......');
+    console.log('Finish loading all Tooltip.');
+    console.log('Start converting color code......');
 
     /* 轉換樣式代碼至css */
     $(function(){
