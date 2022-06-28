@@ -1,5 +1,4 @@
 $(document).ready(function() {
-    console.log('JQuery Loaded Successfully!');
     $(this).scrollTop(0);
 
     /* 防止所有按鈕出現右鍵選單 */
