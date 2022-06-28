@@ -81,6 +81,7 @@ div.background_block {
 }
 
 div.containerslot {
+    font-size: large;
     text-align: center;
     top: 12.5%;
     width: 87.5%;
@@ -192,12 +193,11 @@ td {
 }
 
 .tooltip .title {
-    display: block;
-    font-size: large;
-    font-weight: bold;
+    font-size: 1.2em;
 }
 
 .tooltip .number {
+    font-size: 1em;
     color: white;
 }
 
