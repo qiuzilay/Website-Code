@@ -1,47 +1,76 @@
 $(document).ready(function(){
-    console.log('Start loading Class Information......');
-    $('div#Warrior').load('https://cdn.jsdelivr.net/gh/qiuzilay/Website-Code/Ability%20Tree/HTML/class/Warrior.html', function(){
-        console.log('Warrior Loaded.');
-    });
-    $('div#Archer').load('https://cdn.jsdelivr.net/gh/qiuzilay/Website-Code/Ability%20Tree/HTML/class/Archer.html', function(){
-        console.log('Archer Loaded.');
-    });
-    $('div#Mage').load('https://cdn.jsdelivr.net/gh/qiuzilay/Website-Code/Ability%20Tree/HTML/class/Mage.html', function(){
-        console.log('Mage Loaded.');
-    });
-    $('div#Assassin').load('https://cdn.jsdelivr.net/gh/qiuzilay/Website-Code/Ability%20Tree/HTML/class/Assassin.html', function(){
-        console.log('Assassin Loaded.');
-    });
-    $('div#Shaman').load('https://cdn.jsdelivr.net/gh/qiuzilay/Website-Code/Ability%20Tree/HTML/class/Shaman.html', function(){
-        console.log('Shaman Loaded.');
-    });
+    console.log('JQuery Loaded Successfully!');
     
-
-    console.log('Start loading Tooltip......');
-
-    var all_button = $('button[data-name]');
-    all_button.each(function(){
-        let self = $(this);
-        let get_dataName = $(this).data('name');
-        let get_dataClass = $(this).closest('div.tabcontent').prop('id');
-        let data_URL = "https://cdn.jsdelivr.net/gh/qiuzilay/Website-Code/Ability%20Tree/storage/tooltip/" + get_dataClass + "/" + get_dataName + ".txt";
-        let tooltip_block = $(document.createElement('span')).addClass('tooltip');
-        $(self).before(tooltip_block);
-        $.ajax({
-            url : data_URL,
-            dataType: "text",
-            success : function (data) {
-                $(tooltip_block).html(data);
-            }
+    console.log('Start loading Class Information......');
+    let loadWarrior = function () {
+        let promise = $.Deferred();
+        $('div#Warrior').load('https://cdn.jsdelivr.net/gh/qiuzilay/Website-Code/Ability%20Tree/HTML/class/Warrior.html', function(){
+            console.log('Warrior Loaded.');
+            promise.resolve();
         });
-    });
+        return promise;    
+    }
+    let loadArcher = function () {
+        let promise = $.Deferred();
+        $('div#Archer').load('https://cdn.jsdelivr.net/gh/qiuzilay/Website-Code/Ability%20Tree/HTML/class/Archer.html', function(){
+            console.log('Archer Loaded.');
+            promise.resolve();
+        });
+        return promise;
+    }
+    let loadMage = function () {
+        let promise = $.Deferred();
+        $('div#Mage').load('https://cdn.jsdelivr.net/gh/qiuzilay/Website-Code/Ability%20Tree/HTML/class/Mage.html', function(){
+            console.log('Mage Loaded.');
+            promise.resolve();
+        });
+        return promise;
+    }
+    let loadAssassin = function () {
+        let promise = $.Deferred();
+        $('div#Assassin').load('https://cdn.jsdelivr.net/gh/qiuzilay/Website-Code/Ability%20Tree/HTML/class/Assassin.html', function(){
+            console.log('Assassin Loaded.');
+            promise.resolve();
+        });
+        return promise;
+    }
+    let loadShaman = function () {
+        let promise = $.Deferred();
+        $('div#Shaman').load('https://cdn.jsdelivr.net/gh/qiuzilay/Website-Code/Ability%20Tree/HTML/class/Shaman.html', function(){
+            console.log('Shaman Loaded.');
+            promise.resolve();
+        });
+        return promise;
+    }
 
-    console.log('Finish loading all Tooltip.');
-    console.log('Start converting color code......');
+    let tooltipLoader = function () {
+        console.log('Start loading Tooltip......');
 
-    /* 轉換樣式代碼至css */
-    $(function(){
-        var colorblock_creator = function(key){
+        let all_button = $('button[data-name]');
+        all_button.each(function(){
+            let self = $(this);
+            let get_dataName = $(this).data('name');
+            let get_dataClass = $(this).closest('div.tabcontent').prop('id');
+            let data_URL = "https://cdn.jsdelivr.net/gh/qiuzilay/Website-Code/Ability%20Tree/storage/tooltip/" + get_dataClass + "/" + get_dataName + ".txt";
+            let tooltip_block = $(document.createElement('span')).addClass('tooltip');
+            $(self).before(tooltip_block);
+            $.ajax({
+                url : data_URL,
+                dataType: "text",
+                success : function (data) {
+                    $(tooltip_block).html(data);
+                }
+            });
+        });
+
+        console.log('Finish loading all Tooltip.');
+    }
+
+    let colorManager = function () {
+        console.log('Start converting color code......');
+
+        /* 轉換樣式代碼至css */
+        let colorblock_creator = function(key){
             let CSScontent;
             switch (key) {
                 case '0':
@@ -113,7 +142,7 @@ $(document).ready(function(){
             }
             return span_block;
         };
-        var colorpicker = function(index, codeblock, key_value, content_text){
+        let colorpicker = function(index, codeblock, key_value, content_text){
             if (index < 1) {
                 if (content_text == '') {
                     $(codeblock).append($(colorblock_creator(key_value)));
@@ -185,5 +214,11 @@ $(document).ready(function(){
             return;
         });
         console.log('Finish converting all color codes.');
+    }
+
+    $.when(loadWarrior(), loadArcher(), loadMage(), loadAssassin(), loadShaman()).then(tooltipLoader).then(colorManager).then(function(){
+        $.getScript('https://cdn.statically.io/gh/qiuzilay/Website-Code/main/Ability%20Tree/Javascript/core.js', function(){
+            console.log('Start loading core.');
+        });
     });
 });
