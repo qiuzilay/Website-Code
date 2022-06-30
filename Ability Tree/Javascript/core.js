@@ -504,169 +504,177 @@ $(document).ready(function() {
         let data_type_req_min = parseInt($(this).data('type-req-min'));
         let data_archetype = $(this).closest('div.tabcontent').find('span[data-type]');
         let data_group = $(this).data('group');
+        let data_lock = $(this).data('lock');
         let self = $(this);
         let req_archetype;
         console.clear();
-        if ($(this).hasClass('toggle') == true) {
-            // Enable //
-            if ($(this).hasClass('disable') == true) {
-                $(this).addClass('enable');
-                $(this).removeClass('disable');
-                if (AP_left < AP_cost) {
-                    console.log('技能點不足!');
-                    return false;
-                }
-                //console.log('data-req: '+data_req);
-                //console.log('data-cost: '+AP_cost);
-                //console.log('AP-left: '+AP_left);
-                if (typeof data_req !== 'undefined') {
-                    let req_ability = all_button.filter(function(){return $(this).data('name') == data_req;});
-                    if (req_ability.hasClass('enable') == false) {
-                        console.log('您沒有 <'+ data_req +'> 這個技能!');
+        if ($(this).hasClass('lock') != true) {
+            if ($(this).hasClass('toggle') == true) {
+                // Enable //
+                if ($(this).hasClass('disable') == true) {
+                    $(this).addClass('enable');
+                    $(this).removeClass('disable');
+                    if (AP_left < AP_cost) {
+                        console.log('技能點不足!');
                         return false;
                     }
-                }
-                if (typeof data_type_req !== 'undefined') {
-                    req_archetype = data_archetype.filter(function(){return $(this).data('type') == data_type_req;});
-                    //console.log('data_archetype: '+data_archetype+'\nreq_archetype: '+req_archetype.data('type'));
-                    if (parseInt(req_archetype.text()) < data_type_req_min) {
-                        console.log('您的 ['+ data_type_req +' Archetype] 的點數不足!');
-                        return false;
-                    }
-                }
-                //console.log('Enable Ability.');
-                $(function(){
-                    let bro_buttonlist = [];
-                    /* 在此技能之後且互相連接的技能允許點擊*/
-                    $.each(data_next, function (index, name) {
-                        let next_button = $('button[data-name="' + name + '"]');
-                        //console.log(name+' 是reverse? :['+(next_button.data('info') == 'reverse')+'], 是enable狀態? :['+(next_button.hasClass('enable'))+']');
-                        
-                        if (typeof data_group == 'undefined') {
-                            next_button.addClass('toggle');
+                    //console.log('data-req: '+data_req);
+                    //console.log('data-cost: '+AP_cost);
+                    //console.log('AP-left: '+AP_left);
+                    if (typeof data_req !== 'undefined') {
+                        let req_ability = all_button.filter(function(){return $(this).data('name') == data_req;});
+                        if (req_ability.hasClass('enable') == false) {
+                            console.log('您沒有 <'+ data_req +'> 這個技能!');
+                            return false;
                         }
-                    });
-                    $.each(data_last, function (index, name) {
-                        let last_button = $('button[data-name="' + name + '"]');
-                        if (last_button.hasClass('enable') == true) {
-                            /* 在此此技能之前且互相連接而且又是enable狀態的技能禁止點擊*/
-                            if (typeof data_group == 'undefined') {
-                                last_button.removeClass('toggle');
-                            }
-
-                            if (last_button.data('info') == 'lock') {
-                                //console.log('Lock Successfully.');
-                                all_button.filter(function (index, button) {return $(button).data('last').includes(name);}).not(self).removeClass('toggle');
-                            }
-
-                            /* 拿到上一個Enable狀態中的Button所持有其之後連接的Button名字列表並篩選出Enable狀態的按鈕清單給path_checker用 */
-                            $.merge(bro_buttonlist, $(last_button).data('next'));
-                        }
-                    });
-                    if (typeof data_group !== 'undefined') {
-                        let grouplist = group_manager(self, data_name, data_last, data_next, 'Enable');
-                        
-                        $(grouplist).each(function(){
-                            return bro_buttonlist.push($(this).data('name'));
-                        });
                     }
-                    
-                    path_checker(data_name, bro_buttonlist);
-
-                    /* AP cost 處理*/
-                    AP_left = AP_left - AP_cost;
-                    $(self).closest('div.tabcontent').find('span[data-type="AP_pool"]').text(AP_left);
-                    /* Archetype 點數處理*/
-                    if (typeof data_type_req !== 'undefined') {
-                        req_archetype.text((parseInt(req_archetype.text()) + 1));
-                    }
-                });
-                return false;
-            }
-            // Disable //
-            if ($(this).hasClass('enable') == true) {
-                $(this).addClass('disable');
-                $(this).removeClass('enable');
-                let is_there_anybody_need_Me = false; 
-                let temp = all_button.filter(function(){return $(this).data('req')==data_name;});
-                temp.each(function(){
-                    if ($(this).hasClass('enable')) {
-                        is_there_anybody_need_Me = true;
-                        return false;
-                    }
-                });
-                if (is_there_anybody_need_Me) {
-                    console.log('有其他技能需要這個技能啊gay owo凸')
-                    return false;
-                }
-                //console.log('Disable Ability.');
-                $(function(){
-                    let bro_buttonlist = [];
-                    $.each(data_next, function (index, name) {
-                        let next_button = $('button[data-name="' + name + '"]');
-                        if (typeof data_group == 'undefined') {
-                            next_button.removeClass('toggle');
-                        }
-                    });
-                    $.each(data_last, function (index, name) {
-                        let last_button = $('button[data-name="' + name + '"]');
-                        if (last_button.hasClass('enable') == true) {
-                            if (typeof data_group == 'undefined') {
-                                if (typeof last_button.data('group') == 'undefined') {
-                                    let childButton = all_button.filter(function(index, button) {return $(button).data('last').includes(name);});
-                                    let checker = true;
-                                    $(childButton).each(function(){
-                                        if ($(this).hasClass('enable')) {
-                                            checker = false;
-                                            return false;
-                                        }
-                                    });
-                                    if (checker) {
-                                        last_button.addClass('toggle');
-                                    }
-
-                                    if (last_button.data('info') == 'lock') {
-                                        //console.log('Unlock Successfully.');
-                                        childButton.addClass('toggle');
-                                    }
-                                }
-                                else {
-                                    if (group_checker(last_button, name)) {
-                                        last_button.addClass('toggle');
-                                    }
-                                }
-                            }
-
-                            $.merge(bro_buttonlist, $(last_button).data('next'));
-                        }
-                    });
-                    if (typeof data_group !== 'undefined') {
-                        let grouplist = group_manager(self, data_name, data_last, data_next, 'Disable');
-                        
-                        $(grouplist).each(function(){
-                            return bro_buttonlist.push($(this).data('name'));
-                        });
-                    }
-                    
-                    path_checker(data_name, bro_buttonlist);
-
-                    AP_left = AP_left + AP_cost;
-                    $(self).closest('div.tabcontent').find('span[data-type="AP_pool"]').text(AP_left);
                     if (typeof data_type_req !== 'undefined') {
                         req_archetype = data_archetype.filter(function(){return $(this).data('type') == data_type_req;});
-                        req_archetype.text((parseInt(req_archetype.text()) - 1));
+                        //console.log('data_archetype: '+data_archetype+'\nreq_archetype: '+req_archetype.data('type'));
+                        if (parseInt(req_archetype.text()) < data_type_req_min) {
+                            console.log('您的 ['+ data_type_req +' Archetype] 的點數不足!');
+                            return false;
+                        }
                     }
-                });
-            return false;
+                    if (typeof data_lock !== 'undefined') {
+                        $.each(data_lock, function(index, name){
+                            $('button[data-name="' + name + '"]').addClass('lock');
+                        });
+                    }
+                    
+                    //console.log('Enable Ability.');
+                    $(function(){
+                        let bro_buttonlist = [];
+                        /* 在此技能之後且互相連接的技能允許點擊*/
+                        $.each(data_next, function (index, name) {
+                            let next_button = $('button[data-name="' + name + '"]');
+                            //console.log(name+' 是reverse? :['+(next_button.data('info') == 'reverse')+'], 是enable狀態? :['+(next_button.hasClass('enable'))+']');
+                            
+                            if (typeof data_group == 'undefined') {
+                                next_button.addClass('toggle');
+                            }
+                        });
+                        $.each(data_last, function (index, name) {
+                            let last_button = $('button[data-name="' + name + '"]');
+                            if (last_button.hasClass('enable') == true) {
+                                /* 在此此技能之前且互相連接而且又是enable狀態的技能禁止點擊*/
+                                if (typeof data_group == 'undefined') {
+                                    last_button.removeClass('toggle');
+                                }
+
+                                /* 拿到上一個Enable狀態中的Button所持有其之後連接的Button名字列表並篩選出Enable狀態的按鈕清單給path_checker用 */
+                                $.merge(bro_buttonlist, $(last_button).data('next'));
+                            }
+                        });
+                        if (typeof data_group !== 'undefined') {
+                            let grouplist = group_manager(self, data_name, data_last, data_next, 'Enable');
+                            
+                            $(grouplist).each(function(){
+                                return bro_buttonlist.push($(this).data('name'));
+                            });
+                        }
+                        
+                        path_checker(data_name, bro_buttonlist);
+
+                        /* AP cost 處理*/
+                        AP_left = AP_left - AP_cost;
+                        $(self).closest('div.tabcontent').find('span[data-type="AP_pool"]').text(AP_left);
+                        /* Archetype 點數處理*/
+                        if (typeof data_type_req !== 'undefined') {
+                            req_archetype.text((parseInt(req_archetype.text()) + 1));
+                        }
+                    });
+                    return false;
+                }
+                // Disable //
+                if ($(this).hasClass('enable') == true) {
+                    $(this).addClass('disable');
+                    $(this).removeClass('enable');
+                    let is_there_anybody_need_Me = false; 
+                    let temp = all_button.filter(function(){return $(this).data('req')==data_name;});
+                    temp.each(function(){
+                        if ($(this).hasClass('enable')) {
+                            is_there_anybody_need_Me = true;
+                            return false;
+                        }
+                    });
+                    if (is_there_anybody_need_Me) {
+                        console.log('有其他技能需要這個技能啊gay owo凸')
+                        return false;
+                    }
+                    if (typeof data_lock !== 'undefined') {
+                        $.each(data_lock, function(index, name){
+                            $('button[data-name="' + name + '"]').removeClass('lock');
+                        });
+                    }
+                    //console.log('Disable Ability.');
+                    $(function(){
+                        let bro_buttonlist = [];
+                        $.each(data_next, function (index, name) {
+                            let next_button = $('button[data-name="' + name + '"]');
+                            if (typeof data_group == 'undefined') {
+                                next_button.removeClass('toggle');
+                            }
+                        });
+                        $.each(data_last, function (index, name) {
+                            let last_button = $('button[data-name="' + name + '"]');
+                            if (last_button.hasClass('enable') == true) {
+                                if (typeof data_group == 'undefined') {
+                                    if (typeof last_button.data('group') == 'undefined') {
+                                        let childButton = all_button.filter(function(index, button) {return $(button).data('last').includes(name);});
+                                        let checker = true;
+                                        $(childButton).each(function(){
+                                            if ($(this).hasClass('enable')) {
+                                                checker = false;
+                                                return false;
+                                            }
+                                        });
+                                        if (checker) {
+                                            last_button.addClass('toggle');
+                                        }
+                                    }
+                                    else {
+                                        if (group_checker(last_button, name)) {
+                                            last_button.addClass('toggle');
+                                        }
+                                    }
+                                }
+
+                                $.merge(bro_buttonlist, $(last_button).data('next'));
+                            }
+                        });
+                        if (typeof data_group !== 'undefined') {
+                            let grouplist = group_manager(self, data_name, data_last, data_next, 'Disable');
+                            
+                            $(grouplist).each(function(){
+                                return bro_buttonlist.push($(this).data('name'));
+                            });
+                        }
+                        
+                        path_checker(data_name, bro_buttonlist);
+
+                        AP_left = AP_left + AP_cost;
+                        $(self).closest('div.tabcontent').find('span[data-type="AP_pool"]').text(AP_left);
+                        if (typeof data_type_req !== 'undefined') {
+                            req_archetype = data_archetype.filter(function(){return $(this).data('type') == data_type_req;});
+                            req_archetype.text((parseInt(req_archetype.text()) - 1));
+                        }
+                    });
+                return false;
+                }
+                // Exception //
+                else {
+                    console.log("There is an exception happened on this button, please report.");
+                    return false;
+                }
             }
-            // Exception //
             else {
-                console.log("There is an exception happened on this button, please report.");
+                console.log("This Toggle Button doesn't have 'toggle' class.");
                 return false;
             }
         }
         else {
-            console.log("This Toggle Button doesn't have 'toggle' class.");
+            console.log("This Button has been locked.");
             return false;
         }
     });
