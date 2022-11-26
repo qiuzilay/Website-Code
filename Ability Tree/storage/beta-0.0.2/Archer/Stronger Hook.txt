@@ -1,0 +1,3 @@
+強化 §nGrappling Hook§r 的射程、速度和強度。
+
+§R 最遠射程：§f+4 格§r
