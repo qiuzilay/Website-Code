@@ -1,0 +1,1 @@
+穿戴 §B§bMask of the Lunatic§o§3（瘋狂面具）§r的狀態下，當 §B§nAura§r 擊殺敵人時，就會在該處生成一個傷害 §B§f-50%§r 的新一波 §B§nAura§r。

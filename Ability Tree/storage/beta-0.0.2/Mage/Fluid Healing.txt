@@ -1,1 +1,1 @@
-每有 §f1%§r 來自物品給予的 §B§W 水屬傷害 §o§8(Water Damage)§r，你的 §nHeal§r 的治癒能力就會強化 §f+0.3%§r。
+每有 §f1%§r 來自物品給予的 §B§W 水屬傷害§o§8（Water Damage）§r，你的 §nHeal§r 的治癒能力就會強化 §f+0.3%§r。
