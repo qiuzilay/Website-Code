@@ -1,0 +1,1 @@
+當你因為各個 §B§bMask§o§3（面具）§r 的魔力消耗減免而節省下來的魔力總量超過 §f§B200§r 點時，施放 §B§nUproot§r 將會裝備上 §B§bMask of the Awakened§o§3（覺醒面具）§r。其效果為在 §f§B20§r 秒的時間內同時給予你所有 §B§bMask§o§3（面具）§r的效果。

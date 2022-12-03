@@ -1,0 +1,1 @@
+每當你或你的 §B§b召喚物§o§3（Puppet／Effigy）§r 擊殺了一個敵人，§B15 秒內 §bPuppet§r 的生成數量上限 §f+1§r。§B（最多 +8）§r
