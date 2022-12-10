@@ -1,0 +1,43 @@
+§h§l§6Arrow Rain§r
+§S 總體傷害：§f150% §2➙ §f250%§B§8（你的 DPS／每支箭矢）§r
+§G§8（§U 中立傷害：100% ➙ 150%）§r
+§G§8（§A 風屬傷害：50% ➙ 100%）§r
+
+§h§l§cGuardian Angels§r
+§R 最遠射程：§f5 格 §2➙ §f6 格§r
+
+§h§l§cFocus§r
+§S 傷害加成：§f+20% §4➙ §f+15%§r
+
+§h§l§dGrappling Hook§r
+§R 最遠射程：§f26 格 §2➙ §f30 格§r
+
+§h§l§fMore Shields§r
+§S 總體傷害：§f-0% §4➙ §c-15%§B§8（你的 DPS／Guardian Angels 的每支箭矢）§r
+§G§8（§U 中立傷害：-0% ➙ -15%）§r
+
+§h§l§6Fierce Stomp§r
+§S 總體傷害：§f100% §2➙ §f120%§B§8（你的 DPS）§r
+§G§8（§U 中立傷害：100% ➙ 120%）§r
+
+§h§l§fBetter Arrow Shield§r
+§S 總體傷害：§f+0% §2➙ §f+3%§B§8（你的 DPS／Guardian Angels 的每支箭矢）§r
+§G§8（§U 中立傷害：+0% ➙ +3%）§r
+
+§h§l§6Escape Artist§r
+§S 總體傷害：§f+100% §2➙ §f+150%§B§8（你的 DPS／每支箭矢）§r
+§G§8（§U 中立傷害：+70% ➙ +100%）§r
+§G§8（§T 雷屬傷害：+30% ➙ +50%）§r
+
+§h§l§fStronger Hook§r
+§R 最遠射程：§f+4 格 §2➙ §f+8 格§r
+
+§h§l§6Geyser Stomp§r
+§S 總體傷害：§f+50% §2➙ §f+80%§B§8（你的 DPS／每支箭矢）§r
+§G§8（§W 水屬傷害：+50% ➙ +80%）§r
+
+§h§l§6Elusive§r
+觸發條件：§f5 秒 §2➙ §f4 秒§r
+
+§h§l§cAll-Seeing Panoptes§r
+§R 最遠射程：§f+7 格 §4➙ §f+4 格
