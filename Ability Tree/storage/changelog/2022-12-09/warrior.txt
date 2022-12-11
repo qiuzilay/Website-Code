@@ -29,9 +29,9 @@
 <span style="line-height: 1em; font-size:2em; font-weight: 900;">Others</span>
 <ul style="margin-top: 0.6em; white-space: normal;">
     <li>§nArrow Shout§r 被移動到 §nCounter§r 原先的位置。</li>
-    <li>§nCounter§r 被移動到 §nCheaper Uppercut 與 §nAerodynamics§r 之間的位置。</li>
+    <li>§nCounter§r 被移動到 §nCheaper Uppercut§r 與 §nAerodynamics§r 之間的位置。</li>
     <li>§nPrecise Strikes§r 被移動到 §nAmbidextrous§r 原先的位置。</li>
-    <li>§nAmbidextrous§r 被移動到 §nRadiant Devotee§r 與 §nWhirlwind Strike§r 之間。</li>
+    <li>§nAmbidextrous§r 被移動到 §nRadiant Devotee§r 與 §nWhirlwind Strike§r 之間的位置。</li>
     <li>§nAir Shout§r 現已被歸類為 Battle Monk Archetype 的技能。</li>
     <li>§nCounter§r 不再屬於 Battle Monk Archetype 的技能。</li>
     <li>§nThunderclap§r 再也不會將 §B§U 中立傷害§r 轉換成 §B§T 雷屬傷害§r。</li>
