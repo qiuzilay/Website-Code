@@ -1,0 +1,29 @@
+§h§l§6Thunderstorm§r
+雷擊數量：§f4 §2➙ §f 6§r
+§S 總體傷害：§f35% §4➙ §f23%§B§8（你的 DPS／每道雷擊）§r
+§G§8（§U 中立傷害：25% ➙ 15%）§r
+§G§8（§T 雷屬傷害：10% ➙ 8%）§r
+
+§h§l§6Breathless§r
+§S 總體傷害：§f8% §4➙ §f6%§B§8（你的 DPS／每個 Winded）§r
+§G§8（§U 中立傷害：5% ➙ 4%）§r
+§G§8（§E 地屬傷害：3% ➙ 2%）§r
+
+§h§l§cTimelock§r
+持續時間增加一秒所需的 Winded 吸收量：§f10 §2➙ §f5§r
+持續時間上限：§f5 秒 §2➙ §f6 秒§r
+
+§h§l§6Manastorm§r
+最低 Arcanist Archetype 點數需求：§f1 §4➙ §f4§r
+
+
+
+<span style="line-height: 1em; font-size:2em; font-weight: 900;">Others</span>
+<ul style="margin-top: 0.6em; white-space: normal;">
+    <li>§nBetter Lightweaver§r 被移動到 §nSunflare§r 旁邊的位置。</li>
+    <li>§nArcane Speed§r 已被歸類成 Arcanist Archetype 的技能。</li>
+    <li>§nMemory Recollection§r 不再屬於 Arcanist Archetype 的技能。</li>
+    <li>增加 §nIce Snake§r 的碰撞箱大小。（1.5 → 2 格）</li>
+    <li>減少 §nThunderstorm§r 每到雷擊間的攻擊間隔。（0.2 → 0.15 秒）</li>
+    <li>減少 §nSnake Nest§r 的散播廣角。（45° → 15°）</li>
+</ul>
