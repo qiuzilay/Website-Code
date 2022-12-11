@@ -21,7 +21,7 @@
 <span style="line-height: 1em; font-size:2em; font-weight: 900;">Others</span>
 <ul style="margin-top: 0.6em; white-space: normal;">
     <li>§nBetter Lightweaver§r 被移動到 §nSunflare§r 旁邊的位置。</li>
-    <li>§nArcane Speed§r 已被歸類成 Arcanist Archetype 的技能。</li>
+    <li>§nArcane Speed§r 現已被歸類為 Arcanist Archetype 的技能。</li>
     <li>§nMemory Recollection§r 不再屬於 Arcanist Archetype 的技能。</li>
     <li>增加 §nIce Snake§r 的碰撞箱大小。（1.5 → 2 格）</li>
     <li>減少 §nThunderstorm§r 每到雷擊間的攻擊間隔。（0.2 → 0.15 秒）</li>
