@@ -1,0 +1,6 @@
+按住 Shift 潛行時施放 §nHeal§r 會令玩家吸收附近敵人身上全部的 §bWinded§r，並進入 §bTimelock§r 狀態。
+
+於 §bTimelock§r 狀態下，玩家的魔力不會衰減且會處於不受任何外力影響的抗擊退和騰空狀態。被剝離 §bWinded§r 的敵人會受到原持有 §bWinded§r 數量的傷害。§B（最多 60 個）§r
+
+§R 效果範圍：§f12 格§r
+§D 持續時間：§f+1 秒§8§B（每吸收 5 個 Winded／最多 6 秒）§r

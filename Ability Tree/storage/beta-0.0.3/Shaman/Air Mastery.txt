@@ -1,4 +1,0 @@
-增加所有風屬性的基礎傷害。
-
-§A Air Damage：§f+3-4§r
-§A Air Damage：§f+15%§r

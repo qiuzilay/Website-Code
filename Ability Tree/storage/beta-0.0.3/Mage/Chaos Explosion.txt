@@ -1,1 +1,0 @@
-當 §bMana Bank§r 儲存超過 §f120§r 點魔力時，施放 §B§nArcane Transfer§r 會按照順序將最近施放過的 §f3§r 個技能在短時間內快速地重複施放。

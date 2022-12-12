@@ -1,8 +1,0 @@
-§nTotem§r 可同時並存的數量 §f+1§r，但降低 §n§BTotem§r 及 §n§BAura§r 的傷害和回血效果。
-
-§S 總體傷害：§c-2%§8（§7§nTotem§r§8 的 DPS）§r
-§G§8（§U 中立傷害：-2%）§r
-§S 總體傷害：§c-40%§8（§7§nAura§r§8 的 DPS）§r
-§G§8（§U 中立傷害：-40%）§r
-§H 總回復量：§c-0.2%§8（§7§nRegeneration§r§8 的治癒效果）§r
-§H 總回復量：§c-3%§8（§7§nSacrificial Shrine§r§8 的治癒效果）§r

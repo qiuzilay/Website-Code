@@ -1,3 +1,0 @@
-強化 §nUproot§r 的射程範圍，且若使用 §nUproot§r 擊中自己的 §nTotem§r，可重置 §nTotem§r 的持續時間。
-
-§R 射程範圍：§f+6 格§r

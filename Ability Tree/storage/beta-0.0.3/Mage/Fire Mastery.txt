@@ -1,4 +1,0 @@
-增加所有火屬性的基礎傷害。
-
-§F Fire Damage：§f+3-5§r
-§F Fire Damage：§f+15%§r

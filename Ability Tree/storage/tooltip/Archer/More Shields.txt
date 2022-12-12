@@ -1,0 +1,4 @@
+§f+2§r §nArrow Shield§r 的抵禦次數。
+
+§S 總體傷害：§c-15%§B§8（你的 DPS／Guardian Angels 的每支箭矢）§r
+§G§8（§U 中立傷害：-15%）§r

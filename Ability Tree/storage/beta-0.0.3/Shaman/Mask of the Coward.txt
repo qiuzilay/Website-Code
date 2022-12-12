@@ -1,7 +1,0 @@
-§nUproot§r 的效用改為穿戴 §bMask of the Coward§o§3（懦夫面具）§r。§B§8（Shift + Uproot 可卸掉面具）§r
-
-穿戴此面具會降低施放 §nHaul§r 的魔力消耗，並犧牲防禦來換取移動速度。
-
-§M 魔力消耗（Haul）：§f-50%§r
-§V 效果：§B§f+80%§7 自身的移動速度§r
-§G§G§G§G §B§c-20%§7 自身的抗性§r

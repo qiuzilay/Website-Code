@@ -1,2 +1,0 @@
-在 §bCorrupted§r 狀態下，如果你的攻擊速度為 Slow 或更慢的速度。若使用普通攻擊傷害敵人，
-§B將會 §f+4% §bCorruption§r 至你的 §bCorrupted Bar§r。

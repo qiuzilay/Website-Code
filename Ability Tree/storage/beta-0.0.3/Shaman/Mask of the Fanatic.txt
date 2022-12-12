@@ -1,7 +1,0 @@
-§nUproot§r 的效用改為穿戴 §bMask of the Fanatic§o§3（狂熱面具）§r。§B§8（Shift + Uproot 可卸掉面具）§r
-
-穿戴此面具會降低施放 §nTotem§r 的魔力消耗，並犧牲傷害來換取抗性。
-
-§M 魔力消耗（Totem）：§f-65%§r
-§V 效果：§B§f+35%§7 自身的抗性§r
-§G§G§G§G §B§c-20%§7 自身的傷害§r

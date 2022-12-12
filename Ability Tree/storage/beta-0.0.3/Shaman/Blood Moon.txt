@@ -1,1 +1,0 @@
-每有 §f1%§r 來自物品給予的靈魂再生增益§B§o§8（Soul Point Regen）§r，你就會獲得 §f+5/3s§r 的生命值偷取§B§o§8（Life Steal）§r。§B（上限 +1000/3s）§r

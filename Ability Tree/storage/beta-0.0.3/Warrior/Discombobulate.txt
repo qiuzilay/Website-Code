@@ -1,3 +1,0 @@
-攻擊敵人會使你的元素傷害 §f+3§r 點。（上限 +80）§B但此增益會以每秒 §f-5§7 點的速度衰退。§r
-
-§I§8註：§nDiscombobulate§r§I§8 給予的元素傷害增益，實際名稱為 §n附加基礎傷害§o（Additive Base Damage）§r§I§8，實際運作方式類似於各職業都擁有的五種元素 Mastery Ability。

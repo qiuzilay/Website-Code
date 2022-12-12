@@ -1,4 +1,0 @@
-增加所有雷屬性的基礎傷害。
-
-§T Thunder Damage：§f+1-8§r
-§T Thunder Damage：§f+10%§r
