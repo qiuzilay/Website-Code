@@ -1,0 +1,3 @@
+§nSmoke Bomb§r 會在受到攻擊的敵人身上放置 §b+1 Marked§r。§B（上限 4 個／冷卻 0.4 秒）§r
+
+帶有 §bMarked§r 的敵人在受到你的攻擊時，每持有一個 §bMarked§r 就會額外受到 §f+8%§r 傷害。

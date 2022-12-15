@@ -1,0 +1,1 @@
+§nRicochets§r 給予的反彈次數 §f+1§r。
