@@ -1,0 +1,490 @@
+img.orb {
+    content: url('../storage/images/icon-orb.png');
+    width: 90%;
+}
+
+img.up_arrow {
+    content: url('../storage/images/icon-arrow-up.png');
+    width: 90%;
+    padding-top: 2.5%;
+}
+
+img.down_arrow {
+    content: url('../storage/images/icon-arrow-down.png');
+    width: 90%;
+    padding-bottom: 2.5%;
+}
+
+img.red_checkmark {
+    content: url('../storage/images/icon-checkmark-red.png');
+    width: 90%;
+}
+
+
+/* Archetype */
+
+img.archetype {
+    width: 100%;
+    transform: scale(1.2);
+}
+
+img.blue {
+    content: url('../storage/images/icon-archetype-blue.png');
+}
+
+img.white {
+    content: url('../storage/images/icon-archetype-white.png');
+}
+
+img.yellow {
+    content: url('../storage/images/icon-archetype-yellow.png');
+}
+
+img.purple {
+    content: url('../storage/images/icon-archetype-purple.png');
+}
+
+img.green {
+    content: url('../storage/images/icon-archetype-green.png');
+}
+
+img.orange {
+    content: url('../storage/images/icon-archetype-orange.png');
+}
+
+img.red {
+    content: url('../storage/images/icon-archetype-red.png');
+}
+
+/* Ability Button */
+
+
+img.button_archer,
+img.button_warrior,
+img.button_shaman,
+img.button_mage,
+img.button_assassin,
+img.button_ability2,
+img.button_ability3,
+img.button_ability4,
+button.lock img.button_ability1 {
+    transform: scale(1.15);
+}
+
+/*--------------------*/
+
+button.force:not(.lock) img.button_assassin {
+    content: url('../storage/images/button-class-assassin--disable.png') !important;
+}
+
+button.lock img.button_assassin {
+    content: url('../storage/images/button-class-assassin--disable.png');
+}
+
+button.disable:not(.lock) img.button_assassin {
+    content: url('../storage/images/button-class-assassin--disable.png');
+}
+
+button.toggle.disable:not(.lock) img.button_assassin {
+    content: url('../storage/images/button-class-assassin--toggle.png');
+}
+
+button.enable img.button_assassin {
+    content: url('../storage/images/button-class-assassin--enable.png');
+}
+
+/*--------------------*/
+
+button.force:not(.lock) img.button_mage {
+    content: url('../storage/images/button-class-mage--disable.png') !important;
+}
+
+button.lock img.button_mage {
+    content: url('../storage/images/button-class-mage--disable.png');
+}
+
+button.disable:not(.lock) img.button_mage {
+    content: url('../storage/images/button-class-mage--disable.png');
+}
+
+button.toggle.disable:not(.lock) img.button_mage {
+    content: url('../storage/images/button-class-mage--toggle.png');
+}
+
+button.enable img.button_mage {
+    content: url('../storage/images/button-class-mage--enable.png');
+}
+
+/*--------------------*/
+
+button.force:not(.lock) img.button_shaman {
+    content: url('../storage/images/button-class-shaman--disable.png') !important;
+}
+
+button.lock img.button_shaman {
+    content: url('../storage/images/button-class-shaman--disable.png');
+}
+
+button.disable:not(.lock) img.button_shaman {
+    content: url('../storage/images/button-class-shaman--disable.png');
+}
+
+button.toggle.disable:not(.lock) img.button_shaman {
+    content: url('../storage/images/button-class-shaman--toggle.png');
+}
+
+button.enable img.button_shaman {
+    content: url('../storage/images/button-class-shaman--enable.png');
+}
+
+/*--------------------*/
+
+button.force:not(.lock) img.button_warrior {
+    content: url('../storage/images/button-class-warrior--disable.png') !important;
+}
+
+button.lock img.button_warrior {
+    content: url('../storage/images/button-class-warrior--disable.png');
+}
+
+button.disable:not(.lock) img.button_warrior {
+    content: url('../storage/images/button-class-warrior--disable.png');
+}
+
+button.toggle.disable:not(.lock) img.button_warrior {
+    content: url('../storage/images/button-class-warrior--toggle.png');
+}
+
+button.enable img.button_warrior {
+    content: url('../storage/images/button-class-warrior--enable.png');
+}
+
+/*--------------------*/
+
+button.force:not(.lock) img.button_archer {
+    content: url('../storage/images/button-class-archer--disable.png') !important;
+}
+
+button.lock img.button_archer {
+    content: url('../storage/images/button-class-archer--disable.png');
+}
+
+button.disable:not(.lock) img.button_archer {
+    content: url('../storage/images/button-class-archer--disable.png');
+}
+
+button.toggle.disable:not(.lock) img.button_archer {
+    content: url('../storage/images/button-class-archer--toggle.png');
+}
+
+button.enable img.button_archer {
+    content: url('../storage/images/button-class-archer--enable.png');
+}
+
+/*--------------------*/
+
+button.force:not(.lock) img.button_ability1 {
+    content: url('../storage/images/button-tier-1--disable.png') !important;
+}
+
+button.lock img.button_ability1 {
+    content: url('../storage/images/button-tier-1--lock.png');
+}
+
+button.disable:not(.lock) img.button_ability1 {
+    content: url('../storage/images/button-tier-1--disable.png');
+}
+
+button.toggle.disable:not(.lock) img.button_ability1 {
+    content: url('../storage/images/button-tier-1--toggle.png');
+}
+
+button.enable img.button_ability1 {
+    content: url('../storage/images/button-tier-1--enable.png');
+}
+
+/*--------------------*/
+
+button.force:not(.lock) img.button_ability2 {
+    content: url('../storage/images/button-tier-2--disable.png') !important;
+}
+
+button.lock img.button_ability2 {
+    content: url('../storage/images/button-tier-2--lock.png');
+}
+
+button.disable:not(.lock) img.button_ability2 {
+    content: url('../storage/images/button-tier-2--disable.png');
+}
+
+button.toggle.disable:not(.lock) img.button_ability2 {
+    content: url('../storage/images/button-tier-2--toggle.png');
+}
+
+button.enable img.button_ability2 {
+    content: url('../storage/images/button-tier-2--enable.png');
+}
+
+/*--------------------*/
+
+button.force:not(.lock) img.button_ability3 {
+    content: url('../storage/images/button-tier-3--disable.png') !important;
+}
+
+button.lock img.button_ability3 {
+    content: url('../storage/images/button-tier-3--lock.png');
+}
+
+button.disable:not(.lock) img.button_ability3 {
+    content: url('../storage/images/button-tier-3--disable.png');
+}
+
+button.toggle.disable:not(.lock) img.button_ability3 {
+    content: url('../storage/images/button-tier-3--toggle.png');
+}
+
+button.enable img.button_ability3 {
+    content: url('../storage/images/button-tier-3--enable.png');
+}
+
+/*--------------------*/
+
+button.force:not(.lock) img.button_ability4 {
+    content: url('../storage/images/button-tier-4--disable.png') !important;
+}
+
+button.lock img.button_ability4 {
+    content: url('../storage/images/button-tier-4--lock.png');
+}
+
+button.disable:not(.lock) img.button_ability4 {
+    content: url('../storage/images/button-tier-4--disable.png');
+}
+
+button.toggle.disable:not(.lock) img.button_ability4 {
+    content: url('../storage/images/button-tier-4--toggle.png');
+}
+
+button.enable img.button_ability4 {
+    content: url('../storage/images/button-tier-4--enable.png');
+}
+
+/* Branch */
+
+img.br_vertical {
+    content: url('../storage/images/branches/br_vertical.png');
+}
+
+img.br_vertical.active {
+    content: url('../storage/images/branches/br_vertical--active.png');
+}
+
+img.br_horizontal {
+    content: url('../storage/images/branches/br_horizontal.png');
+}
+
+img.br_horizontal.active {
+    content: url('../storage/images/branches/br_horizontal--active.png');
+}
+
+img.br_typeL_RD {
+    content: url('../storage/images/branches/br_typeL_RD.png');
+}
+
+img.br_typeL_RD.active {
+    content: url('../storage/images/branches/br_typeL_RD--active.png');
+}
+
+img.br_typeL_LD {
+    content: url('../storage/images/branches/br_typeL_LD.png');
+}
+
+img.br_typeL_LD.active {
+    content: url('../storage/images/branches/br_typeL_LD--active.png');
+}
+
+/* 以下為岔路 (設置圖片時請注意放置方法與上面不同)*/
+
+img.br_typeT_RTD {
+    content: url('../storage/images/branches/br_typeT_RTD.png');
+}
+
+img.br_typeT_RTD_active_RTD {
+    z-index: 3;
+    content: url('../storage/images/branches/br_typeT_RTD_active_RTD.png');
+}
+
+img.br_typeT_RTD_active_RT {
+    content: url('../storage/images/branches/br_typeT_RTD_active_RT.png');
+}
+
+img.br_typeT_RTD_active_RD {
+    content: url('../storage/images/branches/br_typeT_RTD_active_RD.png');
+}
+
+img.br_typeT_RTD_active_TD {
+    content: url('../storage/images/branches/br_typeT_RTD_active_TD.png');
+}
+
+img.br_typeT_LTD {
+    content: url('../storage/images/branches/br_typeT_LTD.png');
+}
+
+img.br_typeT_LTD_active_LTD {
+    z-index: 3;
+    content: url('../storage/images/branches/br_typeT_LTD_active_LTD.png');
+}
+
+img.br_typeT_LTD_active_LD {
+    content: url('../storage/images/branches/br_typeT_LTD_active_LD.png');
+}
+
+img.br_typeT_LTD_active_TD {
+    content: url('../storage/images/branches/br_typeT_LTD_active_TD.png');
+}
+
+img.br_typeT_LTD_active_LT {
+    content: url('../storage/images/branches/br_typeT_LTD_active_LT.png');
+}
+
+img.br_typeT_LRD {
+    content: url('../storage/images/branches/br_typeT_LRD.png');
+}
+
+img.br_typeT_LRD_active_LRD {
+    z-index: 3;
+    content: url('../storage/images/branches/br_typeT_LRD_active_LRD.png');
+}
+
+img.br_typeT_LRD_active_LR {
+    content: url('../storage/images/branches/br_typeT_LRD_active_LR.png');
+}
+
+img.br_typeT_LRD_active_LD {
+    content: url('../storage/images/branches/br_typeT_LRD_active_LD.png');
+}
+
+img.br_typeT_LRD_active_RD {
+    content: url('../storage/images/branches/br_typeT_LRD_active_RD.png');
+}
+
+img.br_typeX_LRTD {
+    content: url('../storage/images/branches/br_typeX_LRTD.png');
+}
+
+img.br_typeX_LRTD_active_LT {
+    content: url('../storage/images/branches/br_typeX_LRTD_active_LT.png');
+    z-index: 7;
+}
+
+img.br_typeX_LRTD_active_LD {
+    content: url('../storage/images/branches/br_typeX_LRTD_active_LD.png');
+    z-index: 7;
+}
+
+img.br_typeX_LRTD_active_RT {
+    content: url('../storage/images/branches/br_typeX_LRTD_active_RT.png');
+    z-index: 7;
+}
+
+img.br_typeX_LRTD_active_RD {
+    content: url('../storage/images/branches/br_typeX_LRTD_active_RD.png');
+    z-index: 7;
+}
+
+img.br_typeX_LRTD_active_LR {
+    content: url('../storage/images/branches/br_typeX_LRTD_active_LR.png');
+    z-index: 8;
+}
+
+img.br_typeX_LRTD_active_TD {
+    content: url('../storage/images/branches/br_typeX_LRTD_active_TD.png');
+    z-index: 8;
+}
+
+img.br_typeX_LRTD_active_LRT {
+    content: url('../storage/images/branches/br_typeX_LRTD_active_LRT.png');
+    z-index: 9;
+}
+
+img.br_typeX_LRTD_active_LRD {
+    content: url('../storage/images/branches/br_typeX_LRTD_active_LRD.png');
+    z-index: 9;
+}
+
+img.br_typeX_LRTD_active_RTD {
+    content: url('../storage/images/branches/br_typeX_LRTD_active_RTD.png');
+    z-index: 9;
+}
+
+img.br_typeX_LRTD_active_LTD {
+    content: url('../storage/images/branches/br_typeX_LRTD_active_LTD.png');
+    z-index: 9;
+}
+
+img.br_typeX_LRTD_active_LRTD {
+    content: url('../storage/images/branches/br_typeX_LRTD_active_LRTD.png');
+    z-index: 10;
+}
+
+/* 岔路特別處理 */
+
+img.br_typeT_RTD.active,
+img.br_typeT_RTD_active_RTD,
+img.br_typeT_RTD_active_RT,
+img.br_typeT_RTD_active_RD,
+img.br_typeT_RTD_active_TD,
+img.br_typeT_LRD.active,
+img.br_typeT_LRD_active_LRD,
+img.br_typeT_LRD_active_LR,
+img.br_typeT_LRD_active_LD,
+img.br_typeT_LRD_active_RD,
+img.br_typeT_LTD.active,
+img.br_typeT_LTD_active_LTD,
+img.br_typeT_LTD_active_LD,
+img.br_typeT_LTD_active_TD,
+img.br_typeT_LTD_active_LT,
+img.br_typeX_LRTD.active,
+img.br_typeX_LRTD_active_LT,
+img.br_typeX_LRTD_active_LD,
+img.br_typeX_LRTD_active_RT,
+img.br_typeX_LRTD_active_RD,
+img.br_typeX_LRTD_active_LR,
+img.br_typeX_LRTD_active_TD,
+img.br_typeX_LRTD_active_LRT,
+img.br_typeX_LRTD_active_LRD,
+img.br_typeX_LRTD_active_RTD,
+img.br_typeX_LRTD_active_LTD,
+img.br_typeX_LRTD_active_LRTD {
+    visibility: hidden;
+}
+
+img.br_typeT_RTD,
+img.br_typeT_RTD_active_RTD.active,
+img.br_typeT_RTD_active_RT.active,
+img.br_typeT_RTD_active_RD.active,
+img.br_typeT_RTD_active_TD.active,
+img.br_typeT_LRD,
+img.br_typeT_LRD_active_LRD.active,
+img.br_typeT_LRD_active_LR.active,
+img.br_typeT_LRD_active_LD.active,
+img.br_typeT_LRD_active_RD.active,
+img.br_typeT_LTD,
+img.br_typeT_LTD_active_LTD.active,
+img.br_typeT_LTD_active_LD.active,
+img.br_typeT_LTD_active_TD.active,
+img.br_typeT_LTD_active_LT.active,
+img.br_typeX_LRTD,
+img.br_typeX_LRTD_active_LT.active,
+img.br_typeX_LRTD_active_LD.active,
+img.br_typeX_LRTD_active_RT.active,
+img.br_typeX_LRTD_active_RD.active,
+img.br_typeX_LRTD_active_LR.active,
+img.br_typeX_LRTD_active_TD.active,
+img.br_typeX_LRTD_active_LRT.active,
+img.br_typeX_LRTD_active_LRD.active,
+img.br_typeX_LRTD_active_RTD.active,
+img.br_typeX_LRTD_active_LTD.active,
+img.br_typeX_LRTD_active_LRTD.active {
+    visibility: visible;
+}

@@ -1,0 +1,71 @@
+div.alert-window {
+    display: none;
+    background: no-repeat center url('../storage/images/window-background.png');
+    background-size: contain;
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 50%;
+    bottom: 50%;
+    margin: auto;
+    padding: 1em;
+    width: 60vmin;
+    min-width: max-content;
+    min-height: max-content;
+    color: #000000;
+    font-family: 'Nunito', 'Microsoft JhengHei', sans-serif;
+    font-size: 1.2em;
+    font-weight: 900;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    align-content: center;
+    flex-wrap: wrap;
+    z-index: 1000;
+    box-sizing: border-box;
+}
+
+.alert-window span {
+    width: max-content;
+    height: max-content;
+    text-align: center;
+}
+
+.alert-window span:has(button) {
+    margin: 0.5em;
+    padding: 1em;
+}
+
+.alert-window img {
+    filter: grayscale(50%);
+    width: 3em;
+    height: 3em;
+    margin: 1em 0.5em;
+}
+
+.alert-window button {
+    display: inline-block;
+    background-color: #988558;
+    border: 0.25em outset #5C4139;
+    border-radius: 0.25em;
+    color: #151515;
+    margin: auto 1em;
+    padding-left: 2em;
+    padding-right: 2em;
+    font-family: 'Nunito';
+    font-size: medium;
+    font-weight: 700;
+}
+
+.alert-window button:hover {
+    color: #FFFFFF;
+    background-color: #5C4033;
+    border: 0.25em outset #6F4E37;
+}
+
+.alert-window button:active {
+    background-color: #5C4033;
+    border: 0.25em outset #6F4E37;
+    box-shadow: 1px 1px black;
+    transform: scale(97.5%);
+}

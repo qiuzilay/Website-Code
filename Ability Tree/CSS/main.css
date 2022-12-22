@@ -1,0 +1,260 @@
+body {
+    overflow-x: hidden;
+    -webkit-touch-callout: none !important;
+}
+
+.content_top {
+    background-image: url("../storage/images/main-background-upper.png");
+    background-attachment: scroll;
+    background-size: 100% 100%;
+    image-rendering: pixelated;
+}
+
+.content {
+    background-image: url("../storage/images/main-background-body.png");
+    background-attachment: local;
+    background-repeat: repeat-y;
+    background-size: 100%;
+    image-rendering: pixelated;
+}
+
+.content_bottom {
+    background-image: url("../storage/images/main-background-lower.png");
+    background-attachment: scroll;
+    background-size: 100% 100%;
+    image-rendering: pixelated;
+}
+
+img.background {
+    visibility: hidden;
+    width: 100%;
+    image-rendering: pixelated;
+}
+
+div.background_block {
+    margin: 0px;
+    position: relative;
+}
+
+/* Style the tab */
+.tab {
+    overflow: hidden;
+    border: none;
+    background-color: #323232;
+    border-radius: 1.5em;
+    text-align: center;
+}
+
+/* Style the buttons that are used to open the tab content */
+.tab button {
+    background-color: inherit;
+    display: inline-block;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 14px 16px;
+    transition: 0.3s;
+    text-align: center;
+    font-family: Roboto;
+    font-weight: bold;
+    font-size: medium;
+    color: #fff;
+    margin: 0px;
+}
+
+/* Change background color of buttons on hover */
+.tab button:hover {
+    background-color: dimgrey;
+}
+
+/* Create an active/current tablink class */
+.tab button.active {
+    background-color: grey;
+}
+
+/* Style the tab content */
+.tabcontent {
+    display: none;
+    border: none;
+    padding-top: 1em;
+    opacity: 0;
+    transition: all 0.5s;
+}
+
+.tabcontent.active {
+    opacity: 1;
+}
+
+div.containerslot {
+    font-size: large;
+    text-align: center;
+    top: 12.5%;
+    width: 87.5%;
+    left: 0px;
+    right: 0px;
+    margin: 0 auto;
+}
+
+.content div.containerslot {
+    position: static;
+}
+
+.content_bottom div.containerslot {
+    position: absolute;
+}
+
+.containerslot table,
+tbody,
+tr,
+td {
+    border: none;
+    /* 邊界在這裡鵝 */
+    border-collapse: collapse;
+    border-spacing: 0;
+    text-align: center;
+    margin: 0px;
+    padding: 0px;
+}
+
+.containerslot table {
+    width: 100%;
+}
+
+.containerslot tbody {
+    width: 100%;
+}
+
+.containerslot tr {
+    width: 100%;
+    margin: 1px 0px;
+    /* 表格上下行距 */
+}
+
+.containerslot td {
+    display: table-cell;
+    width: 9.5%;
+    position: relative;
+}
+
+.containerslot td::after {
+    content: "";
+    display: block;
+    padding-bottom: 100%;
+}
+
+.containerslot td .pointer {
+    visibility: hidden;
+    width: 100%;
+    height: 100%;
+    background-color: white;
+    opacity: 0.5;
+    position: absolute;
+    z-index: 50;
+    display: inline-block;
+    left: 0;
+    top: 0;
+}
+
+.containerslot td:hover .pointer.active {
+    visibility: visible;
+}
+
+.containerslot td .tooltip {
+    overflow: visible;
+    visibility: hidden;
+    width: max-content;
+    max-width: 40vw;
+    background-color: #120312;
+    border: 3px solid #1f0249;
+    border-radius: 3px;
+    text-align: left;
+    color: #aaaaaa;
+    font-family: 'nunito', 'Microsoft JhengHei', sans-serif;
+    font-size: large;
+    font-weight: 700;
+    text-shadow: 2px 2px #2a2a2a;
+    position: absolute;
+    z-index: -1;
+    padding: 6px 3em 6px 9px;
+    outline: 3px solid #120312;
+    word-wrap: break-word;
+    display: inline-block;
+    box-sizing: border-box;
+    white-space: pre-line;
+}
+
+@media only screen and (max-width: 1024px) {
+    .containerslot td .tooltip {
+        max-width: 37.5vw;
+        font-size: medium;
+        padding: 5px 2.5em 5px 7.5px;
+    }
+
+    span.shield::before {
+        margin-right: 0.5em;
+    }
+}
+
+@media only screen and (max-width: 768px) {
+    .containerslot td .tooltip {
+        max-width: 40vw;
+        font-size: small;
+        padding: 4px 2em 4px 6px;
+    }
+
+    span.shield::before {
+        margin-right: 0.5em;
+    }
+}
+
+.containerslot td:hover .tooltip {
+    visibility: visible;
+    z-index: 99;
+    left: 120%;
+    right: initial;
+    transform: translate(0%, -20%);
+}
+
+.containerslot td:hover .tooltip.reverse {
+    visibility: visible;
+    z-index: 99;
+    right: 120%;
+    left: initial;
+    transform: translate(0%, -20%);
+}
+
+.containerslot button {
+    border: none;
+    width: 100%;
+    height: 100%;
+    background-color: transparent;
+    position: absolute;
+    z-index: 98;
+    display: inline-block;
+    left: 0;
+    top: 0;
+}
+
+.containerslot img {
+    image-rendering: pixelated;
+    object-fit: contain;
+    object-position: center;
+    display: inline-block;
+    position: absolute;
+    top: 0px;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+    margin: auto;
+    width: 100%;
+    height: 100%;
+}
+
+.tooltip .title {
+    font-size: 1.2em;
+}
+
+.tooltip .number {
+    font-size: 1em;
+    color: white;
+}

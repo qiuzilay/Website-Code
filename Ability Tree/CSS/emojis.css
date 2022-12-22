@@ -1,0 +1,108 @@
+span.mana::before,
+span.areaEffect::before,
+span.duration::before,
+span.heart::before,
+span.shield::before,
+span.sword::before,
+span.range::before {
+    display: inline-block !important;
+    text-align: center;
+    width: 1em;
+    overflow: visible;
+}
+
+span.checkmark::before {
+    content: '\2714\FE0E';
+    color: #55FF55;
+    text-shadow: 2px 2px #153F15;
+}
+
+span.ban::before {
+    content: '\2718';
+    color: #FF5555;
+    text-shadow: 2px 2px #3F1515;
+}
+
+span.neutral::before {
+    content: '\2724';
+    color: #FFAA00;
+    text-shadow: 2px 2px #2A2A00;
+    font-weight: 400;
+}
+
+span.earth::before {
+    content: '\2724';
+    color: #00AA00;
+    text-shadow: 2px 2px #002A00;
+    font-weight: 800;
+}
+
+span.thunder::before {
+    content: '\2726';
+    color: #FFFF55;
+    text-shadow: 2px 2px #3F3F15;
+}
+
+span.water::before {
+    content: '\2749';
+    color: #55FFFF;
+    text-shadow: 2px 2px #153F3F;
+}
+
+span.fire::before {
+    content: '\2739';
+    color: #FF5555;
+    text-shadow: 2px 2px #3F1515;
+}
+
+span.air::before {
+    content: '\274B';
+    color: #FFFFFF;
+    text-shadow: 2px 2px #3F3F3F;
+}
+
+span.mana::before {
+    content: '\273A';
+    color: #55FFFF;
+    text-shadow: 2px 2px #153F3F;
+}
+
+span.areaEffect::before {
+    content: '\2600';
+    color: #00AA00;
+    text-shadow: 2px 2px #002A00;
+}
+
+span.range::before {
+    content: '\27BC';
+    color: #00AA00;
+    text-shadow: 2px 2px #002A00;
+}
+
+span.duration::before {
+    content: '\29D6';
+    color: #FF55FF;
+    text-shadow: 2px 2px #3F153F;
+}
+
+span.sword::before {
+    content: '\2694';
+    color: #AA0000;
+    text-shadow: 2px 2px #2A0000;
+}
+
+span.heart::before {
+    content: '\2764\FE0E';
+    color: #FF5555;
+    text-shadow: 2px 2px #3F1515;
+}
+
+span.shield::before {
+    content: '\1F5E1';
+    color: #AAAAAA;
+    text-shadow: 2px 2px #2A2A2A;
+}
+
+span.blankGap::before {
+    content: '\3000';
+}

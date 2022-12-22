@@ -1,0 +1,85 @@
+div.toast {
+    position: fixed;
+    left: 100%;
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+    top: 8.5%;
+}
+
+.popup {
+    position: relative;
+    image-rendering: pixelated;
+    background-image: url('../storage/images/popup-background-body.png');
+    background-repeat: repeat-x;
+    background-size: contain;
+    background-attachment: local;
+    font-size: large;
+    font-family: 'nunito', 'Microsoft JhengHei', sans-serif;
+    text-align: left;
+    color: white;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    padding: 18px 12px;
+    flex-wrap: nowrap;
+    min-width: max-content;
+    max-width: max-content;
+    margin-left: 1em;
+    z-index: 101;
+}
+
+.popup.active {
+    animation: Popup 6s linear 0s 1 normal none;
+}
+
+@keyframes Popup {
+    0% {
+        right: 0em;
+        transform: translateX(0%);
+    }
+    16% {
+        right: 1.5em;
+        transform: translateX(-100%);
+    }
+    66% {
+        right: 1.5em;
+        transform: translateX(-100%);
+    }
+    100% {
+        right: 0em;
+        transform: translateX(0%);
+    }
+}
+
+.popup::before,
+.popup::after {
+    content: "";
+    image-rendering: pixelated;
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-attachment: local;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.popup::before {
+    background-image: url('../storage/images/popup-background-left.png');
+    right: 100%;
+    background-position: right;
+}
+
+.popup::after {
+    background-image: url('../storage/images/popup-background-right.png');
+    left: 100%;
+    background-position: left;
+}
+
+.popup img {
+    display: inline-block;
+    max-width: 100%;
+    transform: scale(1.8);
+    padding-left: 0.3em;
+    padding-right: 0.6em;
+}
