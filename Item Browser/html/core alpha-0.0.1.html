@@ -64,7 +64,7 @@
                     <tr>
                         <td>
                             <span>類別：</span>
-                            <input class="selectbar full-width" type="text" name="category" value="ALL" autofocus="autofocus" autocomplete="off" readonly>
+                            <input class="selectbar full-width" type="text" name="category" value="ALL" autocomplete="off" readonly>
                             <div class="dropdown-menu">
                                 <input class="search-select-options" type="text" autocomplete="off">
                                 <ul class="select-options">
@@ -97,20 +97,60 @@
                         </td>
                         <td>
                             <span>稀有度：</span>
-                            <input class="selectbar full-width" type="text" name="rarity" value="ANY" autofocus="autofocus" autocomplete="off">
+                            <input class="selectbar full-width" type="text" name="rarity" value="ANY" autocomplete="off" readonly>
+                            <div class="dropdown-menu">
+                                <input class="search-select-options" type="text" autocomplete="off">
+                                <ul class="select-options">
+                                    <li>ANY</li>
+                                    <li class="optgroup" data-optgroup="Items">Items:</li>
+                                    <li data-belong="Items">Mythic</li>
+                                    <li data-belong="Items">Fabled</li>
+                                    <li data-belong="Items">Legendary</li>
+                                    <li data-belong="Items">Rare</li>
+                                    <li data-belong="Items">Set</li>
+                                    <li data-belong="Items">Unique</li>
+                                    <li data-belong="Items">Normal</li>
+                                    <li data-belong="Items">Any except Normal</li>
+                                    <li class="optgroup" data-optgroup="Ingredients and Materials">Ingredients and Materials:</li>
+                                    <li data-belong="Ingredients and Materials">✫✫✫ 3 Stars</li>
+                                    <li data-belong="Ingredients and Materials">✫✫ 2 Stars</li>
+                                    <li data-belong="Ingredients and Materials">✫ 1 Stars</li>
+                                    <li data-belong="Ingredients and Materials">0 Stars</li>
+                                </ul>
+                            </div>
                         </td>
                         <td>
                             <span>鍛造類別：</span>
-                            <input class="selectbar full-width" type="text" name="crafting" value="ANY" autofocus="autofocus" autocomplete="off">
+                            <input class="selectbar full-width" type="text" name="crafting" value="ANY" autocomplete="off" readonly>
+                            <div class="dropdown-menu">
+                                <input class="search-select-options" type="text" autocomplete="off">
+                                <ul class="select-options">
+                                    <li>ANY</li>
+                                    <li class="optgroup" data-optgroup="Items">Items:</li>
+                                    <li data-belong="Items">Mythic</li>
+                                    <li data-belong="Items">Fabled</li>
+                                    <li data-belong="Items">Legendary</li>
+                                    <li data-belong="Items">Rare</li>
+                                    <li data-belong="Items">Set</li>
+                                    <li data-belong="Items">Unique</li>
+                                    <li data-belong="Items">Normal</li>
+                                    <li data-belong="Items">Any except Normal</li>
+                                    <li class="optgroup" data-optgroup="Ingredients and Materials">Ingredients and Materials:</li>
+                                    <li data-belong="Ingredients and Materials">✫✫✫ 3 Stars</li>
+                                    <li data-belong="Ingredients and Materials">✫✫ 2 Stars</li>
+                                    <li data-belong="Ingredients and Materials">✫ 1 Stars</li>
+                                    <li data-belong="Ingredients and Materials">0 Stars</li>
+                                </ul>
+                            </div>
                         </td>
                         <td style="display: inline-flex; flex-wrap: nowrap; flex-direction: row; gap: 1rem;">
                             <div style="display: inline-block; flex: 1 1 50%;">
                                 <span>最低等級：</span>
-                                <input class="selectbar full-width" type="text" name="level-min" value=1 autofocus="autofocus" autocomplete="off">
+                                <input class="full-width" type="number" name="level-min" min=1 value=1 max=130 autocomplete="off">
                             </div>
                             <div style="display: inline-block; flex: 1 1 50%;">
                                 <span>最高等級：</span>
-                                <input class="selectbar full-width" type="text" name="level-max" value=130 autofocus="autofocus" autocomplete="off">
+                                <input class="full-width" type="number" name="level-max" min=1 value=130 max=130 autocomplete="off">
                             </div>
                         </td>
                     </tr>

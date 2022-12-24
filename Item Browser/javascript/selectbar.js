@@ -24,6 +24,21 @@ $(document).ready(function() {
         }
     }
 
+    class Gadget {
+        static unicode(text) {
+            if (text.length > 1) {
+                text = Array.from(text).forEach((word) => {
+                    word = `\\u${word.codePointAt(0).toString(16).padStart(4, "0")}`
+                })
+            }
+            else if (text.length == 1) {
+                text = `\\u${text.codePointAt(0).toString(16).padStart(4, "0")}`
+            }
+
+            return text
+        }
+    }
+
     class LaunchEvent {
         static buildata() {
             
@@ -39,7 +54,9 @@ $(document).ready(function() {
                     }
                 };
 
-                $.each(self.filter.siblings('ul.select-options').find('li.optgroup'), function() {
+                const optblock = $(this).siblings('ul.select-options');
+
+                $.each(optblock.find('li.optgroup'), function() {
                     self.options.json[$(this).data('optgroup')] = {
                         "optObject": {},
                         "object": $(this),
@@ -47,7 +64,7 @@ $(document).ready(function() {
                     };
                 });
 
-                $.each(self.filter.siblings('ul.select-options').find('li:not(.optgroup)'), function() {
+                $.each(optblock.find('li:not(.optgroup)'), function() {
                     if (Examine.defined($(this).data('belong'))) {
                         self.options.json[$(this).data('belong')].optObject[$(this).text()] = $(this);
                         self.options.json[$(this).data('belong')].display += 1;
@@ -58,6 +75,8 @@ $(document).ready(function() {
 
                     self.options.array.push($(this).text());
                 });
+
+                optblock.append($(document.createElement('li')).addClass('warning'));
 
                 selectbar.filters.database[self.owner.attr('name')] = self
             });
@@ -72,7 +91,8 @@ $(document).ready(function() {
             selectbar.objects.on('click', function() {
                 const self = {
                     "object": $(this),
-                    "menu": $(this).siblings('div.dropdown-menu')
+                    "menu": $(this).siblings('div.dropdown-menu'),
+                    "warningOpt": $(this).siblings('div.dropdown-menu').find('li.warning')
                 };
                 const target = self.menu.find('li:not(.optgroup)').filter((index, listObj) => {
                     return $(listObj).text() == self.object.val()
@@ -95,7 +115,7 @@ $(document).ready(function() {
                 const inputext = $(this).val();
                 const data = selectbar.filters.database[$(this).parent('div.dropdown-menu').siblings('input.selectbar').attr('name')];
                 const match = $.map(data.options.array, function(optname, index) {
-                    if (RegExp(`^${inputext}`, 'gmu').test(optname)) {return optname}
+                    if (RegExp(`\\b${Gadget.unicode(inputext)}`, 'gui').test(optname)) {return optname}
                 });
 
                 //console.info(data.options.json);
@@ -129,19 +149,37 @@ $(document).ready(function() {
                         });
                     }
                 });
+                
+
+                if (!selectbar.target.warningOpt.siblings('li:not(li[style*="display: none"])').exist()) {
+                    selectbar.target.warningOpt.addClass('active').text(`No result found for: ${inputext}`);
+                }
+                else {
+                    selectbar.target.warningOpt.removeClass('active');
+                }
 
                 return false;
             });
 
             $(window).on('click', function(event) {
-                if (!$(event.target).is('div.dropdown-menu--active, .dropdown-menu--active input.selectbar, .dropdown-menu--active input.search-select-options, .dropdown-menu--active ul.select-options, .dropdown-menu--active li.optgroup')) {
+                if (!$(event.target).is('div.dropdown-menu--active, .dropdown-menu--active input.selectbar, .dropdown-menu--active input.search-select-options, .dropdown-menu--active ul.select-options, .dropdown-menu--active li.optgroup, .dropdown-menu--active li.warning')) {
                     if (selectbar.active) {
-                        if ($(event.target).is('li')) {
+                        if ($(event.target).is('div.dropdown-menu li')) {
                             $(event.target).closest('div.dropdown-menu').siblings('input.selectbar').val($(event.target).text());
                         }
                         
+                        $.each(selectbar.filters.database, function() {
+                            $.each(this.options.json, function(index, json) {
+                                if (Examine.defined(json.display)) {
+                                    json.display = Object.keys(json.optObject).length;
+                                }
+                            });
+                        });
+                        
                         selectbar.target.menu.css({"display": "none"}).removeClass('dropdown-menu--active');
                         selectbar.target.menu.children('input.search-select-options').val(null);
+                        selectbar.target.menu.find('li:not(.warning)').css({"display": "list-item"});
+                        selectbar.target.menu.find('li.warning').removeClass('active');
                         selectbar.active = false;
                         selectbar.target = null;
                     }

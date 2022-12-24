@@ -65,6 +65,7 @@
     position: relative;
     display: block;
     margin-top: 10px;
+    white-space: nowrap;
 }
 
 .menubox > table tbody td:has(input) > span::after {
@@ -130,8 +131,18 @@ div.dropdown-menu > ul.select-options li:not(.optgroup).hover {
 div.dropdown-menu > ul.select-options li.optgroup {
     background: #222222;
     color: #CCCCCC;
-    font-weight: 400;
     cursor: default;
+}
+
+div.dropdown-menu > ul.select-options li.warning {
+    display: none;
+    background: crimson;
+    color: white;
+    cursor: default;
+}
+
+div.dropdown-menu > ul.select-options li.warning.active {
+    display: list-item;
 }
 
 div.dropdown-menu > ul.select-options::-webkit-scrollbar-track-piece {
