@@ -1,0 +1,84 @@
+.positive {
+    color: #55FF55;
+    text-shadow: 2px 2px 0 #153F15;
+}
+
+.negative {
+    color: #FF5555;
+    text-shadow: 2px 2px 0 #1F1515;
+}
+
+.restrict {
+    color: #FF5555;
+    text-shadow: 2px 2px 0 #1F1515;
+}
+
+.color-initial {
+    color: #AAAAAA;
+    text-shadow: 2px 2px 0 #2A2A2A;
+}
+
+.color-mythic {
+    color: #AA00AA;
+    text-shadow: 2px 2px 0 #2A002A;
+}
+
+.color-fabled {
+    color: #FF5555;
+    text-shadow: 2px 2px 0 #3F1515;
+}
+
+.color-legendary {
+    color: #55FFFF;
+    text-shadow: 2px 2px 0 #153F3F;
+}
+
+.color-rare {
+    color: #FF55FF;
+    text-shadow: 2px 2px 0 #3F153F;
+}
+
+.color-unique {
+    color: #FFFF55;
+    text-shadow: 2px 2px 0 #3F3F15;
+}
+
+.color-normal {
+    color: #FFFFFF;
+    text-shadow: 2px 2px 0 #3F3F3F;
+}
+
+.color-set {
+    color: #55FF55;
+    text-shadow: 2px 2px 0 #153F15;
+}
+
+.color-health {
+    color: #AA0000;
+    text-shadow: 2px 2px 0 #2A0000;
+}
+
+.color-earth {
+    color: #00AA00;
+    text-shadow: 2px 2px 0 #002A00;
+}
+
+.color-thunder {
+    color: #FFFF55;
+    text-shadow: 2px 2px 0 #3F3F15;
+}
+
+.color-water {
+    color: #55FFFF;
+    text-shadow: 2px 2px 0 #153F3F;
+}
+
+.color-fire {
+    color: #FF5555;
+    text-shadow: 2px 2px 0 #3F1515;
+}
+
+.color-air {
+    color: #FFFFFF;
+    text-shadow: 2px 2px 0 #3F3F3F;
+}

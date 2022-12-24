@@ -1,0 +1,94 @@
+/*--- itembox-header ---*/
+
+.itembox > .header {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.itembox > .header > .item-icon {
+    width: 64px;
+    height: 64px;
+    max-width: 90%;
+    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.2));
+    margin: 10px auto 15px;
+}
+
+.itembox > .header > .item-name {
+    text-align: center;
+    font-size: 1.2em;
+    margin-bottom: 16px;
+}
+
+/*--- itembox-content ---*/
+
+.itembox > .body > *:not(.footer) {
+    margin-bottom: 16px;
+}
+
+.itembox > .body > .requirements > li::before {
+    color: #55FF55;
+    text-shadow: 2px 2px 0 #153F15;
+}
+
+.itembox > .body > .ids {
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
+    font-size: inherit;
+    font-weight: inherit;
+    font-style: inherit;
+    font-family: inherit;
+}
+
+.itembox > .body > .ids th {
+    font-size: 0.7em;
+    color: #555555;
+}
+
+.itembox > .body > .ids th:nth-child(1),
+.itembox > .body > .ids td:nth-child(1) {
+    width: 20%;
+    text-align: left;
+}
+
+.itembox > .body > .ids th:nth-child(2),
+.itembox > .body > .ids td:nth-child(2) {
+    color: #AAAAAA;
+    text-align: center;
+}
+
+.itembox > .body > .ids th:nth-child(3),
+.itembox > .body > .ids td:nth-child(3) {
+    width: 20%;
+    text-align: right;
+}
+
+.itembox > .body > .footer > .droptype {
+    display: flex;
+    width: 100%;
+    margin-top: 6px;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+
+.itembox > .body > .footer > .droptype > .iconarea {
+    display: flex;
+    flex-direction: row;
+    flex: 0;
+}
+
+.itembox > .body > .footer > .droptype img {
+    height: 32px;
+    margin-right: 6px;
+    cursor: help;
+}
+
+.itembox > .body > .footer > .droptype a {
+    color: inherit;
+    font-size: 0.8em;
+    padding-right: 4px;
+    text-shadow: none;
+    font-style: italic;
+}

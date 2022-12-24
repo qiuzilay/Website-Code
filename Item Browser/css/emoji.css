@@ -1,0 +1,45 @@
+@font-face {
+    font-family: emoji;
+    src: url('https://cdn.jsdelivr.net/gh//qiuzilay/Website-Code/Item%20Browser/fonts/Emoji.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal
+}
+
+.emoji:not(.emoji-earth, .emoji-thunder, .emoji-water, .emoji-fire, .emoji-air)::before {
+    font-family: emoji !important;
+    font-style: normal;
+    font-weight: 400;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 1;
+    font-size: 0.8em;
+    -webkit-font-smoothing: antialiased;
+}
+
+.emoji-earth::before {
+    content: "\2724" ' ';
+}
+
+.emoji-thunder::before {
+    content: "\2726" ' ';
+}
+
+.emoji-water::before {
+    content: "\2749" ' ';
+}
+
+.emoji-fire::before {
+    content: "\2739" ' ';
+}
+
+.emoji-air::before {
+    content: "\274B" ' ';
+}
+
+.emoji-checkmark::before {
+    content: "\2714" ' ';
+}
+
+.emoji-heart::before {
+    content: "\2764" ' ';
+}
