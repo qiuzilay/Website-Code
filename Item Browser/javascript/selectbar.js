@@ -27,9 +27,11 @@ $(document).ready(function() {
     class Gadget {
         static unicode(text) {
             if (text.length > 1) {
-                text = Array.from(text).forEach((word) => {
-                    word = `\\u${word.codePointAt(0).toString(16).padStart(4, "0")}`
-                })
+                text = Array.from(text);
+                text.forEach((word, index, array) => {
+                    array[index] = `\\u${word.codePointAt(0).toString(16).padStart(4, "0")}`
+                });
+                text = text.join('');
             }
             else if (text.length == 1) {
                 text = `\\u${text.codePointAt(0).toString(16).padStart(4, "0")}`
@@ -113,9 +115,10 @@ $(document).ready(function() {
 
             selectbar.filters.objects.on('input', function() {
                 const inputext = $(this).val();
+                const regex = RegExp(`${Gadget.unicode(inputext)}`, 'ui');
                 const data = selectbar.filters.database[$(this).parent('div.dropdown-menu').siblings('input.selectbar').attr('name')];
-                const match = $.map(data.options.array, function(optname, index) {
-                    if (RegExp(`\\b${Gadget.unicode(inputext)}`, 'gui').test(optname)) {return optname}
+                const match = data.options.array.filter(function(optname) {
+                    return regex.test(optname);
                 });
 
                 //console.info(data.options.json);

@@ -122,6 +122,10 @@ div.dropdown-menu > ul.select-options li:not(.optgroup) {
     cursor: pointer;
 }
 
+input.selectbar[name|="filter"] + div.dropdown-menu > ul.select-options li:not(.optgroup) {
+    padding-left: inherit;
+}
+
 div.dropdown-menu > ul.select-options li:not(.optgroup):hover,
 div.dropdown-menu > ul.select-options li:not(.optgroup).hover {
     color: #FFFFFF;
