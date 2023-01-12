@@ -5924,7 +5924,7 @@ $(document).ready(function(){
             time.latest = parseDate(latest);
             time.now = new Date();
             
-            if (!( (diffDate(time.latest, time.now) > 30) || !display.changelog )) {
+            if (!( (diffDate(time.latest, time.now) > 14) || !display.changelog )) {
                 LaunchEvent.changelog();
             }
         }
