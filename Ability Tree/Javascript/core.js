@@ -5665,7 +5665,7 @@ $(document).ready(function(){
             //if (!["Archer", "Mage", "Shaman", "Warrior"].includes(id)) {return false}
 
             $.ajax({
-                url: `https://raw.githubusercontent.com/qiuzilay/Website-Code/main/Ability%20Tree/storage/tooltip/${id}/${name}.txt`,
+                url: `https://raw.githubusercontent.com/qiuzilay/Website-Code/main/Ability%20Tree/storage/tooltip/CHI/${id}/${name}.txt`,
                 dataType: "text",
                 success: function(text){
                     text = Tooltip.colorTransform(text);
