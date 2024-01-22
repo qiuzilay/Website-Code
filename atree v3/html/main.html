@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+    <head>
+        <title>Ability Tree</title>
+        <link href="../css/main.css" rel="stylesheet">
+        <link href="../css/images.css" rel="stylesheet">
+        <meta charset="utf-8">
+        <meta name="author" content="Marginalcat0410">
+        <meta name="title" property="og:title" content="Wynncraft Ability Tree">
+        <meta name="description" property="og:description" content="Wynncraft 中文翻譯的技能樹小工具 / Wynncraft Ability Tree gadget with Traditional Chinese translation">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body>
+        <div id="tab">
+            <span id="tab_span">
+                <button class="tab_button" onclick="turnPage(event, 'archer')" data-class="archer">弓箭手</button>
+                <button class="tab_button" onclick="turnPage(event, 'warrior')" data-class="warrior">戰士</button>
+                <button class="tab_button" onclick="turnPage(event, 'mage')" data-class="mage">法師</button>
+                <button class="tab_button" onclick="turnPage(event, 'assassin')" data-class="assassin">刺客</button>
+                <button class="tab_button" onclick="turnPage(event, 'shaman')" data-class="shaman">薩滿</button>
+            </span>
+        </div>
+        <div id="main">
+            <div id="archer" class="page">
+                <div class="frame head"><img alt="ability tree background UI"></div>
+                <div class="frame body">
+                    <div class="container">
+                        <table></table>
+                    </div>
+                </div>
+                <div class="frame foot"><img alt="ability tree background UI"></div>
+            </div>
+            <div id="warrior" class="page">
+                <div class="frame head"><img alt="ability tree background UI"></div>
+                <div class="frame body">
+                    <div class="container">
+                        <table></table>
+                    </div>
+                </div>
+                <div class="frame foot"><img alt="ability tree background UI"></div>
+            </div>
+            <div id="mage" class="page">
+                <div class="frame head"><img alt="ability tree background UI"></div>
+                <div class="frame body">
+                    <div class="container">
+                        <table></table>
+                    </div>
+                </div>
+                <div class="frame foot"><img alt="ability tree background UI"></div>
+            </div>
+            <div id="assassin" class="page">
+                <div class="frame head"><img alt="ability tree background UI"></div>
+                <div class="frame body">
+                    <div class="container">
+                        <table></table>
+                    </div>
+                </div>
+                <div class="frame foot"><img alt="ability tree background UI"></div>
+            </div>
+            <div id="shaman" class="page">
+                <div class="frame head"><img alt="ability tree background UI"></div>
+                <div class="frame body">
+                    <div class="container">
+                        <table></table>
+                    </div>
+                </div>
+                <div class="frame foot"><img alt="ability tree background UI"></div>
+            </div>
+        </div>
+        <script src="../javascript/main.js"></script>
+        <script>
+            'use strict'
+            var page;
+            function turnPage(event, clsname) {
+                page = clsname;
+                const buttons = document.getElementById('tab').getElementsByClassName('tab_button');
+                const pages = document.getElementById('main').getElementsByClassName('page')
+
+                Array.prototype.forEach.call(buttons, (elem) => {elem.classList.remove('active')});
+                Array.prototype.forEach.call(pages, (elem) => {elem.classList.remove('active')});
+                
+                setTimeout(() => {
+                    Array.prototype.forEach.call(pages, (elem) => {
+                        if (elem.id === clsname) {
+                            elem.style.display = 'block';
+                            setTimeout(() => {elem.classList.add('active')}, 500);
+                        } else {
+                            elem.style.display = 'none';
+                        }
+                    })
+                }, 500);
+
+                event.target.classList.add('active');
+                
+            }
+        </script>
+    </body>
+</html>

@@ -1,0 +1,378 @@
+div#main .container img {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: auto;
+    width: 100%;
+    height: 100%;
+    object-position: center;
+    object-fit: contain;
+    image-rendering: pixelated;
+}
+
+/*---------------- nodes ---------------- */
+
+img.button_archer,
+img.button_warrior,
+img.button_mage,
+img.button_assassin,
+img.button_shaman,
+img.button_2,
+img.button_3,
+img.button_4,
+button.lock > img {
+    transform: scale(1.15);
+}
+
+/* -------- archer -------- */
+
+button.enable > img.button_archer {
+    content: url(../resources/images/buttons/button_archer_enable.png);
+}
+
+button.disable > img.button_archer {
+    content: url(../resources/images/buttons/button_archer_disable.png);
+}
+
+button.standby > img.button_archer {
+    content: url(../resources/images/buttons/button_archer_standby.png);
+}
+
+/* -------- warrior -------- */
+
+button.enable > img.button_warrior {
+    content: url(../resources/images/buttons/button_warrior_enable.png);
+}
+
+button.disable > img.button_warrior {
+    content: url(../resources/images/buttons/button_warrior_disable.png);
+}
+
+button.standby > img.button_warrior {
+    content: url(../resources/images/buttons/button_warrior_standby.png);
+}
+
+/* -------- mage -------- */
+
+button.enable > img.button_mage {
+    content: url(../resources/images/buttons/button_mage_enable.png);
+}
+
+button.disable > img.button_mage {
+    content: url(../resources/images/buttons/button_mage_disable.png);
+}
+
+button.standby > img.button_mage {
+    content: url(../resources/images/buttons/button_mage_standby.png);
+}
+
+/* -------- assassin -------- */
+
+button.enable > img.button_assassin {
+    content: url(../resources/images/buttons/button_assassin_enable.png);
+}
+
+button.disable > img.button_assassin {
+    content: url(../resources/images/buttons/button_assassin_disable.png);
+}
+
+button.standby > img.button_assassin {
+    content: url(../resources/images/buttons/button_assassin_standby.png);
+}
+
+/* -------- shaman -------- */
+
+button.enable > img.button_shaman {
+    content: url(../resources/images/buttons/button_shaman_enable.png);
+}
+
+button.disable > img.button_shaman {
+    content: url(../resources/images/buttons/button_shaman_disable.png);
+}
+
+button.standby > img.button_shaman {
+    content: url(../resources/images/buttons/button_shaman_standby.png);
+}
+
+/* -------- button_1 -------- */
+
+button.enable > img.button_1 {
+    content: url(../resources/images/buttons/button_1_enable.png);
+}
+
+button.disable > img.button_1 {
+    content: url(../resources/images/buttons/button_1_disable.png);
+}
+
+button.standby > img.button_1 {
+    content: url(../resources/images/buttons/button_1_standby.png);
+}
+
+button.lock > img.button_1 {
+    content: url(../resources/images/buttons/button_1_lock.png);
+}
+
+/* -------- button_2 -------- */
+
+button.enable > img.button_2 {
+    content: url(../resources/images/buttons/button_2_enable.png);
+}
+
+button.disable > img.button_2 {
+    content: url(../resources/images/buttons/button_2_disable.png);
+}
+
+button.standby > img.button_2 {
+    content: url(../resources/images/buttons/button_2_standby.png);
+}
+
+button.lock > img.button_2 {
+    content: url(../resources/images/buttons/button_2_lock.png);
+}
+
+/* -------- button_3 -------- */
+
+button.enable > img.button_3 {
+    content: url(../resources/images/buttons/button_3_enable.png);
+}
+
+button.disable > img.button_3 {
+    content: url(../resources/images/buttons/button_3_disable.png);
+}
+
+button.standby > img.button_3 {
+    content: url(../resources/images/buttons/button_3_standby.png);
+}
+
+button.lock > img.button_3 {
+    content: url(../resources/images/buttons/button_3_lock.png);
+}
+
+/* -------- button_4 -------- */
+
+button.enable > img.button_4 {
+    content: url(../resources/images/buttons/button_4_enable.png);
+}
+
+button.disable > img.button_4 {
+    content: url(../resources/images/buttons/button_4_disable.png);
+}
+
+button.standby > img.button_4 {
+    content: url(../resources/images/buttons/button_4_standby.png);
+}
+
+button.lock > img.button_4 {
+    content: url(../resources/images/buttons/button_4_lock.png);
+}
+
+
+/*---------------- archetypes ---------------- */
+
+img.archetype {
+    width: 100%;
+    transform: scale(1.2);
+}
+
+/* -------- archetype -------- */
+
+img.archetype.blue {
+    content: url(../resources/images/archetypes/icon-archetype-blue.png);
+}
+
+img.archetype.white {
+    content: url(../resources/images/archetypes/icon-archetype-white.png);
+}
+
+img.archetype.yellow {
+    content: url(../resources/images/archetypes/icon-archetype-yellow.png);
+}
+
+img.archetype.purple {
+    content: url(../resources/images/archetypes/icon-archetype-purple.png);
+}
+
+img.archetype.green {
+    content: url(../resources/images/archetypes/icon-archetype-green.png);
+}
+
+img.archetype.orange {
+    content: url(../resources/images/archetypes/icon-archetype-orange.png);
+}
+
+img.archetype.red {
+    content: url(../resources/images/archetypes/icon-archetype-red.png);
+}
+
+
+
+/*---------------- branches ---------------- */
+
+img.br_NS,
+img.br_EW {
+    z-index: -1;
+}
+
+/* -------- 2 Gates -------- */
+
+/* ---- NS ---- */
+
+img.br_NS {
+    content: url(../resources/images/branches/br_NS.png);
+}
+
+img.br_NS.NS {
+    content: url(../resources/images/branches/br_NS_NS.png);
+}
+
+/* ---- EW ---- */
+
+img.br_EW {
+    content: url(../resources/images/branches/br_EW.png);
+}
+
+img.br_EW.EW {
+    content: url(../resources/images/branches/br_EW_EW.png);
+}
+
+/* ---- SE ---- */
+
+img.br_SE {
+    content: url(../resources/images/branches/br_SE.png);
+}
+
+img.br_SE.SE {
+    content: url(../resources/images/branches/br_SE_SE.png);
+}
+
+/* ---- SW ---- */
+
+img.br_SW {
+    content: url(../resources/images/branches/br_SW.png);
+}
+
+img.br_SW.SW {
+    content: url(../resources/images/branches/br_SW_SW.png);
+}
+
+/* -------- 3 Gates -------- */
+
+/* ---- NSE ---- */
+
+img.br_NSE {
+    content: url(../resources/images/branches/br_NSE.png);
+}
+
+img.br_NSE.NS {
+    content: url(../resources/images/branches/br_NSE_NS.png);
+}
+
+img.br_NSE.NE {
+    content: url(../resources/images/branches/br_NSE_NE.png);
+}
+
+img.br_NSE.SE {
+    content: url(../resources/images/branches/br_NSE_SE.png);
+}
+
+img.br_NSE.NSE {
+    content: url(../resources/images/branches/br_NSE_NSE.png);
+}
+
+/* ---- NSW ---- */
+
+img.br_NSW {
+    content: url(../resources/images/branches/br_NSW.png);
+}
+
+img.br_NSW.NS {
+    content: url(../resources/images/branches/br_NSW_NS.png);
+}
+
+img.br_NSW.NW {
+    content: url(../resources/images/branches/br_NSW_NW.png);
+}
+
+img.br_NSW.SW {
+    content: url(../resources/images/branches/br_NSW_SW.png);
+}
+
+img.br_NSW.NSW {
+    content: url(../resources/images/branches/br_NSW_NSW.png);
+}
+
+/* ---- SEW ---- */
+
+img.br_SEW {
+    content: url(../resources/images/branches/br_SEW.png);
+}
+
+img.br_SEW.SE {
+    content: url(../resources/images/branches/br_SEW_SE.png);
+}
+
+img.br_SEW.SW {
+    content: url(../resources/images/branches/br_SEW_SW.png);
+}
+
+img.br_SEW.EW {
+    content: url(../resources/images/branches/br_SEW_EW.png);
+}
+
+img.br_SEW.SEW {
+    content: url(../resources/images/branches/br_SEW_SEW.png);
+}
+
+/* -------- 4 Gates -------- */
+
+/* ---- NSEW ---- */
+
+img.br_NSEW {
+    content: url(../resources/images/branches/br_NSEW.png);
+}
+
+img.br_NSEW.NS {
+    content: url(../resources/images/branches/br_NSEW_NS.png);
+}
+
+img.br_NSEW.NE {
+    content: url(../resources/images/branches/br_NSEW_NE.png);
+}
+
+img.br_NSEW.NW {
+    content: url(../resources/images/branches/br_NSEW_NW.png);
+}
+
+img.br_NSEW.SE {
+    content: url(../resources/images/branches/br_NSEW_SE.png);
+}
+
+img.br_NSEW.SW {
+    content: url(../resources/images/branches/br_NSEW_SW.png);
+}
+
+img.br_NSEW.EW {
+    content: url(../resources/images/branches/br_NSEW_EW.png);
+}
+
+img.br_NSEW.NSE {
+    content: url(../resources/images/branches/br_NSEW_NSE.png);
+}
+
+img.br_NSEW.NSW {
+    content: url(../resources/images/branches/br_NSEW_NSW.png);
+}
+
+img.br_NSEW.NEW {
+    content: url(../resources/images/branches/br_NSEW_NEW.png);
+}
+
+img.br_NSEW.SEW {
+    content: url(../resources/images/branches/br_NSEW_SEW.png);
+}
+
+img.br_NSEW.NSEW {
+    content: url(../resources/images/branches/br_NSEW_NSEW.png);
+}

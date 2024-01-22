@@ -1,0 +1,199 @@
+body {
+    overflow-x: hidden;
+    -webkit-touch-callout: none !important;
+}
+
+@font-face {
+    font-family: wynn;
+    src: url(../resources/fonts/wynn.ttf) format('truetype');
+}
+
+
+/* -------- tab -------- */
+
+div#tab {
+    overflow: hidden;
+    border: none;
+    border-radius: 1.5em;
+    background-color: #323232;
+    color: #FFFFFF;
+    font-family: Roboto;
+    font-weight: bold;
+    font-size: medium;
+    text-align: center;
+}
+
+div#tab #tab_span {
+    display: flex;
+    width: 100%;
+    background-color: #323232;
+    justify-content: center;
+}
+
+div#tab #tab_span button {
+    display: inline-block;
+    padding: 14px 16px;
+    margin: 0px;
+    border: none;
+    outline: none;
+    background-color: inherit;
+    color: inherit;
+    font-family: inherit;
+    font-weight: inherit;
+    font-size: inherit;
+    text-align: inherit;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+div#tab #tab_span button:hover {
+    background-color: dimgray;
+}
+
+div#tab #tab_span button.active {
+    background-color: gray;
+}
+
+
+/* ------- main ------- */
+
+div#main {
+    padding-top: 1em;
+    font-family: Roboto;
+    font-size: large;
+    font-weight: normal;
+    font-style: normal;
+    text-align: center;
+    image-rendering: pixelated;
+}
+
+div#main .page {
+    display: none;
+    border: none;
+    opacity: 0;
+    transition: all 0.5s;
+}
+
+div#main .page.active {
+    opacity: 1;
+}
+
+
+/* ------- main.page.frame ------- */
+
+div#main .frame {
+    margin: 0;
+    position: relative;
+    background-size: 100% 100%;
+    background-attachment: local;
+    background-repeat: initial;
+    image-rendering: inherit;
+}
+
+div#main .frame.head {
+    background-image: url(../resources/images/misc/main-background-upper.png);
+}
+
+div#main .frame.body {
+    background-image: url(../resources/images/misc/main-background-body.png);
+    background-size: 100%;
+    background-repeat: repeat-y;
+}
+
+div#main .frame.foot {
+    background-image: url(../resources/images/misc/main-background-lower.png);
+}
+
+
+/* ------- main.page.frame.img ------- */
+
+div#main .frame > img {
+    min-width: 100%;
+    visibility: hidden;
+    image-rendering: inherit;
+}
+
+div#main .frame.head > img {
+    content: url(../resources/images/misc/main-background-upper.png);
+}
+
+div#main .frame.body > img {
+    content: url(../resources/images/misc/main-background-body.png);
+}
+
+div#main .frame.foot > img {
+    content: url(../resources/images/misc/main-background-lower.png);
+}
+
+/* ------- main.page.frame.container ------- */
+
+div#main .container table,
+div#main .container tbody,
+div#main .container tr,
+div#main .container td {
+    position: relative;
+    padding: 0;
+    border: none;
+    user-select: none;
+    -ms-user-select: none;
+    -webkit-user-select: none;
+}
+
+div#main .container table {
+    display: table;
+    position: relative;
+    width: 87.5%;
+    margin: 0 auto;
+    text-align: center;
+    border-collapse: collapse;
+}
+
+div#main .container tr {
+    display: table-row;
+}
+
+div#main .container td {
+    display: table-cell;
+}
+
+div#main .container td:has(button):hover::before {
+    content: "";
+    display: block;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: white;
+    opacity: 0.5;
+    z-index: 100;
+}
+
+div#main .container td::after {
+    content: "";
+    display: block;
+    padding-bottom: 100%;
+}
+
+div#main .container button {
+    display: block;
+    position: absolute;
+    border: none;
+    width: 100%;
+    height: 100%;
+    background-color: transparent;
+    z-index: 99;
+    left: 0;
+    top: 0;
+}
+
+div#main .container button > img {
+    image-rendering: inherit;
+    object-fit: contain;
+    object-position: center;
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    margin: 0;
+    width: 100%;
+    height: 100%;
+}
