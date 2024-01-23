@@ -11,22 +11,23 @@ function main() {
 class Packet {
     /**
      * @typedef  {("N" | "S" | "E" | "W")}  direction
-     * @typedef  {('normal' | 'boardcast' | 'ACK')} modes
-     * @typedef  {(NODE | BRANCH)}      unit
-     * @typedef  {Object}               params
-     * @property {string}               task    Command
-     * @property {NODE}                 send    Sender Name
-     * @property {NODE}                 recv    Destination
-     * @property {modes}                mode    Transmit mode
-     * @property {unit}                 router  Transmitter
-     * @property {direction}            via     Pass by the gate
-     * @property {Object}               data    Attachment
-     * @property {Iterable<String>}     ignore  Ignore List
-     * @property {number}               ttl     Time To Live
+     * @typedef  {('normal' | 'traceback')} modes
+     * @typedef  {(NODE | BRANCH)}  unit        
+     * @typedef  {Object}           params      
+     * @property {string}           task        Command
+     * @property {NODE}             send        Sender Name
+     * @property {NODE}             recv        Destination
+     * @property {modes}            mode        Transmit mode
+     * @property {unit}             router      Transmitter
+     * @property {direction}        via         Pass by the gate
+     * @property {Object}           data        Attachment
+     * @property {String[]}         ignores     Ignore List
+     * @property {String}           ignore      Ignore
+     * @property {number}           ttl         Time To Live
      * 
      * @param {params}
      */
-    constructor({task, send, recv=null, mode, router, via, data=null, ignore, ttl=-1}) {
+    constructor({task, send, recv=null, mode='normal', router, via, data=null, ignores, ttl=-1}) {
         /**
          * @typedef    {Object}         header
          * @property   {NODE}           send
@@ -50,7 +51,7 @@ class Packet {
             send: send,
             recv: recv,
             mode: mode,
-            __ignore: new Set(ignore),
+            __ignore: new Set(ignores),
             get ignore() {return Array.from(this.__ignore)},
             set ignore(iter) {this.__ignore = new Set(iter)}
         };
@@ -67,12 +68,25 @@ class Packet {
         }
     }
 
+    /** @returns {params} */
+    get params() {return {
+        task: this.payload.task,
+        send: this.header.send,
+        recv: this.header.recv,
+        mode: this.header.mode,
+        router: this.footer.router,
+        via: this.footer.via,
+        data: this.payload.data,
+        ignores: this.header.ignore,
+        ttl: this.footer.ttl
+    }}
+
     /** @param {params} */
     config({task, send, recv, mode, router, via, data, ignore, ttl}) {
         if (send !== undefined) {this.header.send = send}
         if (recv !== undefined) {this.header.recv = recv}
         if (mode !== undefined) {this.header.mode = mode}
-        if (ignore !== undefined) {this.header.ignore = ignore}
+        if (ignore !== undefined) {this.header.__ignore.add(ignore)}
         if (task !== undefined) {this.payload.task = task}
         if (data !== undefined) {this.payload.data = data}
         if (router !== undefined) {this.footer.router = router}
@@ -188,6 +202,16 @@ class NODE extends UNIT{
     /** @returns {Gate[]} */
     get exportGates() {return this.gateway.filter((gate) => gate.connect.some((node) => this.proto.export?.includes(node.name)))}
 
+    /** @returns {NODE[]} */
+    get family() {return unique(this.gateway.flatMap((gate) => gate.connect))}
+
+    /** @returns {NODE[]} */
+    get importNodes() {return this.family.filter((node) => this.proto.import?.includes(node.name))}
+
+    /** @returns {NODE[]} */
+    get exportNodes() {return this.family.filter((node) => this.proto.export?.includes(node.name))}
+
+
     #__buildpath__() {
 
         this.proto.draft.forEach((path) => {
@@ -220,7 +244,8 @@ class NODE extends UNIT{
         const states = ['enable', 'disable', 'standby', 'lock'];
         if (state !== undefined) {this.state = state}
         if (!states.includes(this.state)) {throw Error(`invalid state of Node was detected at <${this.proto.name}>`)}
-        for (const _ of states) {(_ == this.state) ? this.html.classList.add(_) : this.html.classList.remove(_)}
+        states.forEach((state) => {(state === this.state) ? this.html.classList.add(state) : this.html.classList.remove(state)});
+        return this.state;
     }
     
     click() {
@@ -229,42 +254,22 @@ class NODE extends UNIT{
             case 'disable': break;
             case 'enable':
                 this.set('standby');
-                this.gateway.forEach((gate) => {
-                    console.groupCollapsed(`<${this.name}> [${this.state}] start a routing.`);
-
-                    const packet = new Packet({
+                this.#transmitter({
+                    gates: this.gateway,
+                    packet: new Packet({
                         task: 'standby',
-                        send: this.name,
-                        mode: 'normal',
-                        router: this,
-                        via: opposite(gate.pos),
-                        ignore: [this.name]
-                    });
-                    console.info(`<${this.name}> send a packet!`, readpacket(packet));
-                    gate.connect_with.transmit(packet);
-
-                    console.info(`routing end.`);
-                    console.groupEnd();
+                        send: this.name
+                    })
                 });
                 break;
             case 'standby':
                 this.set('enable');
-                this.gateway.forEach((gate) => {
-                    console.groupCollapsed(`<${this.name}> [${this.state}] start a routing.`);
-
-                    const packet = new Packet({
+                this.#transmitter({
+                    gates: this.gateway,
+                    packet: new Packet({
                         task: 'enable',
-                        send: this.name,
-                        mode: 'normal',
-                        router: this,
-                        via: opposite(gate.pos),
-                        ignore: [this.name]
-                    });
-                    console.info(`<${this.name}> send a packet!`, readpacket(packet));
-                    gate.connect_with.transmit(packet);
-
-                    console.info(`routing end.`)
-                    console.groupEnd();
+                        send: this.name
+                    })
                 });
                 break;
             default: throw Error(`invalid state of Node was detected at <${this.proto.name}>`);
@@ -272,162 +277,138 @@ class NODE extends UNIT{
     }
 
     /**
-     * @param {Packet} packet Fan is gay
-     */
+     * @typedef {object}    host
+     * @property {Gate[]}   gates
+     * @property {Packet}   packet
+     * @property {boolean}  interrupt
+     * @param {host}
+     * @returns {boolean | null}
+     **/
+    #transmitter({gates, packet, interrupt=false}) {
+
+        /** @param {Gate} gate */
+        const host = (gate) => {
+            if (gate.connect.every((node) => packet.header.ignore.includes(node.name))) {return null}
+            const subpack = new Packet(packet.params).config({
+                router: this,
+                via: opposite(gate.pos),
+                ignore: this.name
+            });
+            console.groupCollapsed(`<${this.name}> [${this.state}] (Gate ${gate.pos}) Send a packet!`);
+            console.info(`packet:`, readpacket(subpack));
+            const bin = gate.connect_with.transmit(subpack);
+            console.groupEnd();
+            console.info(`<${this.name}> [${this.state}] (Gate ${gate.pos}) response: ${bin}`);
+            return bin;
+        }
+
+        const ID = globalID++;
+        console.groupCollapsed(`<${this.name}> [${this.state}] Route ${ID} start.`, `(task: '${packet.payload.task}')`);
+        const bin = interrupt ? gates.some(host) : gates.map(host).some((_) => _);
+
+        console.groupEnd();
+        console.info(`<${this.name}> [${this.state}] Route ${ID} end. final: ${bin}`);
+        return bin;
+    }
+
+    /** @param {Packet} packet @returns {(boolean | null)} */
     transmit(packet) {
         console.info(`<${this.name}> [${this.state}] received packet.`, readpacket(packet));
-        let retval;
-        const sender = packet.header.send;
-        const receiver = packet.header.recv;
+        const router = packet.footer.router;
+        const from_parent = this.proto.import?.includes(router.name) ?? false;
+        const from_children = this.proto.export?.includes(router.name) ?? false;
+        const relative = (from_parent || from_children);
+        
+        const bin = relative ? this.#manager(packet) : null;
+        
+        return bin;
+    }
+
+    /** @param {Packet} packet @returns {(boolean | null)} */
+    #manager(packet) {
         const task = packet.payload.task;
-        const fromParent = this.proto.import?.includes(sender) ?? false
-        const fromChildren = this.proto.export?.includes(sender) ?? false
+        console.groupCollapsed(`<${this.name}> [${this.state}] start handling the task '${task}'.`);
+        let bin = null;
         switch (task) {
-            case 'enable': {
-                if (fromParent) {
-                    switch (this.state) {
-                        case 'disable': this.set('standby'); break;
-                        case 'standby': break;                        
-                        case 'enable': break;
-                        case 'lock': break;
-                    }
-
-                } else if (fromChildren) {
-                    /* do nothing */
-
-                } else {
-                    console.info(`unexpected packet received.`, this, readpacket(packet));
-                }
-                
-                break;
-
-            }
-
             case 'disable':
             case 'standby': {
-
-                if (fromParent) {
-                    switch (this.state) {
-                        case 'disable': break;
-                        case 'standby':
-                        case 'enable':
-                            let fetch = false;
-                            for (const gate of this.importGates) {
-                                
-                                console.groupCollapsed(`<${this.name}> [${this.state}] start a reachable-inspect routing.`);
-                                const subpack = new Packet({
-                                    task: 'reachable?',
-                                    send: this.name,
-                                    mode: 'normal',
-                                    router: this,
-                                    via: opposite(gate.pos),
-                                    ignore: [this.name, sender],
-                                    ttl: 1
-                                });
-                                console.info(`<${this.name}> [${this.state}] send a packet for reachable-inspect!`, readpacket(subpack));
-                                fetch = gate.connect_with.transmit(subpack);
-                                console.info(`route end. fetch: ${fetch}`);
-                                console.groupEnd();
-                                if (fetch) {break}
-                                
-                            };
-
-                            if (!fetch) {this.set('disable')}
-                            this.exportGates.forEach((gate) => {
-                                console.groupCollapsed(`<${this.name}> [${this.state}] start a sub-routing.`);
-                                const subpack = new Packet({
-                                    task: this.state,
-                                    send: this.name,
-                                    recv: null,
-                                    mode: 'normal',
-                                    router: this,
-                                    via: opposite(gate.pos),
-                                    ignore: packet.header.ignore.concat([this.name])
-                                });
-                                console.info(`<${this.name}> send a subpack!`, readpacket(subpack));
-                                gate.connect_with.transmit(subpack);
-                                console.info(`sub-routing end.`);
-                                console.groupEnd();
-                            })
-
-                            break;
-
-                        case 'lock': break;
+                switch (this.state) {
+                    case 'lock': break;
+                    case 'disable': break;
+                    case 'standby':
+                    case 'enable': {
+                        const connecting = this.importNodes.filter((node) => !packet.header.ignore.includes(node.name)).some((node) => node.state === 'enable');
+                        console.info('connecting:', connecting);
+                        if (connecting || !this.proto.import) {
+                            bin = this.proto.import ? this.#transmitter({
+                                gates: this.importGates,
+                                packet: packet.config({task: 'reachable?', mode: 'traceback'})
+                            }) : true;
+                            if (!bin) {this.set('disable')}
+                        } else {
+                            this.set('disable');
+                            bin = this.proto.export ? this.#transmitter({
+                                gates: this.exportGates,
+                                packet: packet.config({task: 'disable'})
+                            }): null;
+                        }
+                        break;
                     }
-
-
-                } else if (fromChildren) {
-                    /* do nothing */
-
-                } else {
-                    console.info(`unexpected packet received.`, this, packet);
-
                 }
-
                 break;
-
+            }
+            case 'enable': {
+                switch (this.state) {
+                    case 'lock': break;
+                    case 'disable': {
+                        this.set('standby');
+                        break;
+                    }
+                    case 'standby': break;
+                    case 'enable': break;
+                }
+                break;
             }
             case 'reachable?': {
-
-                if (fromParent || fromChildren) {
-                    switch (this.state) {
-                        case 'lock': break;
-                        case 'disable': break;
-                        case 'enable':
-                        case 'standby':
-                            retval = (
-                                this.importGates.flatMap((gate) => gate.connect)
-                                                .filter((node) => !packet.header.ignore.includes(node.name))
-                                                .some((node) => node.state === 'enable')
-                            );
-
-                            if ((!--packet.footer.ttl) || retval) {return retval}
-
-                            for (const gate of this.importGates) {
-                                console.groupCollapsed(`<${this.name}> [${this.state}] start a sub-reachable-inspect routing.`);
-                                packet.config({send: this, router: this, via: opposite(gate.pos), ignore: packet.header.ignore.concat([this.name])})
-                                console.info(`<${this.name}> [${this.state}] send packet to keep reachable-inspect working!`, readpacket(packet));
-                                
-                                retval = gate.connect_with.transmit(packet);
-                                
-                                console.info(`route end. fetch: ${retval}`);
-                                console.groupEnd();
-
-                                if (retval) {break};
-                            }
-                            
-                            break;
+                bin = false;
+                switch (this.state) {
+                    case 'lock': break;
+                    case 'disable': break;
+                    case 'standby': break;
+                    case 'enable': {
+                        bin = this.proto.import ? this.#transmitter({
+                            gates: this.importGates,
+                            packet: packet,
+                            interrupt: true
+                        }) : true;
+                        if (!bin) {this.set('disable')}
+                        break;
                     }
-
-                } else {
-                    console.info(`unexpected packet received.`, this, packet);
-
                 }
-                console.info(`<${this.name}> return ${retval}!`);
-
+                break;
+            }
+            case 'sideroad?': {
+                bin = false;
+                switch (this.state) {
+                    case 'lock': break;
+                    case 'disable': break;
+                    case 'standby':
+                    case 'enable': {
+                        bin = this.proto.export ? this.#transmitter({
+                            gates: this.importGates,
+                            packet: packet
+                        }) : true;
+                        if (!bin) {this.set('disable')}
+                        break;
+                    }
+                }
             }
         }
-        console.info(`<${this.name}> state: '${this.state}'`);
 
-        return retval;
-        /*} else {
-            const buffer = [];
-            this.gateway.forEach((gate) => {
-                if (gate.connect.map((node) => node.name).includes(packet.header.recv)) {
-                    buffer.length = 0
-                    packet.config({router: this, via: opposite(gate.pos)});
-                    console.info(`<${this.name}> send packet.`, readpacket(packet));
-                    gate.connect_with.transmit(packet);
-                }
-                buffer.push([gate, {via: opposite(gate.pos)}]);
-            });
-            
-            for (const [gate, args] of buffer) {
-                packet.config({router: this, via: opposite(gate.pos)});
-                console.info(`<${this.name}> send packet.`, readpacket(packet));
-                gate.connect_with.transmit(packet);
-            }
-        }*/
+        
+        console.groupEnd();
+        console.info(`<${this.name}> [${this.state}] task '${task}' was over.`, `return: ${bin}`);
+        return bin;
     }
 
 }
@@ -462,29 +443,31 @@ class BRANCH extends UNIT {
         this.base.className = base;
     }
 
-    /**
-     * @param {Packet} packet 
-     */
+    /** @param {Packet} packet @returns {(boolean | null)} */
     transmit(packet) {
-        const fetch = [];
-        const input_gate = packet.footer.via;
-        console.info(`branch[${this.axis}](Gate ${input_gate}) received packet.`);
+        const input = packet.footer.via;
+        console.info(`branch[${this.axis}](Gate ${input}) received packet.`);
 
-        this.gateway.forEach((gate) => {
-            if (input_gate == gate.pos) {return};
-            if ((gate.connect.length === 1) && (packet.header.ignore.includes(gate.connect.at(0).name))) {
-                console.info(`Gate '${gate.pos}' blocked this packet depends on ignore list.`)
-                return;
+        const bin = bool(this.gateway.filter((gate) => gate.pos !== input).map((gate) => {
+
+            if (gate.connect.every((node) => packet.header.ignore.includes(node.name))) {
+                console.info(`branch[${this.axis}](Gate ${gate.pos}) blocked the packet.`);
+                return null;
+            } else {
+                console.groupCollapsed(`branch[${this.axis}](Gate ${gate.pos}) send packet.`);
+                const bin = gate.connect_with.transmit(
+                    packet.config({via: opposite(gate.pos)})
+                );
+                console.groupEnd();
+                console.info(`branch[${this.axis}](Gate ${gate.pos}) got: ${bin}`);
+                return bin;
             }
 
-            packet.config({router: this, via: opposite(gate.pos)});
+        }));
 
-            console.info(`branch[${this.axis}](Gate ${gate.pos}) send packet.`);
-            fetch.push(gate.connect_with.transmit(packet));
-
-        });
         this.#update();
-        return fetch.some((_) => _);
+        console.info(`branch[${this.axis}](Gate ${input}) return: ${bin}`);
+        return bin;
     }
 
 }
@@ -576,6 +559,29 @@ function is_defined(...obj) {
     return obj.every((_) => _ !== undefined);
 }
 
+/** 
+ * @typedef {(boolean | null)}  bool
+ * @param {Array<bool>} arr
+ * @returns {bool}
+ **/
+function bool(arr) {
+    let bin = null;
+    for (const elem of arr) {
+        switch (elem) {
+            case true: bin = true; break;
+            case false: bin = false; break;
+            case null: continue;
+        }
+        if (bin) {break}
+    }
+    return bin;
+}
+
+/** @param {Array} arr @returns {Array}  */
+function unique(arr) {
+    return Array.from(new Set(arr));
+}
+
 function NSEW(arg1, arg2) {
     const seq = {'N': 0, 'S': 1, 'E': 2, 'W': 3};
     [arg1, arg2] = [seq[arg1], seq[arg2]]
@@ -597,6 +603,7 @@ function newline(column, delcount, value) {
     is_defined(column, delcount, value) ? line.splice(column, delcount, value) : undefined;
     return line;
 }
+
 /** @param {Packet} packet  */
 function readpacket(packet) {
     function string(text) {return ((text === null)||(text === undefined)) ? text : `'${text}'`}
@@ -634,6 +641,7 @@ function generateElement(stringHTML) {
     return fragment;
 }
 
+var globalID = 0;
 const $ = (selector) => document.querySelectorAll(selector)
 const str = JSON.stringify
 const routemap = {"archer": [], "warrior": [], "mage": [], "assassin": [], "shaman": []};
