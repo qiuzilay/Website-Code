@@ -5,6 +5,9 @@ function main() {
     document.addEventListener('DOMContentLoaded', () => {
         EventHandler.renderTree();
         EventHandler.register();
+
+        console.info('routemap:', routemap);
+        console.info('routelogs:', routelogs);
     });
 }
 
@@ -24,10 +27,11 @@ class Packet {
      * @property {String[]}         ignores     Ignore List
      * @property {String}           ignore      Ignore
      * @property {number}           ttl         Time To Live
+     * @property {number}           gid         Main-Route ID
      * 
      * @param {params}
      */
-    constructor({task, send, recv=null, mode='normal', router, via, data=null, ignores, ttl=-1}) {
+    constructor({task, send, recv=null, mode='normal', router, via, data=null, ignores, ttl=-1, gid=globalID}) {
         /**
          * @typedef    {Object}         header
          * @property   {NODE}           send
@@ -44,6 +48,7 @@ class Packet {
          * @property   {unit}       router
          * @property   {direction}  via
          * @property   {number}     ttl
+         * @property   {number}     gid
          */
         
         /** @type {header} */
@@ -64,7 +69,8 @@ class Packet {
         this.footer = {
             router: router,
             via: via,
-            ttl: ttl
+            ttl: ttl,
+            gid: gid
         }
     }
 
@@ -78,11 +84,12 @@ class Packet {
         via: this.footer.via,
         data: this.payload.data,
         ignores: this.header.ignore,
-        ttl: this.footer.ttl
+        ttl: this.footer.ttl,
+        gid: this.footer.gid
     }}
 
     /** @param {params} */
-    config({task, send, recv, mode, router, via, data, ignore, ttl}) {
+    config({task, send, recv, mode, router, via, data, ignore, ttl, gid}) {
         if (send !== undefined) {this.header.send = send}
         if (recv !== undefined) {this.header.recv = recv}
         if (mode !== undefined) {this.header.mode = mode}
@@ -92,6 +99,7 @@ class Packet {
         if (router !== undefined) {this.footer.router = router}
         if (via !== undefined) {this.footer.via = via}
         if (ttl !== undefined) {this.footer.ttl = ttl}
+        if (gid !== undefined) {this.footer.gid = gid}
         return this;
     }
 }
@@ -115,10 +123,10 @@ class UNIT {
     constructor(axis) {
         this.axis = axis;
         this.gates = {
-            N: new Gate('N'),
-            S: new Gate('S'),
+            W: new Gate('W'),
             E: new Gate('E'),
-            W: new Gate('W')
+            S: new Gate('S'),
+            N: new Gate('N')
         };
     }
 
@@ -258,7 +266,8 @@ class NODE extends UNIT{
                     gates: this.gateway,
                     packet: new Packet({
                         task: 'standby',
-                        send: this.name
+                        send: this.name,
+                        gid: globalID++
                     })
                 });
                 break;
@@ -268,7 +277,8 @@ class NODE extends UNIT{
                     gates: this.gateway,
                     packet: new Packet({
                         task: 'enable',
-                        send: this.name
+                        send: this.name,
+                        gid: globalID++
                     })
                 });
                 break;
@@ -281,14 +291,18 @@ class NODE extends UNIT{
      * @property {Gate[]}   gates
      * @property {Packet}   packet
      * @property {boolean}  interrupt
+     * @property {any}      base        Default return if result collector is empty.
      * @param {host}
      * @returns {boolean | null}
      **/
-    #transmitter({gates, packet, interrupt=false}) {
+    #transmitter({gates, packet, interrupt=false, base=null}) {
+        
+        const collector = [];
 
         /** @param {Gate} gate */
         const host = (gate) => {
             if (gate.connect.every((node) => packet.header.ignore.includes(node.name))) {return null}
+            
             const subpack = new Packet(packet.params).config({
                 router: this,
                 via: opposite(gate.pos),
@@ -299,15 +313,21 @@ class NODE extends UNIT{
             const bin = gate.connect_with.transmit(subpack);
             console.groupEnd();
             console.info(`<${this.name}> [${this.state}] (Gate ${gate.pos}) response: ${bin}`);
+
+            collector.push(bin);
             return bin;
         }
 
-        const ID = globalID++;
-        console.groupCollapsed(`<${this.name}> [${this.state}] Route ${ID} start.`, `(task: '${packet.payload.task}')`);
-        const bin = interrupt ? gates.some(host) : gates.map(host).some((_) => _);
+        const GID = packet.footer.gid;
+        routelogs[GID] ??= {serial: 0, 'reachable?': {}};
+        const SID = routelogs[GID].serial++;
+        console.groupCollapsed(`<${this.name}> [${this.state}] Route ${GID}:${SID} start.`, `(task: '${packet.payload.task}')`);
+        
+        const bin = (interrupt ? gates.some(host) : gates.map(host).some((_) => _)) ? true : bool(collector, {base: base});
 
         console.groupEnd();
-        console.info(`<${this.name}> [${this.state}] Route ${ID} end. final: ${bin}`);
+        console.info(`<${this.name}> [${this.state}] Route ${GID}:${SID} end. final: ${bin}, collector: ${str(collector)}`);
+        if (!SID) {delete routelogs[GID]};
         return bin;
     }
 
@@ -326,9 +346,11 @@ class NODE extends UNIT{
 
     /** @param {Packet} packet @returns {(boolean | null)} */
     #manager(packet) {
-        const task = packet.payload.task;
-        console.groupCollapsed(`<${this.name}> [${this.state}] start handling the task '${task}'.`);
         let bin = null;
+        const task = packet.payload.task;
+        const send = packet.header.send;
+        const recv = packet.header.recv;
+        console.groupCollapsed(`<${this.name}> [${this.state}] start handling the task '${task}'.`);
         switch (task) {
             case 'disable':
             case 'standby': {
@@ -340,18 +362,37 @@ class NODE extends UNIT{
                         const connecting = this.importNodes.filter((node) => !packet.header.ignore.includes(node.name)).some((node) => node.state === 'enable');
                         console.info('connecting:', connecting);
                         if (connecting || !this.proto.import) {
-                            bin = this.proto.import ? this.#transmitter({
-                                gates: this.importGates,
-                                packet: packet.config({task: 'reachable?', mode: 'traceback'})
-                            }) : true;
-                            if (!bin) {this.set('disable')}
-                        } else {
-                            this.set('disable');
-                            bin = this.proto.export ? this.#transmitter({
-                                gates: this.exportGates,
-                                packet: packet.config({task: 'disable'})
-                            }): null;
+                            const reachable = routelogs.query({
+                                gid: packet.footer.gid,
+                                task: 'reachable?',
+                                nodeName: this.name
+                            }) ?? routelogs.write({
+                                gid: packet.footer.gid,
+                                task: 'reachable?',
+                                nodeName: this.name,
+                                value: (
+                                    this.importGates.length ?
+                                    this.#transmitter({
+                                        gates: this.importGates,
+                                        packet: new Packet({
+                                            task: 'reachable?',
+                                            send: this.name,
+                                            mode: 'traceback',
+                                            ignores: Array.from(this.proto.export).filter((name) => !this.proto.import?.includes(name)),
+                                            gid: packet.footer.gid
+                                        })
+                                    }) : true
+                                )
+                            });
+                            if (reachable) {break};
                         }
+
+                        this.set('disable');
+                        bin = this.exportGates.length ? this.#transmitter({
+                            gates: this.exportGates,
+                            packet: packet.config({task: 'disable'})
+                        }): null;
+
                         break;
                     }
                 }
@@ -361,7 +402,11 @@ class NODE extends UNIT{
                 switch (this.state) {
                     case 'lock': break;
                     case 'disable': {
-                        this.set('standby');
+                        if (this.proto.import?.includes(send)) {
+                            this.set('standby');
+                        } else {
+                            console.info(`enable signal was ignored cause this packet was sent by child node.`)
+                        }
                         break;
                     }
                     case 'standby': break;
@@ -376,32 +421,42 @@ class NODE extends UNIT{
                     case 'disable': break;
                     case 'standby': break;
                     case 'enable': {
-                        bin = this.proto.import ? this.#transmitter({
-                            gates: this.importGates,
-                            packet: packet,
-                            interrupt: true
-                        }) : true;
-                        if (!bin) {this.set('disable')}
+                        bin = routelogs.query({
+                            gid: packet.footer.gid,
+                            task: 'reachable?',
+                            nodeName: this.name
+                        }) ?? routelogs.write({
+                            gid: packet.footer.gid,
+                            task: 'reachable?',
+                            nodeName: this.name,
+                            value: (
+                                this.importGates.length ?
+                                this.#transmitter({
+                                    gates: this.importGates,
+                                    packet: packet,
+                                    interrupt: true,
+                                    base: false
+                                }) : true
+                            )
+                        });
+                        
+                        if (!bin) {
+                            this.set('disable')
+                            this.exportGates.length ? this.#transmitter({
+                                gates: this.exportGates,
+                                packet: new Packet({
+                                    task: 'disable',
+                                    send: this.name,
+                                    mode: 'normal',
+                                    ignores: packet.header.ignore,
+                                    gid: packet.footer.gid
+                                })
+                            }) : null;
+                        }
                         break;
                     }
                 }
                 break;
-            }
-            case 'sideroad?': {
-                bin = false;
-                switch (this.state) {
-                    case 'lock': break;
-                    case 'disable': break;
-                    case 'standby':
-                    case 'enable': {
-                        bin = this.proto.export ? this.#transmitter({
-                            gates: this.importGates,
-                            packet: packet
-                        }) : true;
-                        if (!bin) {this.set('disable')}
-                        break;
-                    }
-                }
             }
         }
 
@@ -475,6 +530,17 @@ class BRANCH extends UNIT {
 class PATH extends BRANCH {}
 
 
+class Tooltip {
+
+    constructor(metadata) {
+        Tooltip.#__build__(metadata)
+        this.html = document.createDocumentFragment();
+    }
+
+    static #__build__(metadata) {}
+
+}
+
 class EventHandler {
 
     static buildTree() {
@@ -497,7 +563,6 @@ class EventHandler {
             }
         }
 
-        console.info(routemap);
         return this;
 
     }
@@ -561,11 +626,14 @@ function is_defined(...obj) {
 
 /** 
  * @typedef {(boolean | null)}  bool
+ * @typedef {Object}    bool_args
+ * @property {bool}     base
  * @param {Array<bool>} arr
+ * @param {bool_args}
  * @returns {bool}
  **/
-function bool(arr) {
-    let bin = null;
+function bool(arr, {base}={base: null}) {
+    let bin = base;
     for (const elem of arr) {
         switch (elem) {
             case true: bin = true; break;
@@ -644,6 +712,10 @@ function generateElement(stringHTML) {
 var globalID = 0;
 const $ = (selector) => document.querySelectorAll(selector)
 const str = JSON.stringify
+const routelogs = {
+    query: /** @returns {boolean} */ function ({gid, task, nodeName}) {try {return this[gid][task][nodeName]} catch {return undefined}},
+    write: function ({gid, task, nodeName, value}) {this[gid][task][nodeName] = value; return value;}
+};
 const routemap = {"archer": [], "warrior": [], "mage": [], "assassin": [], "shaman": []};
 const database = {
     "archer": {},

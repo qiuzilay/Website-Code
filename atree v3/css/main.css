@@ -4,7 +4,7 @@ body {
 }
 
 @font-face {
-    font-family: wynn;
+    font-family: 'wynn';
     src: url(../resources/fonts/wynn.ttf) format('truetype');
 }
 
@@ -164,7 +164,7 @@ div#main .container td:has(button):hover::before {
     height: 100%;
     background-color: white;
     opacity: 0.5;
-    z-index: 100;
+    z-index: 99;
 }
 
 div#main .container td::after {
@@ -180,7 +180,7 @@ div#main .container button {
     width: 100%;
     height: 100%;
     background-color: transparent;
-    z-index: 99;
+    z-index: 98;
     left: 0;
     top: 0;
 }
@@ -196,4 +196,46 @@ div#main .container button > img {
     margin: 0;
     width: 100%;
     height: 100%;
+}
+
+/* ------- tooltip ------- */
+
+div#main .container .tooltip {
+    display: block;
+    position: absolute;
+    width: max-content;
+    max-width: 40vw;
+    padding: 6px 3em 6px 9px;
+    left: 120%;
+    right: initial;
+    transform: translate(0%, -20%);
+    outline: 3px solid #120312;
+    border: 3px solid #1f0249;
+    background-color: #120312;
+    border-radius: 3px;
+    text-align: left;
+    color: #AAAAAA;
+    font-size: large;
+    text-shadow: 2px 2px #2A2A2A;
+    word-wrap: break-word;
+    box-sizing: border-box;
+    white-space: pre-line;
+    z-index: -1;
+    overflow: visible;
+    visibility: hidden;
+}
+
+div#main .container td:hover .tooltip {
+    z-index: 100;
+    visibility: visible;
+}
+
+div#main .container .tooltip.chinese {
+    font-family: 'nunito', 'Microsoft JhengHei', sans-serif;
+    font-weight: 700;
+}
+
+div#main .container .tooltip.english {
+    font-family: 'wynn', 'Microsoft JhengHei', sans-serif;
+    font-weight: normal;
 }
