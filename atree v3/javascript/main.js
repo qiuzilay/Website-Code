@@ -198,10 +198,13 @@ class NODE extends UNIT{
         /** @type {classes} */
         this.class = clsname;
         /** @type {states} */
-        this.state = str(info.axis) == str([4, 1]) ? 'standby' : 'disable';
+        this.state = (str(info.axis) === str([4, 1])) ? 'standby' : 'disable';
+        this.tooltip = new Tooltip(this);
         this.html = generateElement(`<button class="${this.state}"><img class="${info.level ? `button_${info.level}` : `button_${clsname}`}"></button>`);
 
         this.#__buildpath__();
+
+        this.html.appendChild(this.tooltip.html['zh-TW']);
     }
 
     /** @returns {Gate[]} */
@@ -321,12 +324,12 @@ class NODE extends UNIT{
         const GID = packet.footer.gid;
         routelogs[GID] ??= {serial: 0, 'reachable?': {}};
         const SID = routelogs[GID].serial++;
-        console.groupCollapsed(`<${this.name}> [${this.state}] Route ${GID}:${SID} start.`, `(task: '${packet.payload.task}')`);
+        console.groupCollapsed(`<${this.name}> [${this.state}] Route ${GID}.${SID} start.`, `(task: '${packet.payload.task}')`);
         
         const bin = (interrupt ? gates.some(host) : gates.map(host).some((_) => _)) ? true : bool(collector, {base: base});
 
         console.groupEnd();
-        console.info(`<${this.name}> [${this.state}] Route ${GID}:${SID} end. final: ${bin}, collector: ${str(collector)}`);
+        console.info(`<${this.name}> [${this.state}] Route ${GID}.${SID} end. final: ${bin}, collector: ${str(collector)}`);
         if (!SID) {delete routelogs[GID]};
         return bin;
     }
@@ -439,7 +442,7 @@ class NODE extends UNIT{
                                 }) : true
                             )
                         });
-                        
+
                         if (!bin) {
                             this.set('disable')
                             this.exportGates.length ? this.#transmitter({
@@ -532,12 +535,70 @@ class PATH extends BRANCH {}
 
 class Tooltip {
 
-    constructor(metadata) {
-        Tooltip.#__build__(metadata)
-        this.html = document.createDocumentFragment();
+    /** @param {NODE} node */
+    constructor(node) {
+        this.master = node;
+        this.contents = languages.reduce((object, lang) => ({...object, [lang]: ''}), {});
+        this.html = languages.reduce((object, lang) => ({...object, [lang]: generateElement(`<span class="tooltip" lang=${lang}></span>`)}), {});
+        languages.forEach((lang) => {
+            this.#__header__(lang);
+            this.#__footer__(lang);
+            //window.requestIdleCallback(() => Tooltip.fetch(this, '', lang))
+        });
     }
 
-    static #__build__(metadata) {}
+    /**
+     * @param {Tooltip} tooltip
+     * @param {string} url
+     * @param {CallableFunction} resolve
+     * */
+    static fetch(tooltip, url, lang) {
+        window.fetch(url).then(
+            (response) => response.text(),
+            () => {console.error(tooltip.master)}
+        )?.then((text) => {
+            tooltip.contents[lang] = text;
+            tooltip.#__body__(lang);
+        });
+    }
+
+    #__header__(lang) {
+        const info = this.master.proto;
+        const header = document.createDocumentFragment();
+        const name = document.createElement('span');
+        name.appendChild(document.createTextNode(info.name));
+        name.className = "style-larger style-bold";
+        switch (info.level) {
+            case 0: name.classList.add('color-green'); break;
+            case 1: name.classList.add('color-white'); break;
+            case 2: name.classList.add('color-gold'); break;
+            case 3: name.classList.add('color-pink'); break;
+            case 4: name.classList.add('color-red'); break;
+        }
+        header.appendChild(name);
+
+        if (info.combo) {
+            const innerHTML =
+                '<span class="color-gray">' +
+                    '<span class="color-gold"> Click Combo: </span>' +
+                    Array.from(info.combo).map((btn) => {
+                        switch (btn) {
+                            case 'L': return '<span class="color-pink">LEFT</span>'
+                            case 'R': return '<span class="color-pink">RIGHT</span>'
+                        }
+                    }).join('-') +
+                '</span>';
+
+            header.appendChild(document.createElement('br'));
+            header.appendChild(generateElement(innerHTML));
+        }
+
+        this.html[lang].firstChild.appendChild(header);
+    }
+
+    #__footer__(lang) {}
+
+    #__body__(lang) {}
 
 }
 
@@ -710,8 +771,9 @@ function generateElement(stringHTML) {
 }
 
 var globalID = 0;
-const $ = (selector) => document.querySelectorAll(selector)
-const str = JSON.stringify
+const $ = (selector) => document.querySelectorAll(selector);
+const str = JSON.stringify;
+const languages = ['en', 'zh-TW'];
 const routelogs = {
     query: /** @returns {boolean} */ function ({gid, task, nodeName}) {try {return this[gid][task][nodeName]} catch {return undefined}},
     write: function ({gid, task, nodeName, value}) {this[gid][task][nodeName] = value; return value;}
@@ -729,7 +791,6 @@ const database = {
             "cost": 1,
             "lock": null,
             "rely": null,
-            "archetype": {"name": null, "req": null},
             "axis": [4, 1],
             "draft": ["S"]
         },
@@ -741,7 +802,6 @@ const database = {
             "cost": 1,
             "lock": null,
             "rely": null,
-            "archetype": {"name": null, "req": null},
             "axis": [4, 3],
             "draft": ["N", "S", "W"]
         },
@@ -753,7 +813,6 @@ const database = {
             "cost": 1,
             "lock": null,
             "rely": null,
-            "archetype": {"name": null, "req": null},
             "axis": [2, 3],
             "draft": ["E"]
         },
@@ -765,7 +824,6 @@ const database = {
             "cost": 1,
             "lock": null,
             "rely": null,
-            "archetype": {"name": null, "req": null},
             "axis": [4, 5],
             "draft": ["N", "S"]
         },
@@ -778,7 +836,6 @@ const database = {
             "cost": 1,
             "lock": null,
             "rely": null,
-            "archetype": {"name": null, "req": null},
             "axis": [4, 7],
             "draft": ["N", "E", "W"]
         },
@@ -815,7 +872,6 @@ const database = {
             "cost": 1,
             "lock": null,
             "rely": null,
-            "archetype": {"name": null, "req": null},
             "axis": [2, 9],
             "draft": ["N", "SSS", "E", "W", "WWSSS"]
         },
@@ -827,7 +883,6 @@ const database = {
             "cost": 1,
             "lock": null,
             "rely": null,
-            "archetype": {"name": null, "req": null},
             "axis": [4, 9],
             "draft": ["SSSS", "SSSSE", "SSSSW", "E", "W"]
         },
@@ -840,7 +895,6 @@ const database = {
             "cost": 1,
             "lock": null,
             "rely": null,
-            "archetype": {"name": null, "req": null},
             "axis": [6, 9],
             "draft": ["N", "SSS", "EESSS", "W"]
         },
@@ -852,7 +906,6 @@ const database = {
             "cost": 1,
             "lock": null,
             "rely": null,
-            "archetype": {"name": null, "req": null},
             "axis": [1, 10],
             "draft": ["N"]
         },

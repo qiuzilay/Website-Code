@@ -1,0 +1,180 @@
+.tooltip .color-black {
+    color: #000000;
+    text-shadow: 2px 2px #000000
+}
+
+.tooltip .color-dark-blue {
+    color: #0000AA;
+    text-shadow: 2px 2px #00002A    
+}
+
+.tooltip .color-dark-green {
+    color: #00AA00;
+    text-shadow: 2px 2px #002A00
+}
+
+.tooltip .color-dark-aqua {
+    color: #00AAAA;
+    text-shadow: 2px 2px #002A2A
+}
+
+.tooltip .color-dark-red {
+    color: #AA0000;
+    text-shadow: 2px 2px #2A0000
+}
+
+.tooltip .color-dark-purple {
+    color: #AA00AA;
+    text-shadow: 2px 2px #2A002A    
+}
+
+.tooltip .color-gold {
+    color: #FFAA00;
+    text-shadow: 2px 2px #2A2A00
+}
+
+.tooltip .color-gray {
+    color: #AAAAAA;
+    text-shadow: 2px 2px #2A2A2A
+}
+
+.tooltip .color-dark-gray {
+    color: #555555;
+    text-shadow: 2px 2px #151515
+}
+
+.tooltip .color-blue {
+    color: #5555FF;
+    text-shadow: 2px 2px #15153F    
+}
+
+.tooltip .color-green {
+    color: #55FF55;
+    text-shadow: 2px 2px #153F15
+}
+
+.tooltip .color-aqua {
+    color: #55FFFF;
+    text-shadow: 2px 2px #153F3F
+}
+
+.tooltip .color-red {
+    color: #FF5555;
+    text-shadow: 2px 2px #3F1515
+}
+
+.tooltip .color-pink {
+    color: #FF55FF;
+    text-shadow: 2px 2px #3F153F    
+}
+
+.tooltip .color-yellow {
+    color: #FFFF55;
+    text-shadow: 2px 2px #3F3F15
+}
+
+.tooltip .color-white {
+    color: #FFFFFF;
+    text-shadow: 2px 2px #3F3F3F
+}
+
+/* -------- bold -------- */
+
+.tooltip .color-black.style-bold {
+    color: #000000;
+    text-shadow: 3px 3px #000000
+}
+
+.tooltip .color-dark-blue.style-bold {
+    color: #0000AA;
+    text-shadow: 3px 3px #00002A    
+}
+
+.tooltip .color-dark-green.style-bold {
+    color: #00AA00;
+    text-shadow: 3px 3px #002A00
+}
+
+.tooltip .color-dark-aqua.style-bold {
+    color: #00AAAA;
+    text-shadow: 3px 3px #002A2A
+}
+
+.tooltip .color-dark-red.style-bold {
+    color: #AA0000;
+    text-shadow: 3px 3px #2A0000
+}
+
+.tooltip .color-dark-purple.style-bold {
+    color: #AA00AA;
+    text-shadow: 3px 3px #2A002A    
+}
+
+.tooltip .color-gold.style-bold {
+    color: #FFAA00;
+    text-shadow: 3px 3px #2A2A00
+}
+
+.tooltip .color-gray.style-bold {
+    color: #AAAAAA;
+    text-shadow: 3px 3px #2A2A2A
+}
+
+.tooltip .color-dark-gray.style-bold {
+    color: #555555;
+    text-shadow: 3px 3px #151515
+}
+
+.tooltip .color-blue.style-bold {
+    color: #5555FF;
+    text-shadow: 3px 3px #15153F    
+}
+
+.tooltip .color-green.style-bold {
+    color: #55FF55;
+    text-shadow: 3px 3px #153F15
+}
+
+.tooltip .color-aqua.style-bold {
+    color: #55FFFF;
+    text-shadow: 3px 3px #153F3F
+}
+
+.tooltip .color-red.style-bold {
+    color: #FF5555;
+    text-shadow: 3px 3px #3F1515
+}
+
+.tooltip .color-pink.style-bold {
+    color: #FF55FF;
+    text-shadow: 3px 3px #3F153F    
+}
+
+.tooltip .color-yellow.style-bold {
+    color: #FFFF55;
+    text-shadow: 3px 3px #3F3F15
+}
+
+.tooltip .color-white.style-bold {
+    color: #FFFFFF;
+    text-shadow: 3px 3px #3F3F3F
+}
+
+.tooltip .style-bold {
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+.tooltip .style-underline {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    vertical-align: top;
+}
+
+.tooltip .style-smaller {
+    font-size: 0.75em
+}
+
+.tooltip .style-larger {
+    font-size: 1.25em; line-height: 2em
+}

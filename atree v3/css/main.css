@@ -6,6 +6,13 @@ body {
 @font-face {
     font-family: 'wynn';
     src: url(../resources/fonts/wynn.ttf) format('truetype');
+    font-weight: normal;
+}
+
+@font-face {
+    font-family: 'wynn';
+    src: url(../resources/fonts/wynn_bold.ttf) format('truetype');
+    font-weight: bold;
 }
 
 
@@ -215,6 +222,8 @@ div#main .container .tooltip {
     border-radius: 3px;
     text-align: left;
     color: #AAAAAA;
+    font-family: 'wynn', 'nunito', 'Microsoft JhengHei', sans-serif;
+    font-weight: normal;
     font-size: large;
     text-shadow: 2px 2px #2A2A2A;
     word-wrap: break-word;
@@ -232,10 +241,8 @@ div#main .container td:hover .tooltip {
 
 div#main .container .tooltip.chinese {
     font-family: 'nunito', 'Microsoft JhengHei', sans-serif;
-    font-weight: 700;
 }
 
 div#main .container .tooltip.english {
     font-family: 'wynn', 'Microsoft JhengHei', sans-serif;
-    font-weight: normal;
 }
