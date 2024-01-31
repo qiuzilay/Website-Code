@@ -226,7 +226,7 @@ div#main td .tooltip {
     font-weight: 700;
     font-size: 1.2em;
     text-shadow: 2px 2px #2A2A2A;
-    line-height: 1.6em;
+    line-height: 1.5em;
     word-wrap: break-word;
     box-sizing: border-box;
     white-space: pre-line;
@@ -240,7 +240,28 @@ div#main td:hover .tooltip {
     visibility: visible;
 }
 
-div#main .tooltip span[data-update] {
+@media only screen and (max-width: 1024px) {
+    div#main td .tooltip {
+        max-width: 37.5vw;
+        font-size: medium;
+        padding: .53em 3.55em .53em .71em;
+    }
+}
+
+@media only screen and (max-width: 768px) {
+    div#main td .tooltip {
+        max-width: 40vw;
+        font-size: small;
+        padding: .48em 3.25em .48em .65em;
+    }
+}
+
+.tooltip span[data-update] {
     color: #FFFFFF;
     text-shadow: 2px 2px #3F3F3F;
+}
+
+.tooltip .symbol-deny > span[data-update='archetype'] {
+    color: #FF5555;
+    text-shadow: 2px 2px #3F1515;
 }

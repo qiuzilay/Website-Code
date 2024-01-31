@@ -1,8 +1,8 @@
 Violently bash the ground, dealing high damage in a large area.
 
-§M Mana Cost: §f40§r
-§S Total Damage: §f180% §8(of your DPS)§r
-§G§8(§U Damage: 150%)§r
-§G§8(§E Earth: 30%)§r
-§O Area of Effect: §f4 Blocks §7(Circle-Shaped)§r
-§R Range: §f3 Blocks§r
+§MMana Cost: §f40§r
+§STotal Damage: §f180% §8(of your DPS)§r
+§G§8(§UDamage: 150%)§r
+§G§8(§EEarth: 30%)§r
+§OArea of Effect: §f4 Blocks §7(Circle-Shaped)§r
+§RRange: §f3 Blocks§r

@@ -565,7 +565,7 @@ class Tooltip {
         const header = document.createElement('span');
         const nodeName = document.createElement('span');
         header.classList.add('tooltip-header');
-        nodeName.appendChild(document.createTextNode(info.name));
+        nodeName.appendChild(document.createTextNode(info.realname ?? info.name));
         nodeName.className = "style-bold";
         nodeName.style.display = 'block';
         nodeName.style.fontSize = '1.6em';
@@ -627,14 +627,62 @@ class Tooltip {
         const info = tooltip.master.proto;
         const footer = document.createElement('span');
         footer.classList.add('tooltip-footer');
-        footer.style.display = 'block';
-        footer.style.marginTop = '1em';
+
+        if (info.lock) {
+            const lock = document.createElement('span');
+            lock.style.display = 'block';
+            lock.style.marginTop = '1em';
+            lock.appendChild(generateElement(`<span class="color-red">${translate[lang].lock}</span>`));
+            info.lock.forEach((name) => {
+                lock.appendChild(
+                    generateElement(`<span style="display: block;"><span class="color-red">-</span> ${name}</span>`)
+                );
+            });
+            footer.appendChild(lock);
+            info.lock.forEach((name) => {
+                try {
+                    routegroup[tooltip.master.class].lock[name].add(tooltip.master);
+                } catch {
+                    routegroup[tooltip.master.class].lock[name] = new Set([tooltip.master]);
+                }
+            })
+        }
+
+        if (info.archetype?.name) {
+            const archetype = document.createElement('span');
+            archetype.style.display = 'block';
+            archetype.style.marginTop = '1em';
+            archetype.style.fontSize = '1.25em';
+            archetype.classList.add('style-bold');
+            switch (info.archetype.name) {
+                case 'Boltslinger': archetype.classList.add('color-yellow'); break;
+                case 'Sharpshooter': archetype.classList.add('color-pink'); break;
+                case 'Trapper': archetype.classList.add('color-dark_green'); break;
+                case 'Fallen': archetype.classList.add('color-red'); break;
+                case 'Battle Monk': archetype.classList.add('color-yellow'); break;
+                case 'Paladin': archetype.classList.add('color-aqua'); break;
+                case 'Riftwalker': archetype.classList.add('color-aqua'); break;
+                case 'Light Bender': archetype.classList.add('color-white'); break;
+                case 'Arcanist': archetype.classList.add('color-dark_purple'); break;
+                case 'Shadestepper': archetype.classList.add('color-dark_red'); break;
+                case 'Trickster': archetype.classList.add('color-pink'); break;
+                case 'Acrobat': archetype.classList.add('color-white'); break;
+                case 'Summoner': archetype.classList.add('color-gold'); break;
+                case 'Ritualist': archetype.classList.add('color-green'); break;
+                case 'Acolyte': archetype.classList.add('color-red'); break;
+                default: throw Error('unknown archetype.', tooltip.master.proto);
+            }
+            archetype.appendChild(document.createTextNode(`${info.archetype.name} Archetype`));
+            footer.appendChild(archetype);
+        }
         
         if (info.cost) {
-            const cost = generateSpanElement();
-            const text = document.createTextNode(`${translate[lang].cost}: `);
+            const cost = document.createElement('span');
+            const text = document.createTextNode(translate[lang].cost);
             const value = document.createElement('span');
             cost.classList.add('symbol-checkmark');
+            cost.style.display = 'block';
+            cost.style.marginTop = '1em';
             value.dataset.update = 'cost';
             value.appendChild(document.createTextNode(info.cost));
             cost.appendChild(text);
@@ -645,6 +693,31 @@ class Tooltip {
             } catch {
                 routegroup[tooltip.master.class].cost[info.cost] = new Set([tooltip.master]);
             }
+        }
+
+        if (info.rely) {
+            const rely = document.createElement('span');
+            const name = document.createElement('span');
+            rely.style.display = 'block';
+            name.dataset.update = 'rely';
+            rely.classList.add('symbol-deny');
+            name.appendChild(document.createTextNode(info.rely));
+            rely.appendChild(document.createTextNode(translate[lang].rely));
+            rely.appendChild(name);
+            footer.appendChild(rely);
+            routegroup[tooltip.master.class].rely[info.rely] = tooltip.master;
+        }
+
+        if (info.archetype?.req) {
+            const archetype = document.createElement('span');
+            const value = document.createElement('span');
+            archetype.classList.add('symbol-deny');
+            archetype.style.display = 'block';
+            value.dataset.update = 'archetype';
+            value.appendChild(document.createTextNode(0));
+            archetype.append(translate[lang].archetype(info.archetype.name), value, `/${info.archetype.req}`);
+            footer.appendChild(archetype);
+            routegroup[tooltip.master.class].archetype[info.archetype.name].add(tooltip.master);
         }
 
         tooltip.html[lang].appendChild(footer);
@@ -701,7 +774,7 @@ class Tooltip {
             case '§A': span.classList.add('symbol-air'); break;
             case '§M': span.classList.add('symbol-mana'); break;
             case '§Y': span.classList.add('symbol-checkmark'); break;
-            case '§N': span.classList.add('symbol-neutral'); break;
+            case '§N': span.classList.add('symbol-deny'); break;
             case '§S': span.classList.add('symbol-sword'); break;
             case '§D': span.classList.add('symbol-duration'); break;
             case '§R': span.classList.add('symbol-range'); break;
@@ -883,12 +956,6 @@ function generateElement(stringHTML) {
     return fragment;
 }
 
-function generateSpanElement() {
-    const span = document.createElement('span');
-    span.style.display = 'block';
-    return span;
-}
-
 const languages = ['zh-TW', 'en'];
 const using = 0;
 
@@ -897,16 +964,16 @@ const $ = (selector) => document.querySelectorAll(selector);
 const str = JSON.stringify;
 const translate = {
     "zh-TW": {
-        cost: '技能點數',
-        rely: '技能需求',
-        lock: '衝突技能',
-        archetype: /** @param {String} type */ (type) => `最低 ${type} Archetype 點數需求`
+        cost: '技能點數：',
+        rely: '技能需求：',
+        lock: '衝突技能：',
+        archetype: /** @param {String} type */ (type) => `最低 ${type} Archetype 點數需求：`
     },
     "en": {
-        cost: 'Ability Points',
-        rely: 'Required Ability',
-        lock: '衝突技能',
-        archetype: /** @param {String} type */ (type) => `Min ${type} Archetype`
+        cost: 'Ability Points: ',
+        rely: 'Required Ability: ',
+        lock: 'Unlocking will block: ',
+        archetype: /** @param {String} type */ (type) => `Min ${type} Archetype: `
     }
 };
 const regex = {
@@ -919,31 +986,51 @@ const routegroup = {
         cost: {},
         lock: {},
         rely: {},
-        archetype: {}
+        archetype: {
+            "Boltslinger": new Set(),
+            "Sharpshooter": new Set(),
+            "Trapper": new Set()
+        }
     },
     warrior: {
         cost: {},
         lock: {},
         rely: {},
-        archetype: {}
+        archetype: {
+            "Fallen": new Set(),
+            "Battle Monk": new Set(),
+            "Paladin": new Set()
+        }
     },
     mage: {
         cost: {},
         lock: {},
         rely: {},
-        archetype: {}
+        archetype: {
+            "Riftwalker": new Set(),
+            "Light Bender": new Set(),
+            "Arcanist": new Set()
+        }
     },
     assassin: {
         cost: {},
         lock: {},
         rely: {},
-        archetype: {}
+        archetype: {
+            "Shadestepper": new Set(),
+            "Trickster": new Set(),
+            "Acrobat": new Set()
+        }
     },
     shaman: {
         cost: {},
         lock: {},
         rely: {},
-        archetype: {}
+        archetype: {
+            "Summoner": new Set(),
+            "Ritualist": new Set(),
+            "Acolyte": new Set()
+        }
     }
 }
 const routelogs = {
@@ -961,8 +1048,6 @@ const database = {
             "import": null,
             "export": ["Spear Proficiency I"],
             "cost": 1,
-            "lock": null,
-            "rely": null,
             "axis": [4, 1],
             "draft": ["S"]
         },
@@ -972,8 +1057,6 @@ const database = {
             "import": ["Bash"],
             "export": ["Double Bash", "Cheaper Bash"],
             "cost": 1,
-            "lock": null,
-            "rely": null,
             "axis": [4, 3],
             "draft": ["N", "S", "W"]
         },
@@ -983,8 +1066,6 @@ const database = {
             "import": ["Spear Proficiency I"],
             "export": null,
             "cost": 1,
-            "lock": null,
-            "rely": null,
             "axis": [2, 3],
             "draft": ["E"]
         },
@@ -994,8 +1075,6 @@ const database = {
             "import": ["Spear Proficiency I"],
             "export": ["Charge"],
             "cost": 1,
-            "lock": null,
-            "rely": null,
             "axis": [4, 5],
             "draft": ["N", "S"]
         },
@@ -1006,8 +1085,6 @@ const database = {
             "import": ["Double Bash"],
             "export": ["Vehement", "Tougher Skin"],
             "cost": 1,
-            "lock": null,
-            "rely": null,
             "axis": [4, 7],
             "draft": ["N", "E", "W"]
         },
@@ -1042,8 +1119,6 @@ const database = {
             "import": ["Cheaper Charge", "Vehement"],
             "export": ["Cheaper Charge", "Heavy Impact", "Earth Mastery", "Thunder Mastery"],
             "cost": 1,
-            "lock": null,
-            "rely": null,
             "axis": [2, 9],
             "draft": ["N", "SSS", "E", "W", "WWSSS"]
         },
@@ -1053,8 +1128,6 @@ const database = {
             "import": ["Uppercut", "War Scream"],
             "export": ["Uppercut", "War Scream", "Thunder Mastery", "Air Mastery", "Water Mastery"],
             "cost": 1,
-            "lock": null,
-            "rely": null,
             "axis": [4, 9],
             "draft": ["SSSS", "SSSSE", "SSSSW", "E", "W"]
         },
@@ -1065,8 +1138,6 @@ const database = {
             "import": ["Cheaper Charge", "Tougher Skin"],
             "export": ["Cheaper Charge", "Air Mastery", "Fire Mastery"],
             "cost": 1,
-            "lock": null,
-            "rely": null,
             "axis": [6, 9],
             "draft": ["N", "SSS", "EESSS", "W"]
         },
@@ -1076,8 +1147,6 @@ const database = {
             "import": ["Uppercut"],
             "export": null,
             "cost": 1,
-            "lock": null,
-            "rely": null,
             "axis": [1, 10],
             "draft": ["N"]
         },
@@ -1087,8 +1156,6 @@ const database = {
             "import": ["Uppercut"],
             "export": ["Quadruple Bash"],
             "cost": 1,
-            "lock": null,
-            "rely": null,
             "archetype": {"name": "Fallen", "req": 0},
             "axis": [0, 13],
             "draft": ["NNNNE", "S"]
@@ -1099,8 +1166,6 @@ const database = {
             "import": ["Cheaper Charge", "Air Mastery", "Uppercut"],
             "export": ["Fireworks", "Air Mastery", "Water Mastery"],
             "cost": 1,
-            "lock": null,
-            "rely": null,
             "archetype": {"name": "Fallen", "req": 0},
             "axis": [2, 13],
             "draft": ["NNN", "S", "EE", "EEE", "EENNN"]
@@ -1111,8 +1176,6 @@ const database = {
             "import": ["Cheaper Charge", "Thunder Mastery", "War Scream"],
             "export": ["Flyby Jab", "Thunder Mastery", "Water Mastery"],
             "cost": 1,
-            "lock": null,
-            "rely": null,
             "archetype": {"name": "Battle Monk", "req": 0},
             "axis": [6, 13],
             "draft": ["NNN", "S", "WW", "WWW", "WWNNN"]
@@ -1123,8 +1186,6 @@ const database = {
             "import": ["War Scream"],
             "export": ["Flaming Uppercut"],
             "cost": 1,
-            "lock": null,
-            "rely": null,
             "archetype": {"name": "Paladin", "req": 0},
             "axis": [8, 13],
             "draft": ["NNNNW", "S"]
@@ -1135,11 +1196,181 @@ const database = {
             "import": ["Cheaper Charge", "Thunder Mastery", "Air Mastery"],
             "export": ["Half-Moon Swipe"],
             "cost": 1,
-            "lock": null,
-            "rely": null,
             "archetype": {"name": "Battle Monk", "req": 0},
             "axis": [4, 14],
             "draft": ["NNNN", "NE", "NW", "S"]
+        },
+        "Quadruple Bash": {
+            "name": "Quadruple Bash",
+            "level": 2,
+            "import": ["Earth Mastery"],
+            "export": ["Bak'al's Grasp", "Fireworks"],
+            "cost": 2,
+            "rely": "Bash",
+            "archetype": {"name": "Fallen", "req": 0},
+            "axis": [0, 15],
+            "draft": ["N", "ESSSS"]
+        },
+        "Fireworks": {
+            "name": "Fireworks",
+            "level": 2,
+            "import": ["Thunder Mastery"],
+            "export": ["Bak'al's Grasp", "Quadruple Bash"],
+            "cost": 2,
+            "archetype": {"name": "Fallen", "req": 0},
+            "axis": [2, 15],
+            "draft": ["N", "WSSSS"]
+        },
+        "Flyby Jab": {
+            "name": "Flyby Jab",
+            "level": 1,
+            "import": ["Air Mastery"],
+            "export": ["Iron Lungs", "Flaming Uppercut"],
+            "cost": 1,
+            "axis": [6, 15],
+            "draft": ["N", "E"]
+        },
+        "Flaming Uppercut": {
+            "name": "Flaming Uppercut",
+            "level": 2,
+            "import": ["Fire Mastery"],
+            "export": ["Iron Lungs", "Flyby Jab"],
+            "cost": 2,
+            "axis": [8, 15],
+            "draft": ["N", "W"]
+        },
+        "Half-Moon Swipe": {
+            "name": "Half-Moon Swipe",
+            "level": 2,
+            "import": ["Water Mastery"],
+            "export": ["Air Shout"],
+            "cost": 2,
+            "rely": "Uppercut",
+            "archetype": {"name": "Battle Monk", "req": 1},
+            "axis": [4, 16],
+            "draft": ["N", "SS"]
+        },
+        "Iron Lungs": {
+            "name": "Iron Lungs",
+            "level": 1,
+            "import": ["Flyby Jab", "Flaming Uppercut"],
+            "export": ["Mantle of the Bovemists"],
+            "cost": 1,
+            "rely": "War Scream",
+            "archetype": {"name": "Paladin", "req": 0},
+            "axis": [7, 16],
+            "draft": ["N", "SS"]
+        },
+        "Generalist": {
+            "name": "Generalist",
+            "level": 4,
+            "import": ["Air Shout"],
+            "export": null,
+            "cost": 2,
+            "archetype": {"name": "Battle Monk", "req": 3},
+            "axis": [2, 19],
+            "draft": ["E"]
+        },
+        "Air Shout": {
+            "name": "Air Shout",
+            "level": 2,
+            "import": ["Half-Moon Swipe"],
+            "export": ["Generalist", "Cheaper Uppercut"],
+            "cost": 2,
+            "rely": "War Scream",
+            "archetype": {"name": "Battle Monk", "req": 0},
+            "axis": [4, 19],
+            "draft": ["NN", "W", "WS"]
+        },
+        "Mantle of the Bovemists": {
+            "name": "Mantle of the Bovemists",
+            "level": 4,
+            "import": ["Iron Lungs"],
+            "export": ["Provoke"],
+            "cost": 2,
+            "rely": "War Scream",
+            "archetype": {"name": "Paladin", "req": 3},
+            "axis": [7, 19],
+            "draft": ["NN", "S"]
+        },
+        "Bak'al's Grasp": {
+            "name": "Bak'al's Grasp",
+            "level": 4,
+            "import": ["Quadruple Bash", "Fireworks"],
+            "export": ["Spear Proficiency II"],
+            "cost": 2,
+            "rely": "War Scream",
+            "archetype": {"name": "Fallen", "req": 2},
+            "axis": [1, 20],
+            "draft": ["NNNNN", "W"]
+        },
+        "Spear Proficiency II": {
+            "name": "Spear Proficiency II",
+            "level": 1,
+            "import": ["Bak'al's Grasp", "Cheaper Uppercut"],
+            "export": ["Precise Strikes", "Cheaper Uppercut", "Enraged Blow"],
+            "cost": 1,
+            "axis": [0, 21],
+            "draft": ["N", "SSS", "EE"]
+        },
+        "Cheaper Uppercut": {
+            "name": "Cheaper Uppercut",
+            "level": 1,
+            "import": ["Spear Proficiency II", "Aerodynamics", "Air Shout"],
+            "export": ["Spear Proficiency II", "Aerodynamics", "Precise Strikes", "Counter", "Flying Kick"],
+            "cost": 1,
+            "rely": "Uppercut",
+            "axis": [3, 21],
+            "draft": ["NN", "SSS", "E", "WW"]
+        },
+        "Aerodynamics": {
+            "name": "Aerodynamics",
+            "level": 2,
+            "import": ["Provoke", "Cheaper Uppercut"],
+            "export": ["Provoke", "Cheaper Uppercut", "Counter", "Manachism"],
+            "cost": 2,
+            "archetype": {"name": "Battle Monk", "req": 0},
+            "axis": [5, 21],
+            "draft": ["E", "W"]
+        },
+        "Provoke": {
+            "name": "Provoke",
+            "level": 2,
+            "import": ["Mantle of the Bovemists", "Aerodynamics"],
+            "export": ["Mantle of the Bovemists", "Aerodynamics", "Manachism", "Sacred Surge"],
+            "cost": 2,
+            "rely": "War Scream",
+            "axis": [7, 21],
+            "draft": ["N", "ESSS", "W"]
+        },
+        "Precise Strikes": {
+            "name": "Precise Strikes",
+            "level": 1,
+            "import": ["Spear Proficiency II", "Cheaper Uppercut"],
+            "export": null,
+            "cost": 1,
+            "axis": [1, 22],
+            "draft": ["NE"]
+        },
+        "Counter": {
+            "name": "Counter",
+            "level": 2,
+            "import": ["Cheaper Uppercut", "Aerodynamics", "Manachism"],
+            "export": ["Manachism"],
+            "cost": 2,
+            "archetype": {"name": "Battle Monk", "req": 0},
+            "axis": [4, 22],
+            "draft": ["N", "E"]
+        },
+        "Manachism": {
+            "name": "Manachism",
+            "level": 3,
+            "import": ["Aerodynamics", "Provoke", "Counter"],
+            "export": ["Counter"],
+            "cost": 2,
+            "archetype": {"name": "Paladin", "req": 3},
+            "axis": [6, 22],
+            "draft": ["N", "W"]
         }
     },
     "mage": {},

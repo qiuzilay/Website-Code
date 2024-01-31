@@ -206,7 +206,7 @@ span.symbol-water::before,
 span.symbol-fire::before,
 span.symbol-air::before {
     font-size: .8em;
-    transform: scale(1.2);
+    transform: scale(1.1);
 }
 
 span.symbol-neutral::before {
@@ -253,7 +253,7 @@ span.symbol-checkmark::before {
     text-shadow: 2px 2px #153F15;
 }
 
-span.symbol-ban::before {
+span.symbol-deny::before {
     content: '\2718';
     color: #FF5555;
     text-shadow: 2px 2px #3F1515;
