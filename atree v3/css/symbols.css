@@ -160,6 +160,8 @@ span.color-white.style-bold {
     text-shadow: 3px 3px #3F3F3F;
 }
 
+/* -------- styles -------- */
+
 span.style-bold {
     font-weight: 900;
     letter-spacing: 2px;
@@ -187,23 +189,24 @@ span.style-wrapper {
     display: inline-block;
 }
 
+/* -------- symbols -------- */
+
 span[class^='symbol-']::before {
     display: inline-block !important;
     text-align: center;
     width: 1em;
+    padding-right: .5em;
     overflow: visible;
 }
 
-span.symbol-checkmark::before {
-    content: '\2714\FE0E';
-    color: #55FF55;
-    text-shadow: 2px 2px #153F15;
-}
-
-span.symbol-ban::before {
-    content: '\2718';
-    color: #FF5555;
-    text-shadow: 2px 2px #3F1515;
+span.symbol-neutral::before,
+span.symbol-earth::before,
+span.symbol-thunder::before,
+span.symbol-water::before,
+span.symbol-fire::before,
+span.symbol-air::before {
+    font-size: .8em;
+    transform: scale(1.2);
 }
 
 span.symbol-neutral::before {
@@ -242,6 +245,18 @@ span.symbol-air::before {
     content: '\274B';
     color: #FFFFFF;
     text-shadow: 2px 2px #3F3F3F;
+}
+
+span.symbol-checkmark::before {
+    content: '\2714\FE0E';
+    color: #55FF55;
+    text-shadow: 2px 2px #153F15;
+}
+
+span.symbol-ban::before {
+    content: '\2718';
+    color: #FF5555;
+    text-shadow: 2px 2px #3F1515;
 }
 
 span.symbol-mana::before {

@@ -207,7 +207,7 @@ div#main .container button > img {
 
 /* ------- tooltip ------- */
 
-div#main .container .tooltip {
+div#main td .tooltip {
     display: block;
     position: absolute;
     width: max-content;
@@ -235,7 +235,12 @@ div#main .container .tooltip {
     visibility: hidden;
 }
 
-div#main .container td:hover .tooltip {
+div#main td:hover .tooltip {
     z-index: 100;
     visibility: visible;
+}
+
+div#main .tooltip span[data-update] {
+    color: #FFFFFF;
+    text-shadow: 2px 2px #3F3F3F;
 }

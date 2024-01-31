@@ -8,6 +8,7 @@ function main() {
 
         console.info('routemap:', routemap);
         console.info('routelogs:', routelogs);
+        console.info('routegroup:', routegroup);
     });
 }
 
@@ -561,8 +562,9 @@ class Tooltip {
      **/
     static #__header__(tooltip, lang) {
         const info = tooltip.master.proto;
-        const header = document.createDocumentFragment();
+        const header = document.createElement('span');
         const nodeName = document.createElement('span');
+        header.classList.add('tooltip-header');
         nodeName.appendChild(document.createTextNode(info.name));
         nodeName.className = "style-bold";
         nodeName.style.display = 'block';
@@ -599,21 +601,20 @@ class Tooltip {
      * @param {Tooltip} tooltip
      * @param {languages} lang
      **/
-    static async #__body__(tooltip, lang) {
-        await window.fetch(`https://raw.githubusercontent.com/qiuzilay/Website-Code/main/atree%20v3/resources/texts/${lang}/${tooltip.master.class}/${tooltip.master.proto.name}.txt`)
+    static #__body__(tooltip, lang) {
+        const body = document.createElement('span');
+        body.classList.add('tooltip-body');
+        body.style.display = 'block';
+        body.style.marginTop = '1em';
+        tooltip.html[lang].appendChild(body);
+        window.fetch(`https://raw.githubusercontent.com/qiuzilay/Website-Code/main/atree%20v3/resources/texts/${lang}/${tooltip.master.class}/${tooltip.master.proto.name}.txt`)
                     .catch((error) => console.error(error))
                     .then(/** @param {Response} response */ (response) => response.ok ? response.text() : void(0))
                     .then(/** @param {String}   text     */ (text) => {
                         if (text) {
-                            const body = document.createElement('span');
-                            body.style.display = 'block';
-                            body.style.marginTop = '1em';
-
                             text.split(regex.reset)
                                 .map((subtext) => this.analyst(subtext))
                                 .forEach((frag) => {body.appendChild(frag)});
-
-                            tooltip.html[lang].appendChild(body);
                         }
                     });
     }
@@ -622,7 +623,32 @@ class Tooltip {
      * @param {Tooltip} tooltip
      * @param {languages} lang
      **/
-    static #__footer__(tooltip, lang) {}
+    static #__footer__(tooltip, lang) {
+        const info = tooltip.master.proto;
+        const footer = document.createElement('span');
+        footer.classList.add('tooltip-footer');
+        footer.style.display = 'block';
+        footer.style.marginTop = '1em';
+        
+        if (info.cost) {
+            const cost = generateSpanElement();
+            const text = document.createTextNode(`${translate[lang].cost}: `);
+            const value = document.createElement('span');
+            cost.classList.add('symbol-checkmark');
+            value.dataset.update = 'cost';
+            value.appendChild(document.createTextNode(info.cost));
+            cost.appendChild(text);
+            cost.appendChild(value);
+            footer.appendChild(cost);
+            try {
+                routegroup[tooltip.master.class].cost[info.cost].add(tooltip.master);
+            } catch {
+                routegroup[tooltip.master.class].cost[info.cost] = new Set([tooltip.master]);
+            }
+        }
+
+        tooltip.html[lang].appendChild(footer);
+    }
 
 
     /** @param {String} string */
@@ -857,16 +883,68 @@ function generateElement(stringHTML) {
     return fragment;
 }
 
+function generateSpanElement() {
+    const span = document.createElement('span');
+    span.style.display = 'block';
+    return span;
+}
+
 const languages = ['zh-TW', 'en'];
 const using = 0;
 
 var globalID = 0;
 const $ = (selector) => document.querySelectorAll(selector);
 const str = JSON.stringify;
+const translate = {
+    "zh-TW": {
+        cost: '技能點數',
+        rely: '技能需求',
+        lock: '衝突技能',
+        archetype: /** @param {String} type */ (type) => `最低 ${type} Archetype 點數需求`
+    },
+    "en": {
+        cost: 'Ability Points',
+        rely: 'Required Ability',
+        lock: '衝突技能',
+        archetype: /** @param {String} type */ (type) => `Min ${type} Archetype`
+    }
+};
 const regex = {
     reset: new RegExp(/\u00A7r/, 'gus'),
     general: new RegExp(/\u00A7\S/, 'us'),
     text: new RegExp(/\u00A7\S(.+)/, 'us')
+};
+const routegroup = {
+    archer: {
+        cost: {},
+        lock: {},
+        rely: {},
+        archetype: {}
+    },
+    warrior: {
+        cost: {},
+        lock: {},
+        rely: {},
+        archetype: {}
+    },
+    mage: {
+        cost: {},
+        lock: {},
+        rely: {},
+        archetype: {}
+    },
+    assassin: {
+        cost: {},
+        lock: {},
+        rely: {},
+        archetype: {}
+    },
+    shaman: {
+        cost: {},
+        lock: {},
+        rely: {},
+        archetype: {}
+    }
 }
 const routelogs = {
     query: /** @returns {boolean} */ function ({gid, task, nodeName}) {try {return this[gid][task][nodeName]} catch {return undefined}},
