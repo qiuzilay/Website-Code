@@ -5,14 +5,14 @@ body {
 
 @font-face {
     font-family: 'wynn';
-    src: url(../resources/fonts/wynn.ttf) format('truetype');
-    font-weight: normal;
+    src: url(../resources/fonts/wynn_alter_regular.ttf) format('truetype');
+    font-weight: 700;
 }
 
 @font-face {
     font-family: 'wynn';
-    src: url(../resources/fonts/wynn_bold.ttf) format('truetype');
-    font-weight: bold;
+    src: url(../resources/fonts/wynn_alter_bold.ttf) format('truetype');
+    font-weight: 900;
 }
 
 
@@ -212,7 +212,7 @@ div#main .container .tooltip {
     position: absolute;
     width: max-content;
     max-width: 40vw;
-    padding: 6px 3em 6px 9px;
+    padding: .6em 4em .6em .8em;
     left: 120%;
     right: initial;
     transform: translate(0%, -20%);
@@ -223,9 +223,10 @@ div#main .container .tooltip {
     text-align: left;
     color: #AAAAAA;
     font-family: 'wynn', 'nunito', 'Microsoft JhengHei', sans-serif;
-    font-weight: normal;
-    font-size: large;
+    font-weight: 700;
+    font-size: 1.2em;
     text-shadow: 2px 2px #2A2A2A;
+    line-height: 1.6em;
     word-wrap: break-word;
     box-sizing: border-box;
     white-space: pre-line;
@@ -237,12 +238,4 @@ div#main .container .tooltip {
 div#main .container td:hover .tooltip {
     z-index: 100;
     visibility: visible;
-}
-
-div#main .container .tooltip.chinese {
-    font-family: 'nunito', 'Microsoft JhengHei', sans-serif;
-}
-
-div#main .container .tooltip.english {
-    font-family: 'wynn', 'Microsoft JhengHei', sans-serif;
 }

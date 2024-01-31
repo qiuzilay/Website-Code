@@ -204,7 +204,7 @@ class NODE extends UNIT{
 
         this.#__buildpath__();
 
-        this.html.appendChild(this.tooltip.html['zh-TW']);
+        this.html.appendChild(this.tooltip.html[languages[using]]);
     }
 
     /** @returns {Gate[]} */
@@ -535,51 +535,51 @@ class PATH extends BRANCH {}
 
 class Tooltip {
 
-    /** @param {NODE} node */
+    /**
+     * @typedef {('en' | 'zh-TW')} languages
+     * @typedef {Object} html
+     * @property {HTMLSpanElement} en
+     * @property {HTMLSpanElement} zh-TW
+     * @param {NODE} node
+     **/
     constructor(node) {
+        /** @type {NODE} */
         this.master = node;
-        this.contents = languages.reduce((object, lang) => ({...object, [lang]: ''}), {});
-        this.html = languages.reduce((object, lang) => ({...object, [lang]: generateElement(`<span class="tooltip" lang=${lang}></span>`)}), {});
-        languages.forEach((lang) => {
-            this.#__header__(lang);
-            this.#__footer__(lang);
-            //window.requestIdleCallback(() => Tooltip.fetch(this, '', lang))
+        /** @type {html} */
+        this.html = languages.reduce((object, lang) => ({...object, [lang]: document.createElement('span')}), {});
+        languages.forEach(/** @param {languages} lang */(lang) => {
+            this.html[lang].classList.add('tooltip');
+            Tooltip.#__header__(this, lang);
+            Tooltip.#__body__(this, lang);
+            Tooltip.#__footer__(this, lang);
         });
     }
 
     /**
      * @param {Tooltip} tooltip
-     * @param {string} url
-     * @param {CallableFunction} resolve
-     * */
-    static fetch(tooltip, url, lang) {
-        window.fetch(url).then(
-            (response) => response.text(),
-            () => {console.error(tooltip.master)}
-        )?.then((text) => {
-            tooltip.contents[lang] = text;
-            tooltip.#__body__(lang);
-        });
-    }
-
-    #__header__(lang) {
-        const info = this.master.proto;
+     * @param {languages} lang
+     **/
+    static #__header__(tooltip, lang) {
+        const info = tooltip.master.proto;
         const header = document.createDocumentFragment();
-        const name = document.createElement('span');
-        name.appendChild(document.createTextNode(info.name));
-        name.className = "style-larger style-bold";
+        const nodeName = document.createElement('span');
+        nodeName.appendChild(document.createTextNode(info.name));
+        nodeName.className = "style-bold";
+        nodeName.style.display = 'block';
+        nodeName.style.fontSize = '1.6em';
+        nodeName.style.lineHeight = '1.4em';
         switch (info.level) {
-            case 0: name.classList.add('color-green'); break;
-            case 1: name.classList.add('color-white'); break;
-            case 2: name.classList.add('color-gold'); break;
-            case 3: name.classList.add('color-pink'); break;
-            case 4: name.classList.add('color-red'); break;
+            case 0: nodeName.classList.add('color-green'); break;
+            case 1: nodeName.classList.add('color-white'); break;
+            case 2: nodeName.classList.add('color-gold'); break;
+            case 3: nodeName.classList.add('color-pink'); break;
+            case 4: nodeName.classList.add('color-red'); break;
         }
-        header.appendChild(name);
+        header.appendChild(nodeName);
 
         if (info.combo) {
             const innerHTML =
-                '<span class="color-gray">' +
+                '<span class="color-gray" display="block">' +
                     '<span class="color-gold"> Click Combo: </span>' +
                     Array.from(info.combo).map((btn) => {
                         switch (btn) {
@@ -589,16 +589,103 @@ class Tooltip {
                     }).join('-') +
                 '</span>';
 
-            header.appendChild(document.createElement('br'));
             header.appendChild(generateElement(innerHTML));
         }
 
-        this.html[lang].firstChild.appendChild(header);
+        tooltip.html[lang].appendChild(header);
     }
 
-    #__footer__(lang) {}
+    /**
+     * @param {Tooltip} tooltip
+     * @param {languages} lang
+     **/
+    static async #__body__(tooltip, lang) {
+        await window.fetch(`https://raw.githubusercontent.com/qiuzilay/Website-Code/main/atree%20v3/resources/texts/${lang}/${tooltip.master.class}/${tooltip.master.proto.name}.txt`)
+                    .catch((error) => console.error(error))
+                    .then(/** @param {Response} response */ (response) => response.ok ? response.text() : void(0))
+                    .then(/** @param {String}   text     */ (text) => {
+                        if (text) {
+                            const body = document.createElement('span');
+                            body.style.display = 'block';
+                            body.style.marginTop = '1em';
 
-    #__body__(lang) {}
+                            text.split(regex.reset)
+                                .map((subtext) => this.analyst(subtext))
+                                .forEach((frag) => {body.appendChild(frag)});
+
+                            tooltip.html[lang].appendChild(body);
+                        }
+                    });
+    }
+
+    /**
+     * @param {Tooltip} tooltip
+     * @param {languages} lang
+     **/
+    static #__footer__(tooltip, lang) {}
+
+
+    /** @param {String} string */
+    static analyst(string) {
+        const [outer, inner, _] = string.split(regex.text);
+        const bin = document.createDocumentFragment();
+        if (outer) {bin.appendChild(document.createTextNode(outer))}
+        if (inner) {
+            const style = this.palette(string.match(regex.general)?.shift());
+            style.appendChild(this.analyst(inner));
+            bin.appendChild(style);
+        }
+        return bin;
+    }
+
+    /**
+     * @param {String} hashtag
+     * @return {HTMLSpanElement}
+     **/
+    static palette(hashtag) {
+        const span = document.createElement('span');
+        switch (hashtag) {
+            case '§0': span.classList.add('color-black'); break;
+            case '§1': span.classList.add('color-dark_blue'); break;
+            case '§2': span.classList.add('color-dark_green'); break;
+            case '§3': span.classList.add('color-dark_aqua'); break;
+            case '§4': span.classList.add('color-dark_red'); break;
+            case '§5': span.classList.add('color-dark_purple'); break;
+            case '§6': span.classList.add('color-gold'); break;
+            case '§7': span.classList.add('color-gray'); break;
+            case '§8': span.classList.add('color-dark_gray'); break;
+            case '§9': span.classList.add('color-blue'); break;
+            case '§a': span.classList.add('color-green'); break;
+            case '§b': span.classList.add('color-aqua'); break;
+            case '§c': span.classList.add('color-red'); break;  
+            case '§d': span.classList.add('color-pink'); break;
+            case '§e': span.classList.add('color-yellow'); break;
+            case '§f': span.classList.add('color-white'); break;
+            case '§l': span.classList.add('style-bold'); break;
+            case '§n': span.classList.add('style-underline'); break;
+            case '§o': span.classList.add('style-smaller'); break;
+            case '§h': span.classList.add('style-larger'); break;
+            case '§I': span.classList.add('style-oblique'); break;
+            case '§B': span.classList.add('style-wrapper'); break;
+            case '§U': span.classList.add('symbol-neutral'); break;
+            case '§E': span.classList.add('symbol-earth'); break; 
+            case '§T': span.classList.add('symbol-thunder'); break; 
+            case '§W': span.classList.add('symbol-water'); break; 
+            case '§F': span.classList.add('symbol-fire'); break;
+            case '§A': span.classList.add('symbol-air'); break;
+            case '§M': span.classList.add('symbol-mana'); break;
+            case '§Y': span.classList.add('symbol-checkmark'); break;
+            case '§N': span.classList.add('symbol-neutral'); break;
+            case '§S': span.classList.add('symbol-sword'); break;
+            case '§D': span.classList.add('symbol-duration'); break;
+            case '§R': span.classList.add('symbol-range'); break;
+            case '§O': span.classList.add('symbol-aoe'); break;
+            case '§H': span.classList.add('symbol-heart'); break;
+            case '§V': span.classList.add('symbol-shield'); break;
+            case '§G': span.classList.add('symbol-gap'); break;
+        }
+        return span;
+    }
 
 }
 
@@ -770,10 +857,17 @@ function generateElement(stringHTML) {
     return fragment;
 }
 
+const languages = ['zh-TW', 'en'];
+const using = 0;
+
 var globalID = 0;
 const $ = (selector) => document.querySelectorAll(selector);
 const str = JSON.stringify;
-const languages = ['en', 'zh-TW'];
+const regex = {
+    reset: new RegExp(/\u00A7r/, 'gus'),
+    general: new RegExp(/\u00A7\S/, 'us'),
+    text: new RegExp(/\u00A7\S(.+)/, 'us')
+}
 const routelogs = {
     query: /** @returns {boolean} */ function ({gid, task, nodeName}) {try {return this[gid][task][nodeName]} catch {return undefined}},
     write: function ({gid, task, nodeName, value}) {this[gid][task][nodeName] = value; return value;}
