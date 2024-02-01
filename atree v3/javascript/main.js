@@ -124,10 +124,10 @@ class UNIT {
     constructor(axis) {
         this.axis = axis;
         this.gates = {
-            W: new Gate('W'),
-            E: new Gate('E'),
+            N: new Gate('N'),
             S: new Gate('S'),
-            N: new Gate('N')
+            E: new Gate('E'),
+            W: new Gate('W'),
         };
     }
 
@@ -266,7 +266,7 @@ class NODE extends UNIT{
             case 'disable': break;
             case 'enable':
                 this.set('standby');
-                this.#transmitter({
+                this.#send({
                     gates: this.gateway,
                     packet: new Packet({
                         task: 'standby',
@@ -277,7 +277,7 @@ class NODE extends UNIT{
                 break;
             case 'standby':
                 this.set('enable');
-                this.#transmitter({
+                this.#send({
                     gates: this.gateway,
                     packet: new Packet({
                         task: 'enable',
@@ -299,7 +299,7 @@ class NODE extends UNIT{
      * @param {host}
      * @returns {boolean | null}
      **/
-    #transmitter({gates, packet, interrupt=false, base=null}) {
+    #send({gates, packet, interrupt=false, base=null}) {
         
         const collector = [];
 
@@ -319,6 +319,15 @@ class NODE extends UNIT{
             console.info(`<${this.name}> [${this.state}] (Gate ${gate.pos}) response: ${bin}`);
 
             collector.push(bin);
+            if (bin && packet.payload.task.endsWith('?')) {
+                routelogs.write({
+                    gid: subpack.footer.gid,
+                    task: subpack.payload.task,
+                    nodeName: this.name,
+                    value: bin
+                })
+            }
+
             return bin;
         }
 
@@ -330,7 +339,7 @@ class NODE extends UNIT{
         const bin = (interrupt ? gates.some(host) : gates.map(host).some((_) => _)) ? true : bool(collector, {base: base});
 
         console.groupEnd();
-        console.info(`<${this.name}> [${this.state}] Route ${GID}.${SID} end. final: ${bin}, collector: ${str(collector)}`);
+        console.info(`<${this.name}> [${this.state}] Route ${GID}.${SID} end. collector: ${str(collector)}, final: ${bin}.`);
         if (!SID) {delete routelogs[GID]};
         return bin;
     }
@@ -376,13 +385,13 @@ class NODE extends UNIT{
                                 nodeName: this.name,
                                 value: (
                                     this.importGates.length ?
-                                    this.#transmitter({
+                                    this.#send({
                                         gates: this.importGates,
                                         packet: new Packet({
                                             task: 'reachable?',
                                             send: this.name,
                                             mode: 'traceback',
-                                            ignores: Array.from(this.proto.export).filter((name) => !this.proto.import?.includes(name)),
+                                            ignores: this.proto.export?.filter((name) => !this.proto.import?.includes(name)),
                                             gid: packet.footer.gid
                                         })
                                     }) : true
@@ -392,7 +401,7 @@ class NODE extends UNIT{
                         }
 
                         this.set('disable');
-                        bin = this.exportGates.length ? this.#transmitter({
+                        bin = this.exportGates.length ? this.#send({
                             gates: this.exportGates,
                             packet: packet.config({task: 'disable'})
                         }): null;
@@ -429,13 +438,19 @@ class NODE extends UNIT{
                             gid: packet.footer.gid,
                             task: 'reachable?',
                             nodeName: this.name
-                        }) ?? routelogs.write({
+                        }) ?? this.proto.import?.some((name) => {
+                            return routelogs.query({
+                                gid: packet.footer.gid,
+                                task: 'reachable?',
+                                nodeName: name
+                            })
+                        }) ? true : routelogs.write({
                             gid: packet.footer.gid,
                             task: 'reachable?',
                             nodeName: this.name,
                             value: (
                                 this.importGates.length ?
-                                this.#transmitter({
+                                this.#send({
                                     gates: this.importGates,
                                     packet: packet,
                                     interrupt: true,
@@ -446,7 +461,7 @@ class NODE extends UNIT{
 
                         if (!bin) {
                             this.set('disable')
-                            this.exportGates.length ? this.#transmitter({
+                            this.exportGates.length ? this.#send({
                                 gates: this.exportGates,
                                 packet: new Packet({
                                     task: 'disable',
@@ -533,7 +548,6 @@ class BRANCH extends UNIT {
 
 class PATH extends BRANCH {}
 
-
 class Tooltip {
 
     /**
@@ -568,7 +582,7 @@ class Tooltip {
         nodeName.appendChild(document.createTextNode(info.realname ?? info.name));
         nodeName.className = "style-bold";
         nodeName.style.display = 'block';
-        nodeName.style.fontSize = '1.6em';
+        nodeName.style.fontSize = '1.5em';
         nodeName.style.lineHeight = '1.4em';
         switch (info.level) {
             case 0: nodeName.classList.add('color-green'); break;
@@ -607,6 +621,7 @@ class Tooltip {
         body.style.display = 'block';
         body.style.marginTop = '1em';
         tooltip.html[lang].appendChild(body);
+        return;
         window.fetch(`https://raw.githubusercontent.com/qiuzilay/Website-Code/main/atree%20v3/resources/texts/${lang}/${tooltip.master.class}/${tooltip.master.proto.name}.txt`)
                     .catch((error) => console.error(error))
                     .then(/** @param {Response} response */ (response) => response.ok ? response.text() : void(0))
@@ -793,6 +808,7 @@ class EventHandler {
     static buildTree() {
 
         for (const [clsname, dataset] of Object.entries(database)) {
+            const clsmap = routemap[clsname];
             for (const [name, info] of Object.entries(dataset)) {
                 console.groupCollapsed(`<${name}>`);
 
@@ -801,12 +817,16 @@ class EventHandler {
                 const node = new NODE(clsname, info);
 
                 try {
-                    routemap[clsname][y].splice(x, 1, node);
+                    clsmap[y].splice(x, 1, node);
                 } catch {
-                    routemap[clsname][y] = newline(x, 1, node);
+                    clsmap[y] = newline(x, 1, node);
                 }
 
-                console.groupEnd()
+                console.groupEnd();
+            }
+
+            for (let y = clsmap.length; clsmap.length % 6; y++) {
+                clsmap[y] = newline();
             }
         }
 
@@ -828,18 +848,28 @@ class EventHandler {
                         td.appendChild(unit.html);
                         unit.html = td.firstChild;
                         if (unit instanceof PATH) {
-                            unit.gateway.forEach((/** @type {Gate}*/ gate) => {
-                                gate.connect.forEach((/** @type {NODE}*/ node) => {
-                                    if (node === gate.connect_with) {
-                                        const family = [node.proto.import, node.proto.export].flat();
-                                        node.gates[opposite(gate.pos)].connect_with ??= unit;
-                                        node.gates[opposite(gate.pos)].connect = (
-                                            unit.gateway.flatMap((_gate) => _gate.connect)
-                                                        .filter((_node) => family.includes(_node.name))
-                                        );
-                                    }
-                                });
-                            });
+                            unit.gateway.map((gate) => [gate.pos, gate.connect_with])
+                                        .filter((/** @type {[direction, UNIT]} */[pos, obj]) => obj instanceof NODE)
+                                        .forEach((/** @type {[direction, NODE]} */[pos, node]) => {
+                                            const family = [node.proto.import, node.proto.export].flat();
+                                            node.gates[opposite(pos)].connect_with ??= unit;
+                                            node.gates[opposite(pos)].connect = (
+                                                unit.gateway.flatMap((_gate) => _gate.connect)
+                                                            .filter((_node) => family.includes(_node.name))
+                                            );
+                                        });
+                            //unit.gateway.forEach((/** @type {Gate}*/ gate) => {
+                            //    gate.connect.forEach((/** @type {NODE}*/ node) => {
+                            //        if (node === gate.connect_with) {
+                            //            const family = [node.proto.import, node.proto.export].flat();
+                            //            node.gates[opposite(gate.pos)].connect_with ??= unit;
+                            //            node.gates[opposite(gate.pos)].connect = (
+                            //                unit.gateway.flatMap((_gate) => _gate.connect)
+                            //                            .filter((_node) => family.includes(_node.name))
+                            //            );
+                            //        }
+                            //    });
+                            //});
                         }
                     }
                     tr.appendChild(td);
@@ -1055,13 +1085,14 @@ const database = {
             "name": "Spear Proficiency I",
             "level": 1,
             "import": ["Bash"],
-            "export": ["Double Bash", "Cheaper Bash"],
+            "export": ["Double Bash", "Cheaper Bash I"],
             "cost": 1,
             "axis": [4, 3],
             "draft": ["N", "S", "W"]
         },
-        "Cheaper Bash": {
-            "name": "Cheaper Bash",
+        "Cheaper Bash I": {
+            "name": "Cheaper Bash I",
+            "realname": "Cheaper Bash",
             "level": 1,
             "import": ["Spear Proficiency I"],
             "export": null,
@@ -1120,7 +1151,7 @@ const database = {
             "export": ["Cheaper Charge", "Heavy Impact", "Earth Mastery", "Thunder Mastery"],
             "cost": 1,
             "axis": [2, 9],
-            "draft": ["N", "SSS", "E", "W", "WWSSS"]
+            "draft": ["N", "SSS", "E", "WWSSS"]
         },
         "Cheaper Charge": {
             "name": "Cheaper Charge",
@@ -1129,7 +1160,7 @@ const database = {
             "export": ["Uppercut", "War Scream", "Thunder Mastery", "Air Mastery", "Water Mastery"],
             "cost": 1,
             "axis": [4, 9],
-            "draft": ["SSSS", "SSSSE", "SSSSW", "E", "W"]
+            "draft": ["SSSSE", "SSSSW", "E", "W"]
         },
         "War Scream": {
             "name": "War Scream",
@@ -1168,7 +1199,7 @@ const database = {
             "cost": 1,
             "archetype": {"name": "Fallen", "req": 0},
             "axis": [2, 13],
-            "draft": ["NNN", "S", "EE", "EEE", "EENNN"]
+            "draft": ["NNN", "S", "EEE", "EENNN"]
         },
         "Air Mastery": {
             "name": "Air Mastery",
@@ -1178,7 +1209,7 @@ const database = {
             "cost": 1,
             "archetype": {"name": "Battle Monk", "req": 0},
             "axis": [6, 13],
-            "draft": ["NNN", "S", "WW", "WWW", "WWNNN"]
+            "draft": ["NNN", "S", "WWW", "WWNNN"]
         },
         "Fire Mastery": {
             "name": "Fire Mastery",
@@ -1275,7 +1306,7 @@ const database = {
             "name": "Air Shout",
             "level": 2,
             "import": ["Half-Moon Swipe"],
-            "export": ["Generalist", "Cheaper Uppercut"],
+            "export": ["Generalist", "Cheaper Uppercut I"],
             "cost": 2,
             "rely": "War Scream",
             "archetype": {"name": "Battle Monk", "req": 0},
@@ -1307,14 +1338,15 @@ const database = {
         "Spear Proficiency II": {
             "name": "Spear Proficiency II",
             "level": 1,
-            "import": ["Bak'al's Grasp", "Cheaper Uppercut"],
-            "export": ["Precise Strikes", "Cheaper Uppercut", "Enraged Blow"],
+            "import": ["Bak'al's Grasp", "Cheaper Uppercut I"],
+            "export": ["Precise Strikes", "Cheaper Uppercut I", "Enraged Blow"],
             "cost": 1,
             "axis": [0, 21],
             "draft": ["N", "SSS", "EE"]
         },
-        "Cheaper Uppercut": {
-            "name": "Cheaper Uppercut",
+        "Cheaper Uppercut I": {
+            "name": "Cheaper Uppercut I",
+            "realname": "Cheaper Uppercut",
             "level": 1,
             "import": ["Spear Proficiency II", "Aerodynamics", "Air Shout"],
             "export": ["Spear Proficiency II", "Aerodynamics", "Precise Strikes", "Counter", "Flying Kick"],
@@ -1326,8 +1358,8 @@ const database = {
         "Aerodynamics": {
             "name": "Aerodynamics",
             "level": 2,
-            "import": ["Provoke", "Cheaper Uppercut"],
-            "export": ["Provoke", "Cheaper Uppercut", "Counter", "Manachism"],
+            "import": ["Provoke", "Cheaper Uppercut I"],
+            "export": ["Provoke", "Cheaper Uppercut I", "Counter", "Manachism"],
             "cost": 2,
             "archetype": {"name": "Battle Monk", "req": 0},
             "axis": [5, 21],
@@ -1346,7 +1378,7 @@ const database = {
         "Precise Strikes": {
             "name": "Precise Strikes",
             "level": 1,
-            "import": ["Spear Proficiency II", "Cheaper Uppercut"],
+            "import": ["Spear Proficiency II", "Cheaper Uppercut I"],
             "export": null,
             "cost": 1,
             "axis": [1, 22],
@@ -1355,7 +1387,7 @@ const database = {
         "Counter": {
             "name": "Counter",
             "level": 2,
-            "import": ["Cheaper Uppercut", "Aerodynamics", "Manachism"],
+            "import": ["Cheaper Uppercut I", "Aerodynamics", "Manachism"],
             "export": ["Manachism"],
             "cost": 2,
             "archetype": {"name": "Battle Monk", "req": 0},
@@ -1371,6 +1403,419 @@ const database = {
             "archetype": {"name": "Paladin", "req": 3},
             "axis": [6, 22],
             "draft": ["N", "W"]
+        },
+        "Enraged Blow": {
+            "name": "Enraged Blow",
+            "level": 3,
+            "import": ["Spear Proficiency II"],
+            "export": ["Intoxicating Blood", "Boiling Blood"],
+            "cost": 2,
+            "rely": "Bak'al's Grasp",
+            "archetype": {"name": "Fallen", "req": 0},
+            "axis": [0, 25],
+            "draft": ["NNN", "S", "ESS"]
+        },
+        "Flying Kick": {
+            "name": "Flying Kick",
+            "level": 2,
+            "import": ["Cheaper Uppercut I", "Stronger Mantle"],
+            "export": ["Stronger Mantle", "Riposte", "Cheaper War Scream I", "Ragnarokkr"],
+            "cost": 2,
+            "archetype": {"name": "Battle Monk", "req": 1},
+            "axis": [3, 25],
+            "draft": ["NNN", "SS", "ES", "EE"]
+        },
+        "Stronger Mantle": {
+            "name": "Stronger Mantle",
+            "level": 1,
+            "import": ["Flying Kick", "Sacred Surge"],
+            "export": ["Flying Kick", "Sacred Surge", "Riposte", "Cheaper War Scream I"],
+            "cost": 1,
+            "rely": "Mantle of the Bovemists",
+            "archetype": {"name": "Paladin", "req": 0},
+            "axis": [6, 25],
+            "draft": ["E", "WWS"]
+        },
+        "Sacred Surge": {
+            "name": "Sacred Surge",
+            "level": 3,
+            "import": ["Provoke", "Stronger Mantle"],
+            "export": ["Stronger Mantle", "Stronger Bash"],
+            "cost": 2,
+            "archetype": {"name": "Paladin", "req": 5},
+            "axis": [8, 25],
+            "draft": ["NNNN", "S", "W"]
+        },
+        "Riposte": {
+            "name": "Riposte",
+            "level": 1,
+            "import": ["Flying Kick", "Stronger Mantle"],
+            "export": null,
+            "cost": 1,
+            "rely": "Counter",
+            "axis": [5, 26],
+            "draft": ["NW"]
+        },
+        "Intoxicating Blood": {
+            "name": "Intoxicating Blood",
+            "level": 2,
+            "import": ["Enraged Blow"],
+            "export": null,
+            "cost": 2,
+            "rely": "Bak'al's Grasp",
+            "archetype": {"name": "Fallen", "req": 5},
+            "axis": [0, 27],
+            "draft": ["N"]
+        },
+        "Cheaper War Scream I": {
+            "name": "Cheaper War Scream I",
+            "realname": "Cheaper War Scream",
+            "level": 1,
+            "import": ["Cleansing Breeze", "Flying Kick", "Stronger Mantle"],
+            "export": ["Cleansing Breeze", "Collide" ,"Ragnarokkr", "Whirlwind Strike"],
+            "cost": 1,
+            "rely": "War Scream",
+            "axis": [4, 27],
+            "draft": ["NNE", "SSS", "E", "WN"]
+        },
+        "Cleansing Breeze": {
+            "name": "Cleansing Breeze",
+            "level": 1,
+            "import": ["Stronger Bash", "Cheaper War Scream I"],
+            "export": ["Stronger Bash", "Cheaper War Scream I", "Collide", "Rejuvenating Skin"],
+            "cost": 1,
+            "archetype": {"name": "Paladin", "req": 0},
+            "axis": [6, 27],
+            "draft": ["E", "W"]
+        },
+        "Stronger Bash": {
+            "name": "Stronger Bash",
+            "level": 1,
+            "import": ["Cleansing Breeze", "Sacred Surge"],
+            "export": ["Cleansing Breeze", "Rejuvenating Skin"],
+            "cost": 1,
+            "axis": [8, 27],
+            "draft": ["N", "W"]
+        },
+        "Boiling Blood": {
+            "name": "Boiling Blood",
+            "level": 2,
+            "import": ["Ragnarokkr", "Enraged Blow"],
+            "export": ["Ragnarokkr", "Comet", "Uncontainable Corruption"],
+            "cost": 2,
+            "axis": [1, 28],
+            "draft": ["NNN", "E", "WSS"]
+        },
+        "Ragnarokkr": {
+            "name": "Ragnarokkr",
+            "level": 3,
+            "import": ["Boiling Blood", "Cheaper War Scream I", "Flying Kick"],
+            "export": ["Boiling Blood", "Comet"],
+            "cost": 2,
+            "rely": "War Scream",
+            "archetype": {"name": "Fallen", "req": 0},
+            "axis": [3, 28],
+            "draft": ["NN", "W"]
+        },
+        "Collide": {
+            "name": "Collide",
+            "level": 2,
+            "import": ["Cheaper War Scream I", "Cleansing Breeze"],
+            "export": null,
+            "cost": 2,
+            "rely": "Flying Kick",
+            "archetype": {"name": "Battle Monk", "req": 4},
+            "axis": [5, 28],
+            "draft": ["N"]
+        },
+        "Rejuvenating Skin": {
+            "name": "Rejuvenating Skin",
+            "level": 4,
+            "import": ["Cleansing Breeze", "Stronger Bash"],
+            "export": ["Mythril Skin"],
+            "cost": 2,
+            "archetype": {"name": "Paladin", "req": 5},
+            "axis": [7, 28],
+            "draft": ["N", "SS"]
+        },
+        "Comet": {
+            "name": "Comet",
+            "level": 2,
+            "import": ["Boiling Blood", "Ragnarokkr"],
+            "export": null,
+            "cost": 2,
+            "rely": "Fireworks",
+            "archetype": {"name": "Fallen", "req": 0},
+            "axis": [2, 29],
+            "draft": ["N"]
+        },
+        "Uncontainable Corruption": {
+            "name": "Uncontainable Corruption",
+            "level": 1,
+            "import": ["Radiant Devotee", "Boiling Blood"],
+            "export": ["Radiant Devotee", "Armour Breaker", "Massive Bash"],
+            "cost": 1,
+            "rely": "Bak'al's Grasp",
+            "axis": [0, 31],
+            "draft": ["NNN", "S", "E"]
+        },
+        "Radiant Devotee": {
+            "name": "Radiant Devotee",
+            "level": 1,
+            "import": ["Whirlwind Strike", "Uncontainable Corruption"],
+            "export": ["Whirlwind Strike", "Uncontainable Corruption", "Armour Breaker"],
+            "cost": 1,
+            "archetype": {"name": "Battle Monk", "req": 1},
+            "axis": [2, 31],
+            "draft": ["E", "W"]
+        },
+        "Whirlwind Strike": {
+            "name": "Whirlwind Strike",
+            "level": 4,
+            "import": ["Radiant Devotee", "Cheaper War Scream I"],
+            "export": ["Radiant Devotee", "Spirit of the Rabbit"],
+            "cost": 2,
+            "rely": "Uppercut",
+            "archetype": {"name": "Battle Monk", "req": 6},
+            "axis": [4, 31],
+            "draft": ["NNN", "S", "W"]
+        },
+        "Mythril Skin": {
+            "name": "Mythril Skin",
+            "level": 2,
+            "import": ["Rejuvenating Skin"],
+            "export": ["Shield Strike", "Sparkling Hope"],
+            "cost": 2,
+            "archetype": {"name": "Paladin", "req": 6},
+            "axis": [7, 31],
+            "draft": ["NN", "E", "W"]
+        },
+        "Armour Breaker": {
+            "name": "Armour Breaker",
+            "level": 3,
+            "import": ["Uncontainable Corruption", "Radiant Devotee"],
+            "export": null,
+            "cost": 2,
+            "rely": "Bak'al's Grasp",
+            "archetype": {"name": "Fallen", "req": 0},
+            "axis": [1, 32],
+            "draft": ["N"]
+        },
+        "Shield Strike": {
+            "name": "Shield Strike",
+            "level": 2,
+            "import": ["Mythril Skin"],
+            "export": ["Cheaper Bash II"],
+            "cost": 2,
+            "rely": "Mantle of the Bovemists",
+            "archetype": {"name": "Paladin", "req": 0},
+            "axis": [6, 32],
+            "draft": ["N", "ES"]
+        },
+        "Sparkling Hope": {
+            "name": "Sparkling Hope",
+            "level": 3,
+            "import": ["Mythril Skin"],
+            "export": ["Cheaper Bash II"],
+            "cost": 2,
+            "rely": "Bak'al's Grasp",
+            "archetype": {"name": "Paladin", "req": 0},
+            "axis": [8, 32],
+            "draft": ["N", "WS"]
+        },
+        "Massive Bash": {
+            "name": "Massive Bash",
+            "level": 3,
+            "import": ["Tempest", "Uncontainable Corruption"],
+            "export": ["Tempest", "Massacre", "Cheaper War Scream II"],
+            "cost": 2,
+            "archetype": {"name": "Fallen", "req": 7},
+            "axis": [0, 33],
+            "draft": ["N", "SSS", "E"]
+        },
+        "Tempest": {
+            "name": "Tempest",
+            "level": 2,
+            "import": ["Massive Bash", "Spirit of the Rabbit"],
+            "export": ["Massive Bash", "Spirit of the Rabbit", "Axe Kick", "Massacre"],
+            "cost": 2,
+            "archetype": {"name": "Battle Monk", "req": 0},
+            "axis": [2, 33],
+            "draft": ["E", "W"]
+        },
+        "Spirit of the Rabbit": {
+            "name": "Spirit of the Rabbit",
+            "level": 1,
+            "import": ["Tempest", "Whirlwind Strike"],
+            "export": ["Tempest", "Axe Kick", "Radiance", "Cyclone"],
+            "cost": 1,
+            "rely": "Charge",
+            "archetype": {"name": "Battle Monk", "req": 5},
+            "axis": [4, 33],
+            "draft": ["N", "SSS", "E", "W"]
+        },
+        "Massacre": {
+            "name": "Massacre",
+            "level": 2,
+            "import": ["Massive Bash", "Tempest"],
+            "export": null,
+            "cost": 2,
+            "archetype": {"name": "Fallen", "req": 5},
+            "axis": [1, 34],
+            "draft": ["N"]
+        },
+        "Axe Kick": {
+            "name": "Axe Kick",
+            "level": 1,
+            "import": ["Tempest", "Spirit of the Rabbit"],
+            "export": null,
+            "cost": 1,
+            "axis": [3, 34],
+            "draft": ["N"]
+        },
+        "Radiance": {
+            "name": "Radiance",
+            "level": 3,
+            "import": ["Spirit of the Rabbit", "Cheaper Bash II"],
+            "export": ["Cheaper Bash II"],
+            "cost": 2,
+            "archetype": {"name": "Paladin", "req": 3},
+            "axis": [5, 34],
+            "draft": ["N", "E"]
+        },
+        "Cheaper Bash II": {
+            "name": "Cheaper Bash II",
+            "realname": "Cheaper Bash",
+            "level": 1,
+            "import": ["Radiance", "Shield Strike", "Sparkling Hope"],
+            "export": ["Radiance", "Stronger Sacred Surge"],
+            "cost": 1,
+            "rely": "Bash",
+            "archetype": {"name": null, "req": null},
+            "axis": [7, 34],
+            "draft": ["NN", "SS", "W"]
+        },
+        "Cheaper War Scream II": {
+            "name": "Cheaper War Scream II",
+            "realname": "Cheaper War Scream",
+            "level": 1,
+            "import": ["Massive Bash"],
+            "export": ["Better Enraged Blow", "Blood Pact"],
+            "cost": 1,
+            "rely": "War Scream",
+            "axis": [0, 37],
+            "draft": ["NNN", "S", "E"]
+        },
+        "Discombobulate": {
+            "name": "Discombobulate",
+            "level": 4,
+            "import": ["Cyclone"],
+            "export": null,
+            "cost": 2,
+            "archetype": {"name": "Battle Monk", "req": 11},
+            "axis": [2, 37],
+            "draft": ["E"]
+        },
+        "Cyclone": {
+            "name": "Cyclone",
+            "level": 2,
+            "import": ["Spirit of the Rabbit"],
+            "export": ["Discombobulate", "Thunderclap"],
+            "cost": 2,
+            "archetype": {"name": "Battle Monk", "req": 0},
+            "axis": [4, 37],
+            "draft": ["NNN", "W", "E"]
+        },
+        "Stronger Sacred Surge": {
+            "name": "Stronger Sacred Surge",
+            "level": 1,
+            "import": ["Cheaper Bash II"],
+            "export": ["Second Chance"],
+            "cost": 1,
+            "rely": "Sacred Surge",
+            "archetype": {"name": "Paladin", "req": 8},
+            "axis": [7, 37],
+            "draft": ["NN", "S"]
+        },
+        "Better Enraged Blood": {
+            "name": "Better Enraged Blood",
+            "level": 1,
+            "import": ["Cheaper War Scream II"],
+            "export": null,
+            "cost": 1,
+            "rely": "Enraged Blow",
+            "axis": [1, 38],
+            "draft": ["N"]
+        },
+        "Thunderclap": {
+            "name": "Thunderclap",
+            "level": 2,
+            "import": ["Cyclone"],
+            "export": null,
+            "cost": 2,
+            "rely": "Bash",
+            "archetype": {"name": "Battle Monk", "req": 8},
+            "axis": [5, 38],
+            "draft": ["N"]
+        },
+        "Blood Pact": {
+            "name": "Blood Pact",
+            "level": 4,
+            "import": ["Cheaper War Scream II"],
+            "export": ["Haemorrhage", "Brink of Madness"],
+            "cost": 2,
+            "archetype": {"name": "Fallen", "req": 10},
+            "axis": [0, 39],
+            "draft": ["N", "EEEE"]
+        },
+        "Second Chance": {
+            "name": "Second Chance",
+            "level": 4,
+            "import": ["Stronger Sacred Surge"],
+            "export": ["Cheaper Uppercut II", "Martyr"],
+            "cost": 2,
+            "archetype": {"name": "Paladin", "req": 6},
+            "axis": [7, 39],
+            "draft": ["N", "E", "W"]
+        },
+        "Haemorrhage": {
+            "name": "Haemorrhage",
+            "level": 1,
+            "import": ["Blood Pact"],
+            "export": null,
+            "cost": 1,
+            "rely": "Blood Pact",
+            "archetype": {"name": "Fallen", "req": 0},
+            "axis": [2, 40],
+            "draft": ["NW"]
+        },
+        "Brink of Madness": {
+            "name": "Brink of Madness",
+            "level": 3,
+            "import": ["Blood Pact", "Cheaper Uppercut II"],
+            "export": ["Cheaper Uppercut II"],
+            "cost": 2,
+            "axis": [4, 40],
+            "draft": ["NWWW", "E"]
+        },
+        "Cheaper Uppercut II": {
+            "name": "Cheaper Uppercut II",
+            "level": 1,
+            "import": ["Brink of Madness", "Second Chance"],
+            "export": ["Brink of Madness"],
+            "cost": 1,
+            "rely": "Uppercut",
+            "axis": [6, 40],
+            "draft": ["N", "W"]
+        },
+        "Martyr": {
+            "name": "Martyr",
+            "level": 2,
+            "import": ["Second Chance"],
+            "export": null,
+            "cost": 2,
+            "axis": [8, 40],
+            "draft": ["N"]
         }
     },
     "mage": {},
