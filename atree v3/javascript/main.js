@@ -187,7 +187,7 @@ class NODE extends UNIT{
      * @property    {String[]}    ndata.lock
      * @property    {String}      ndata.rely
      * @property    {Object}      ndata.archetype
-     * @property    {String}      ndata.archetype.name
+     * @property    {Archetypes}  ndata.archetype.name
      * @property    {number}      ndata.archetype.req
      * @property    {number[]}    ndata.axis
      * @property    {String[]}    ndata.draft
@@ -204,7 +204,7 @@ class NODE extends UNIT{
         /** @type {Classes} */
         this.class = clsname;
         /** @type {States} */
-        this.state = (str(info.axis) === str([4, 1])) ? 'standby' : 'disable';
+        this.state = (str(info.axis) === '[4,1]') ? 'standby' : 'disable';
         /** @type {Tooltip} */
         this.tooltip = new Tooltip(this);
         /** @type {HTMLButtonElement} */
@@ -674,6 +674,8 @@ class Tooltip {
                 );
             });
             footer.appendChild(lock);
+
+            // add to routedata.<class>.lock
             info.lock.forEach((name) => {
                 try {
                     routedata[tooltip.master.class].lock[name].add(tooltip.master);
@@ -709,6 +711,9 @@ class Tooltip {
             }
             archetype.appendChild(document.createTextNode(`${info.archetype.name} Archetype`));
             footer.appendChild(archetype);
+
+            // add to routedata.<class>.archetype
+            routedata[tooltip.master.class].archetype[info.archetype.name].add(tooltip.master);
         }
         
         if (info.cost) {
@@ -740,7 +745,11 @@ class Tooltip {
             rely.appendChild(document.createTextNode(translate[lang].rely));
             rely.appendChild(name);
             footer.appendChild(rely);
-            routedata[tooltip.master.class].rely[info.rely] = tooltip.master;
+            try {
+                routedata[tooltip.master.class].rely[info.rely].add(tooltip.master);
+            } catch {
+                routedata[tooltip.master.class].rely[info.rely] = new Set([tooltip.master]);
+            }
         }
 
         if (info.archetype?.req) {
@@ -752,7 +761,6 @@ class Tooltip {
             value.appendChild(document.createTextNode(0));
             archetype.append(translate[lang].archetype(info.archetype.name), value, `/${info.archetype.req}`);
             footer.appendChild(archetype);
-            routedata[tooltip.master.class].archetype[info.archetype.name].add(tooltip.master);
         }
 
         tooltip.html[lang].appendChild(footer);
@@ -827,44 +835,45 @@ class Archetype extends Set {
     /** @param {Archetypes} name */
     constructor(name) {
         super();
+        /** @type {Archetypes} */
         this.name = name;
-        this.image = document.createElement('img');
-        switch (name) {
-            case 'Boltslinger':
-            case 'Battle Monk':
-                this.image.classList.add('archetype-yellow')
-                break;
-            case 'Sharpshooter':
-            case 'Arcanist':
-            case 'Trickster':
-                this.image.classList.add('archetype-purple');
-                break;
-            case 'Trapper':
-            case 'Ritualist':
-                this.image.classList.add('archetype-green');
-                break;
-            case 'Fallen':
-            case 'Shadestepper':
-            case 'Acolyte':
-                this.image.classList.add('archetype-red');
-                break;
-            case 'Paladin':
-            case 'Riftwalker':
-                this.image.classList.add('archetype-blue');
-                break;
-            case 'Light Bender':
-            case 'Acrobat':
-                this.image.classList.add('archetype-white');
-                break;
-            case 'Summoner':
-                this.image.classList.add('archetype-gold');
-                break;
-        }
     }
 
     get html() {
         const fragment = document.createDocumentFragment();
-        fragment.appendChild(this.image);
+        const image = document.createElement('img');
+        switch (this.name) {
+            case 'Boltslinger':
+            case 'Battle Monk':
+                image.classList.add('archetype-yellow')
+                break;
+            case 'Sharpshooter':
+            case 'Arcanist':
+            case 'Trickster':
+                image.classList.add('archetype-purple');
+                break;
+            case 'Trapper':
+            case 'Ritualist':
+                image.classList.add('archetype-green');
+                break;
+            case 'Fallen':
+            case 'Shadestepper':
+            case 'Acolyte':
+                image.classList.add('archetype-red');
+                break;
+            case 'Paladin':
+            case 'Riftwalker':
+                image.classList.add('archetype-blue');
+                break;
+            case 'Light Bender':
+            case 'Acrobat':
+                image.classList.add('archetype-white');
+                break;
+            case 'Summoner':
+                image.classList.add('archetype-gold');
+                break;
+        }
+        fragment.appendChild(image);
 
         return fragment;
     }
@@ -1016,7 +1025,10 @@ function bool(arr, {base}={base: null}) {
     return bin;
 }
 
-/** @param {Array} arr @returns {Array}  */
+/**
+ * @param {Array} arr
+ * @returns {Array}
+ **/
 function unique(arr) {
     return Array.from(new Set(arr));
 }
@@ -1786,7 +1798,6 @@ const database = {
             "export": ["Radiance", "Stronger Sacred Surge"],
             "cost": 1,
             "rely": "Bash",
-            "archetype": {"name": null, "req": null},
             "axis": [7, 34],
             "draft": ["NN", "SS", "W"]
         },
