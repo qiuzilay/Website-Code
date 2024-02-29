@@ -134,6 +134,14 @@ div#main .frame.foot > img {
 
 /* ------- main.page.frame.container ------- */
 
+div#main .foot .container {
+    position: absolute;
+    top: 12.5%;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+
 div#main .container table,
 div#main .container tbody,
 div#main .container tr,
@@ -163,7 +171,8 @@ div#main .container td {
     display: table-cell;
 }
 
-div#main .container td:has(button):hover::before {
+div#main .frame.body .container td:has(button):hover::before,
+div#main .frame.foot .container td:has(img):hover::before {
     content: "";
     display: block;
     position: absolute;

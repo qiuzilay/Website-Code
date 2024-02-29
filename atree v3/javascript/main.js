@@ -1,5 +1,15 @@
 'use strict'
 
+/**
+ * @typedef {('en' | 'zh-TW')}              Languages
+ * @typedef  {("N" | "S" | "E" | "W")}      Direction
+ * @typedef  {('normal' | 'traceback')}     Modes
+ * @typedef  {(NODE | BRANCH)}              Units
+ * @typedef  {('enable' | 'disable' | 'standby' | 'lock')}  States
+ * @typedef  {('archer' | 'warrior' | 'mage' | 'assassin' | 'shaman')}  Classes
+ * @typedef  {('Boltslinger' | 'Sharpshooter' | 'Trapper' | 'Fallen' | 'Battle Monk' | 'Paladin' | 'Riftwalker' | 'Light Bender' | 'Arcanist' | 'Shadestepper' | 'Trickster' | 'Acrobat' | 'Summoner' | 'Ritualist' | 'Acolyte')}   Archetypes
+ */
+
 function main() {
     EventHandler.buildTree();
     document.addEventListener('DOMContentLoaded', () => {
@@ -8,22 +18,19 @@ function main() {
 
         console.info('routemap:', routemap);
         console.info('routelogs:', routelogs);
-        console.info('routegroup:', routegroup);
+        console.info('routedata:', routedata);
     });
 }
 
 class Packet {
-    /**
-     * @typedef  {("N" | "S" | "E" | "W")}  direction
-     * @typedef  {('normal' | 'traceback')} modes
-     * @typedef  {(NODE | BRANCH)}  unit        
+    /**    
      * @typedef  {Object}           params      
      * @property {string}           task        Command
      * @property {NODE}             send        Sender Name
      * @property {NODE}             recv        Destination
-     * @property {modes}            mode        Transmit mode
-     * @property {unit}             router      Transmitter
-     * @property {direction}        via         Pass by the gate
+     * @property {Modes}            mode        Transmit mode
+     * @property {Units}            router      Transmitter
+     * @property {Direction}        via         Pass by the gate
      * @property {Object}           data        Attachment
      * @property {String[]}         ignores     Ignore List
      * @property {String}           ignore      Ignore
@@ -37,7 +44,7 @@ class Packet {
          * @typedef    {Object}         header
          * @property   {NODE}           send
          * @property   {NODE}           recv
-         * @property   {modes}          mode
+         * @property   {Modes}          mode
          * @property   {String[]}       ignore
          * @property   {Set<String>}    __ignore
          * 
@@ -46,8 +53,8 @@ class Packet {
          * @property   {Object}   data
          * 
          * @typedef    {Object}     footer
-         * @property   {unit}       router
-         * @property   {direction}  via
+         * @property   {Units}      router
+         * @property   {Direction}  via
          * @property   {number}     ttl
          * @property   {number}     gid
          */
@@ -107,11 +114,11 @@ class Packet {
 
 class Gate {
     constructor(pos) {
-        /** @type {direction} */
+        /** @type {Direction} */
         this.pos = pos;
         /** @type {Set<NODE>} */
         this._connect = new Set();
-        /** @type {unit}} */
+        /** @type {Units}} */
         this.connect_with = null;
     }
     get bound() {return this.connect.length ? true : false}
@@ -147,16 +154,16 @@ class UNIT {
     }
     
     /**
-     * @param {direction} pos
-     * @param {node} node
-     * @param {unit} closest
+     * @param {Direction}   pos
+     * @param {NODE}        node
+     * @param {Units}       closest
      */
     __bind__(pos, node, closest) {
         const gate = this.gates[pos]
         gate._connect.add(node)
         try {
             if ((gate.connect_with !== null) && (gate.connect_with !== closest)) {
-                throw Error(`suspecious rebind the "connect_with" property, occurred at [${this.axis}]`);
+                throw Error(`Suspecious rebind the "connect_with" property, occurred at [${this.axis}]`);
             } else {
                 gate.connect_with ??= closest;
             }
@@ -170,8 +177,6 @@ class UNIT {
 class NODE extends UNIT{
 
     /**
-     * @typedef     {('archer' | 'warrior' | 'mage' | 'assassin' | 'shaman')}   classes 
-     * @typedef     {('enable' | 'disable' | 'standby' | 'lock')} states
      * @typedef     {Object}      ndata
      * @property    {String}      ndata.name
      * @property    {String}      ndata.combo
@@ -187,7 +192,7 @@ class NODE extends UNIT{
      * @property    {number[]}    ndata.axis
      * @property    {String[]}    ndata.draft
      * 
-     * @param {classes} clsname
+     * @param {Classes} clsname
      * @param {ndata}   info
      */
     constructor(clsname, info) {
@@ -196,16 +201,26 @@ class NODE extends UNIT{
         this.proto = info;
         /** @type {String} */
         this.name = info.name;
-        /** @type {classes} */
+        /** @type {Classes} */
         this.class = clsname;
-        /** @type {states} */
+        /** @type {States} */
         this.state = (str(info.axis) === str([4, 1])) ? 'standby' : 'disable';
+        /** @type {Tooltip} */
         this.tooltip = new Tooltip(this);
-        this.html = generateElement(`<button class="${this.state}"><img class="${info.level ? `button_${info.level}` : `button_${clsname}`}"></button>`);
+        /** @type {HTMLButtonElement} */
+        this.buttonElement = document.createElement('button');
+        this.buttonElement.classList.add(this.state);
+        this.buttonElement.appendChild(generateElement(`<img class="${info.level ? `button_${info.level}` : `button_${clsname}`}">`));
 
         this.#__buildpath__();
+    }
 
-        this.html.appendChild(this.tooltip.html[languages[using]]);
+    /** @return {DocumentFragment} */
+    get html() {
+        const fragment = document.createDocumentFragment();
+        fragment.appendChild(this.buttonElement);
+        fragment.appendChild(this.tooltip.html[languages[using]]);
+        return fragment;
     }
 
     /** @returns {Gate[]} */
@@ -256,39 +271,44 @@ class NODE extends UNIT{
         const states = ['enable', 'disable', 'standby', 'lock'];
         if (state !== undefined) {this.state = state}
         if (!states.includes(this.state)) {throw Error(`invalid state of Node was detected at <${this.proto.name}>`)}
-        states.forEach((state) => {(state === this.state) ? this.html.classList.add(state) : this.html.classList.remove(state)});
+        states.forEach((state) => {(state === this.state) ? this.buttonElement.classList.add(state) : this.buttonElement.classList.remove(state)});
         return this.state;
     }
     
     click() {
-        switch (this.state) {
-            case 'lock': break;
-            case 'disable': break;
-            case 'enable':
-                this.set('standby');
-                this.#send({
-                    gates: this.gateway,
-                    packet: new Packet({
-                        task: 'standby',
-                        send: this.name,
-                        gid: globalID++
-                    })
-                });
-                break;
-            case 'standby':
-                this.set('enable');
-                this.#send({
-                    gates: this.gateway,
-                    packet: new Packet({
-                        task: 'enable',
-                        send: this.name,
-                        gid: globalID++
-                    })
-                });
-                break;
-            default: throw Error(`invalid state of Node was detected at <${this.proto.name}>`);
+        if (!this.buttonElement.classList.contains('lock')) {
+            switch (this.state) {
+                case 'disable': break;
+                case 'enable':
+                    this.set('standby');
+                    this.#send({
+                        gates: this.gateway,
+                        packet: new Packet({
+                            task: 'standby',
+                            send: this.name,
+                            gid: globalID++
+                        })
+                    });
+                    break;
+                case 'standby':
+                    this.set('enable');
+                    this.#send({
+                        gates: this.gateway,
+                        packet: new Packet({
+                            task: 'enable',
+                            send: this.name,
+                            gid: globalID++
+                        })
+                    });
+                    break;
+                default: throw Error(`invalid state of Node was detected at <${this.proto.name}>`);
+            }
+        } else {
+            console.warn(`<${this.name}> has been locked.`);
         }
     }
+
+    #update() {}
 
     /**
      * @typedef {object}    host
@@ -368,7 +388,6 @@ class NODE extends UNIT{
             case 'disable':
             case 'standby': {
                 switch (this.state) {
-                    case 'lock': break;
                     case 'disable': break;
                     case 'standby':
                     case 'enable': {
@@ -413,7 +432,6 @@ class NODE extends UNIT{
             }
             case 'enable': {
                 switch (this.state) {
-                    case 'lock': break;
                     case 'disable': {
                         if (this.proto.import?.includes(send)) {
                             this.set('standby');
@@ -430,7 +448,6 @@ class NODE extends UNIT{
             case 'reachable?': {
                 bin = false;
                 switch (this.state) {
-                    case 'lock': break;
                     case 'disable': break;
                     case 'standby': break;
                     case 'enable': {
@@ -491,19 +508,23 @@ class BRANCH extends UNIT {
 
     constructor(axis) {
         super(axis);
-        this.html = document.createDocumentFragment();
         this.layer = document.createElement('img');
         this.base = document.createElement('img');
         this.layer.style.zIndex = 1;
         this.base.style.zIndex = 0;
-        this.html.appendChild(this.layer)
-        this.html.appendChild(this.base)
+    }
+
+    get html() {
+        const fragment = document.createDocumentFragment();
+        fragment.appendChild(this.layer);
+        fragment.appendChild(this.base);
+        return fragment;
     }
 
     /**
-     * @param {direction} pos 
+     * @param {Direction} pos 
      * @param {NODE} node 
-     * @param {unit} closest
+     * @param {Units} closest
      */
     __bind__(pos, node, closest) {
         super.__bind__(pos, node, closest);
@@ -551,7 +572,6 @@ class PATH extends BRANCH {}
 class Tooltip {
 
     /**
-     * @typedef {('en' | 'zh-TW')} languages
      * @typedef {Object} html
      * @property {HTMLSpanElement} en
      * @property {HTMLSpanElement} zh-TW
@@ -562,7 +582,7 @@ class Tooltip {
         this.master = node;
         /** @type {html} */
         this.html = languages.reduce((object, lang) => ({...object, [lang]: document.createElement('span')}), {});
-        languages.forEach(/** @param {languages} lang */(lang) => {
+        languages.forEach(/** @param {Languages} lang */(lang) => {
             this.html[lang].classList.add('tooltip');
             Tooltip.#__header__(this, lang);
             Tooltip.#__body__(this, lang);
@@ -572,7 +592,7 @@ class Tooltip {
 
     /**
      * @param {Tooltip} tooltip
-     * @param {languages} lang
+     * @param {Languages} lang
      **/
     static #__header__(tooltip, lang) {
         const info = tooltip.master.proto;
@@ -613,7 +633,7 @@ class Tooltip {
 
     /**
      * @param {Tooltip} tooltip
-     * @param {languages} lang
+     * @param {Languages} lang
      **/
     static #__body__(tooltip, lang) {
         const body = document.createElement('span');
@@ -636,7 +656,7 @@ class Tooltip {
 
     /**
      * @param {Tooltip} tooltip
-     * @param {languages} lang
+     * @param {Languages} lang
      **/
     static #__footer__(tooltip, lang) {
         const info = tooltip.master.proto;
@@ -656,9 +676,9 @@ class Tooltip {
             footer.appendChild(lock);
             info.lock.forEach((name) => {
                 try {
-                    routegroup[tooltip.master.class].lock[name].add(tooltip.master);
+                    routedata[tooltip.master.class].lock[name].add(tooltip.master);
                 } catch {
-                    routegroup[tooltip.master.class].lock[name] = new Set([tooltip.master]);
+                    routedata[tooltip.master.class].lock[name] = new Set([tooltip.master]);
                 }
             })
         }
@@ -704,9 +724,9 @@ class Tooltip {
             cost.appendChild(value);
             footer.appendChild(cost);
             try {
-                routegroup[tooltip.master.class].cost[info.cost].add(tooltip.master);
+                routedata[tooltip.master.class].cost[info.cost].add(tooltip.master);
             } catch {
-                routegroup[tooltip.master.class].cost[info.cost] = new Set([tooltip.master]);
+                routedata[tooltip.master.class].cost[info.cost] = new Set([tooltip.master]);
             }
         }
 
@@ -720,7 +740,7 @@ class Tooltip {
             rely.appendChild(document.createTextNode(translate[lang].rely));
             rely.appendChild(name);
             footer.appendChild(rely);
-            routegroup[tooltip.master.class].rely[info.rely] = tooltip.master;
+            routedata[tooltip.master.class].rely[info.rely] = tooltip.master;
         }
 
         if (info.archetype?.req) {
@@ -732,14 +752,14 @@ class Tooltip {
             value.appendChild(document.createTextNode(0));
             archetype.append(translate[lang].archetype(info.archetype.name), value, `/${info.archetype.req}`);
             footer.appendChild(archetype);
-            routegroup[tooltip.master.class].archetype[info.archetype.name].add(tooltip.master);
+            routedata[tooltip.master.class].archetype[info.archetype.name].add(tooltip.master);
         }
 
         tooltip.html[lang].appendChild(footer);
     }
 
 
-    /** @param {String} string */
+    /** @param {string} string */
     static analyst(string) {
         const [outer, inner, _] = string.split(regex.text);
         const bin = document.createDocumentFragment();
@@ -753,7 +773,7 @@ class Tooltip {
     }
 
     /**
-     * @param {String} hashtag
+     * @param {string} hashtag
      * @return {HTMLSpanElement}
      **/
     static palette(hashtag) {
@@ -803,6 +823,53 @@ class Tooltip {
 
 }
 
+class Archetype extends Set {
+    /** @param {Archetypes} name */
+    constructor(name) {
+        super();
+        this.name = name;
+        this.image = document.createElement('img');
+        switch (name) {
+            case 'Boltslinger':
+            case 'Battle Monk':
+                this.image.classList.add('archetype-yellow')
+                break;
+            case 'Sharpshooter':
+            case 'Arcanist':
+            case 'Trickster':
+                this.image.classList.add('archetype-purple');
+                break;
+            case 'Trapper':
+            case 'Ritualist':
+                this.image.classList.add('archetype-green');
+                break;
+            case 'Fallen':
+            case 'Shadestepper':
+            case 'Acolyte':
+                this.image.classList.add('archetype-red');
+                break;
+            case 'Paladin':
+            case 'Riftwalker':
+                this.image.classList.add('archetype-blue');
+                break;
+            case 'Light Bender':
+            case 'Acrobat':
+                this.image.classList.add('archetype-white');
+                break;
+            case 'Summoner':
+                this.image.classList.add('archetype-gold');
+                break;
+        }
+    }
+
+    get html() {
+        const fragment = document.createDocumentFragment();
+        fragment.appendChild(this.image);
+
+        return fragment;
+    }
+}
+
 class EventHandler {
 
     static buildTree() {
@@ -835,9 +902,38 @@ class EventHandler {
     }
 
     static renderTree() {
-        for (const button of $('div#tab button.tab_button')) {
-            const clsname = button.dataset.class;
-            const table = document.querySelector(`div#main div#${clsname} .frame.body table`);
+        for (const/** @type {Classes} */clsname in routedata) {
+            const page = document.querySelector(`div#main div#${clsname}.page`);
+
+            /* ------ render footer ------ */
+            const f_table = page.querySelector(`.frame.foot table`);
+            const f_fragment = document.createDocumentFragment();
+            const/** @type {Archetype[]} */atypes = Object.values(routedata[clsname].archetype);
+
+            for (let row = 0; row < 4; row++) {
+                const tr = document.createElement('tr');
+                for (let col = 0; col < 9; col++) {
+                    const td = document.createElement('td');
+                    switch (str([row, col])) {
+                        case '[2,2]': 
+                            td.appendChild(atypes.shift().html);
+                            break;
+                        case '[2,4]': 
+                            td.appendChild(atypes.shift().html);
+                            break;
+                        case '[2,6]': 
+                            td.appendChild(atypes.shift().html);
+                            break;
+                    }
+                    tr.appendChild(td);
+                }
+                f_fragment.appendChild(tr);
+            }
+            f_table.appendChild(f_fragment);
+
+
+            /* ------ render body ------ */
+            const table  = page.querySelector(`.frame.body table`);
             const fragment = document.createDocumentFragment();
             
             for (const row of routemap[clsname]) {
@@ -846,11 +942,10 @@ class EventHandler {
                     const td = document.createElement('td');
                     if (unit instanceof UNIT) {
                         td.appendChild(unit.html);
-                        unit.html = td.firstChild;
                         if (unit instanceof PATH) {
                             unit.gateway.map((gate) => [gate.pos, gate.connect_with])
-                                        .filter((/** @type {[direction, UNIT]} */[pos, obj]) => obj instanceof NODE)
-                                        .forEach((/** @type {[direction, NODE]} */[pos, node]) => {
+                                        .filter((/** @type {[Direction, Units]} */[pos, obj]) => obj instanceof NODE)
+                                        .forEach((/** @type {[Direction, NODE]} */[pos, node]) => {
                                             const family = [node.proto.import, node.proto.export].flat();
                                             node.gates[opposite(pos)].connect_with ??= unit;
                                             node.gates[opposite(pos)].connect = (
@@ -876,11 +971,10 @@ class EventHandler {
                 }
                 fragment.appendChild(tr);
             }
-
             table.appendChild(fragment);
         }
 
-        return this
+        return this;
     }
 
     static register() {
@@ -997,7 +1091,8 @@ const translate = {
         cost: '技能點數：',
         rely: '技能需求：',
         lock: '衝突技能：',
-        archetype: /** @param {String} type */ (type) => `最低 ${type} Archetype 點數需求：`
+        archetype: /** @param {String} type */ (type) => `最低 ${type} Archetype 點數需求：`,
+        archetext: {}
     },
     "en": {
         cost: 'Ability Points: ',
@@ -1011,15 +1106,15 @@ const regex = {
     general: new RegExp(/\u00A7\S/, 'us'),
     text: new RegExp(/\u00A7\S(.+)/, 'us')
 };
-const routegroup = {
+const routedata = {
     archer: {
         cost: {},
         lock: {},
         rely: {},
         archetype: {
-            "Boltslinger": new Set(),
-            "Sharpshooter": new Set(),
-            "Trapper": new Set()
+            "Boltslinger": new Archetype('Boltslinger'),
+            "Sharpshooter": new Archetype('Sharpshooter'),
+            "Trapper": new Archetype('Trapper')
         }
     },
     warrior: {
@@ -1027,9 +1122,9 @@ const routegroup = {
         lock: {},
         rely: {},
         archetype: {
-            "Fallen": new Set(),
-            "Battle Monk": new Set(),
-            "Paladin": new Set()
+            "Fallen": new Archetype('Fallen'),
+            "Battle Monk": new Archetype('Battle Monk'),
+            "Paladin": new Archetype('Paladin')
         }
     },
     mage: {
@@ -1037,9 +1132,9 @@ const routegroup = {
         lock: {},
         rely: {},
         archetype: {
-            "Riftwalker": new Set(),
-            "Light Bender": new Set(),
-            "Arcanist": new Set()
+            "Riftwalker": new Archetype('Riftwalker'),
+            "Light Bender": new Archetype('Light Bender'),
+            "Arcanist": new Archetype('Arcanist')
         }
     },
     assassin: {
@@ -1047,9 +1142,9 @@ const routegroup = {
         lock: {},
         rely: {},
         archetype: {
-            "Shadestepper": new Set(),
-            "Trickster": new Set(),
-            "Acrobat": new Set()
+            "Shadestepper": new Archetype('Shadestepper'),
+            "Trickster": new Archetype('Trickster'),
+            "Acrobat": new Archetype('Acrobat')
         }
     },
     shaman: {
@@ -1057,9 +1152,9 @@ const routegroup = {
         lock: {},
         rely: {},
         archetype: {
-            "Summoner": new Set(),
-            "Ritualist": new Set(),
-            "Acolyte": new Set()
+            "Summoner": new Archetype('Summoner'),
+            "Ritualist": new Archetype('Ritualist'),
+            "Acolyte": new Archetype('Acolyte')
         }
     }
 }
