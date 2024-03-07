@@ -145,7 +145,7 @@ class UNIT {
     get active() {
         const retval = (
             Object.values(this.gates)
-                  .filter((gate) => gate.connect.some((node) => node.state === 'enable'))
+                  .filter((gate) => gate.connect.some((node) => node.state.contains('enable')))
                   .map((gate) => gate.pos)
                   .sort(NSEW)
                   .join('')
@@ -203,13 +203,13 @@ class NODE extends UNIT{
         this.name = info.name;
         /** @type {Classes} */
         this.class = clsname;
-        /** @type {States} */
-        this.state = (str(info.axis) === '[4,1]') ? 'standby' : 'disable';
         /** @type {Tooltip} */
         this.tooltip = new Tooltip(this);
         /** @type {HTMLButtonElement} */
         this.buttonElement = document.createElement('button');
-        this.buttonElement.classList.add(this.state);
+        /** @type {DOMTokenList} */
+        this.state = this.buttonElement.classList;
+        this.state.add((str(info.axis) === '[4,1]') ? 'standby' : 'disable');
         this.buttonElement.appendChild(generateElement(`<img class="${info.level ? `button_${info.level}` : `button_${clsname}`}">`));
 
         this.#__buildpath__();
@@ -221,6 +221,10 @@ class NODE extends UNIT{
         fragment.appendChild(this.buttonElement);
         fragment.appendChild(this.tooltip.html[languages[using]]);
         return fragment;
+    }
+
+    get state_s() {
+        return this.buttonElement.className;
     }
 
     /** @returns {Gate[]} */
@@ -266,20 +270,44 @@ class NODE extends UNIT{
         });
     }
 
-    /** @param {states} state  */
+    /** @param {States} state  */
     set(state) {
-        const states = ['enable', 'disable', 'standby', 'lock'];
-        if (state !== undefined) {this.state = state}
-        if (!states.includes(this.state)) {throw Error(`invalid state of Node was detected at <${this.proto.name}>`)}
-        states.forEach((state) => {(state === this.state) ? this.buttonElement.classList.add(state) : this.buttonElement.classList.remove(state)});
+        const def = ['enable', 'disable', 'standby', 'lock'];
+
+        if (state === undefined) return this.state;
+        if (!def.includes(state)) throw Error(`invalid state of Node was detected at <${this.proto.name}>`);
+
+        const history = Array.from(this.state.values());
+
+        def.forEach((name) => {
+            switch (name) {
+                case 'lock':
+                    if (name === state) this.state.toggle('lock');
+                    break;
+                default:
+                    if (name !== state) this.state.remove(name);
+                    else this.state.add(name);
+            }
+        });
+
+        switch (state) {
+            case 'disable':
+            case 'standby':
+                if (history.includes('enable')) routedata[this.class].cost.value += this.proto.cost;
+                break;
+            case 'enable':
+                if (!history.includes('enable')) routedata[this.class].cost.value -= this.proto.cost;
+                break;
+        }
+
         return this.state;
     }
     
     click() {
         if (!this.buttonElement.classList.contains('lock')) {
-            switch (this.state) {
-                case 'disable': break;
-                case 'enable':
+            switch (true) {
+                case this.state.contains('disable'): break;
+                case this.state.contains('enable'):
                     this.set('standby');
                     this.#send({
                         gates: this.gateway,
@@ -290,7 +318,7 @@ class NODE extends UNIT{
                         })
                     });
                     break;
-                case 'standby':
+                case this.state.contains('standby'):
                     this.set('enable');
                     this.#send({
                         gates: this.gateway,
@@ -307,8 +335,6 @@ class NODE extends UNIT{
             console.warn(`<${this.name}> has been locked.`);
         }
     }
-
-    #update() {}
 
     /**
      * @typedef {object}    host
@@ -332,11 +358,11 @@ class NODE extends UNIT{
                 via: opposite(gate.pos),
                 ignore: this.name
             });
-            console.groupCollapsed(`<${this.name}> [${this.state}] (Gate ${gate.pos}) Send a packet!`);
+            console.groupCollapsed(`<${this.name}> [${this.state_s}] (Gate ${gate.pos}) Send a packet!`);
             console.info(`packet:`, readpacket(subpack));
             const bin = gate.connect_with.transmit(subpack);
             console.groupEnd();
-            console.info(`<${this.name}> [${this.state}] (Gate ${gate.pos}) response: ${bin}`);
+            console.info(`<${this.name}> [${this.state_s}] (Gate ${gate.pos}) response: ${bin}`);
 
             collector.push(bin);
             if (bin && packet.payload.task.endsWith('?')) {
@@ -354,19 +380,19 @@ class NODE extends UNIT{
         const GID = packet.footer.gid;
         routelogs[GID] ??= {serial: 0, 'reachable?': {}};
         const SID = routelogs[GID].serial++;
-        console.groupCollapsed(`<${this.name}> [${this.state}] Route ${GID}.${SID} start.`, `(task: '${packet.payload.task}')`);
+        console.groupCollapsed(`<${this.name}> [${this.state_s}] Route ${GID}.${SID} start.`, `(task: '${packet.payload.task}')`);
         
         const bin = (interrupt ? gates.some(host) : gates.map(host).some((_) => _)) ? true : bool(collector, {base: base});
 
         console.groupEnd();
-        console.info(`<${this.name}> [${this.state}] Route ${GID}.${SID} end. collector: ${str(collector)}, final: ${bin}.`);
+        console.info(`<${this.name}> [${this.state_s}] Route ${GID}.${SID} end. collector: ${str(collector)}, final: ${bin}.`);
         if (!SID) {delete routelogs[GID]};
         return bin;
     }
 
     /** @param {Packet} packet @returns {(boolean | null)} */
     transmit(packet) {
-        console.info(`<${this.name}> [${this.state}] received packet.`, readpacket(packet));
+        console.info(`<${this.name}> [${this.state_s}] received packet.`, readpacket(packet));
         const router = packet.footer.router;
         const from_parent = this.proto.import?.includes(router.name) ?? false;
         const from_children = this.proto.export?.includes(router.name) ?? false;
@@ -383,15 +409,15 @@ class NODE extends UNIT{
         const task = packet.payload.task;
         const send = packet.header.send;
         const recv = packet.header.recv;
-        console.groupCollapsed(`<${this.name}> [${this.state}] start handling the task '${task}'.`);
+        console.groupCollapsed(`<${this.name}> [${this.state_s}] start handling the task '${task}'.`);
         switch (task) {
             case 'disable':
             case 'standby': {
-                switch (this.state) {
-                    case 'disable': break;
-                    case 'standby':
-                    case 'enable': {
-                        const connecting = this.importNodes.filter((node) => !packet.header.ignore.includes(node.name)).some((node) => node.state === 'enable');
+                switch (true) {
+                    case this.state.contains('disable'): break;
+                    case this.state.contains('standby'):
+                    case this.state.contains('enable'): {
+                        const connecting = this.importNodes.filter((node) => !packet.header.ignore.includes(node.name)).some((node) => node.state.contains('enable'));
                         console.info('connecting:', connecting);
                         if (connecting || !this.proto.import) {
                             const reachable = routelogs.query({
@@ -431,8 +457,8 @@ class NODE extends UNIT{
                 break;
             }
             case 'enable': {
-                switch (this.state) {
-                    case 'disable': {
+                switch (true) {
+                    case this.state.contains('disable'): {
                         if (this.proto.import?.includes(send)) {
                             this.set('standby');
                         } else {
@@ -440,17 +466,17 @@ class NODE extends UNIT{
                         }
                         break;
                     }
-                    case 'standby': break;
-                    case 'enable': break;
+                    case this.state.contains('standby'): break;
+                    case this.state.contains('enable'): break;
                 }
                 break;
             }
             case 'reachable?': {
                 bin = false;
-                switch (this.state) {
-                    case 'disable': break;
-                    case 'standby': break;
-                    case 'enable': {
+                switch (true) {
+                    case this.state.contains('disable'): break;
+                    case this.state.contains('standby'): break;
+                    case this.state.contains('enable'): {
                         bin = routelogs.query({
                             gid: packet.footer.gid,
                             task: 'reachable?',
@@ -498,7 +524,7 @@ class NODE extends UNIT{
 
         
         console.groupEnd();
-        console.info(`<${this.name}> [${this.state}] task '${task}' was over.`, `return: ${bin}`);
+        console.info(`<${this.name}> [${this.state_s}] task '${task}' was over.`, `return: ${bin}`);
         return bin;
     }
 
@@ -580,6 +606,8 @@ class Tooltip {
     constructor(node) {
         /** @type {NODE} */
         this.master = node;
+        /** @type {{Languages: HTMLSpanElement}} */
+        this.cost = languages.reduce((object, lang) => ({...object, [lang]: document.createElement('span')}), {});
         /** @type {html} */
         this.html = languages.reduce((object, lang) => ({...object, [lang]: document.createElement('span')}), {});
         languages.forEach(/** @param {Languages} lang */(lang) => {
@@ -717,7 +745,7 @@ class Tooltip {
         }
         
         if (info.cost) {
-            const cost = document.createElement('span');
+            const cost = tooltip.cost[lang] = document.createElement('span');
             const text = document.createTextNode(translate[lang].cost);
             const value = document.createElement('span');
             cost.classList.add('symbol-checkmark');
@@ -842,38 +870,126 @@ class Archetype extends Set {
     get html() {
         const fragment = document.createDocumentFragment();
         const image = document.createElement('img');
+        image.classList.add('archetype');
         switch (this.name) {
             case 'Boltslinger':
             case 'Battle Monk':
-                image.classList.add('archetype-yellow')
+                image.classList.add('yellow');
                 break;
             case 'Sharpshooter':
             case 'Arcanist':
             case 'Trickster':
-                image.classList.add('archetype-purple');
+                image.classList.add('purple');
                 break;
             case 'Trapper':
             case 'Ritualist':
-                image.classList.add('archetype-green');
+                image.classList.add('green');
                 break;
             case 'Fallen':
             case 'Shadestepper':
             case 'Acolyte':
-                image.classList.add('archetype-red');
+                image.classList.add('red');
                 break;
             case 'Paladin':
             case 'Riftwalker':
-                image.classList.add('archetype-blue');
+                image.classList.add('blue');
                 break;
             case 'Light Bender':
             case 'Acrobat':
-                image.classList.add('archetype-white');
+                image.classList.add('white');
                 break;
             case 'Summoner':
-                image.classList.add('archetype-gold');
+                image.classList.add('gold');
                 break;
         }
         fragment.appendChild(image);
+
+        return fragment;
+    }
+}
+
+class Orb extends Array {
+    #image;
+    #value;
+
+    /** @param {Classes} clsname*/
+    constructor(clsname) {
+        super();
+
+        /** @type {Classes} */
+        this.class = clsname;
+        /** @type {number} */
+        this._value = 45;
+        
+        this.#image = document.createElement('img');
+        this.#value = document.createElement('span');
+        
+        this.#image.className = 'misc orb';
+        this.#value.dataset.update = 'apoint';
+        this.#value.textContent = this._value;
+    }
+
+    /** @return {number} */
+    get value() {
+        return this._value;
+    }
+
+    /** @param {number} _val Integer only */
+    set value(_val) {
+        const incre = this._value < _val;
+        this.#value.textContent = this._value = _val;
+        this.filter((_, cost) => incre ? (cost <= _val) : (cost > _val))
+            .forEach(
+                /** @param {Set<NODE>} group */
+                (group, _) => {
+                    group.forEach((node) => {
+                        Object.values(node.tooltip.cost).forEach((span) => {
+                            span.className = incre ? 'symbol-checkmark' : 'symbol-deny';
+                        });
+                    });
+                }
+            );
+    }
+
+    get html() {
+        const lang = translate[languages[using]];
+        const fragment = document.createDocumentFragment();
+        const tooltip = document.createElement('span');
+        tooltip.className = 'tooltip';
+
+        const header = document.createElement('span');
+        header.className = 'color-dark_aqua style-bold style-larger';
+        header.style.display = 'block';
+        header.style.lineHeight = '1.4em';
+        header.append(`${lang.apoint}`);
+        
+        const descr = document.createElement('span');
+        descr.className = 'color-gray';
+        descr.style.display = 'block';
+        descr.append(`${lang.apoint_descr}`);
+
+        const suffix = document.createElement('span');
+        suffix.className = 'color-gray';
+        suffix.append(this.#value, `/45`);
+
+        const rmain = document.createElement('span');
+        rmain.className = 'color-aqua';
+        rmain.style.display = 'block';
+        rmain.style.marginTop = '1em';
+        rmain.append(`\u2726 ${lang.apoint_rmain}`, suffix);
+        
+        const info = document.createElement('span');
+        info.className = 'color-dark_gray';
+        info.style.display = 'block';
+        info.style.lineHeight = 'normal';
+        info.append([lang.apoint_info1, lang.apoint_info2].join('\n'));
+
+        tooltip.appendChild(header);
+        tooltip.appendChild(descr);
+        tooltip.appendChild(rmain);
+        tooltip.appendChild(info);
+        fragment.appendChild(this.#image);
+        fragment.appendChild(tooltip);
 
         return fragment;
     }
@@ -918,19 +1034,25 @@ class EventHandler {
             const f_table = page.querySelector(`.frame.foot table`);
             const f_fragment = document.createDocumentFragment();
             const/** @type {Archetype[]} */atypes = Object.values(routedata[clsname].archetype);
+            const/** @type {Orb} */ orb = routedata[clsname].cost;
 
             for (let row = 0; row < 4; row++) {
                 const tr = document.createElement('tr');
                 for (let col = 0; col < 9; col++) {
                     const td = document.createElement('td');
                     switch (str([row, col])) {
-                        case '[2,2]': 
-                            td.appendChild(atypes.shift().html);
+                        case '[0,3]':
+                            td.appendChild(generateElement(`<img class="misc arrow_up">`));
                             break;
-                        case '[2,4]': 
-                            td.appendChild(atypes.shift().html);
+                        case '[0,5]':
+                            td.appendChild(generateElement(`<img class="misc arrow_down">`));
                             break;
-                        case '[2,6]': 
+                        case '[0,4]':
+                            td.appendChild(orb.html);
+                            break;
+                        case '[2,2]':
+                        case '[2,4]':
+                        case '[2,6]':
                             td.appendChild(atypes.shift().html);
                             break;
                     }
@@ -1100,17 +1222,26 @@ const $ = (selector) => document.querySelectorAll(selector);
 const str = JSON.stringify;
 const translate = {
     "zh-TW": {
-        cost: '技能點數：',
-        rely: '技能需求：',
-        lock: '衝突技能：',
+        cost: "技能點數：",
+        rely: "技能需求：",
+        lock: "衝突技能：",
         archetype: /** @param {String} type */ (type) => `最低 ${type} Archetype 點數需求：`,
-        archetext: {}
+        apoint: "技能點",
+        apoint_descr: "技能點可以用來解鎖新的技能",
+        apoint_rmain: "剩餘點數：",
+        apoint_info1: "（左鍵點擊複製分享連結）",
+        apoint_info2: "（Shift+左鍵重置技能樹）"
     },
     "en": {
-        cost: 'Ability Points: ',
-        rely: 'Required Ability: ',
-        lock: 'Unlocking will block: ',
-        archetype: /** @param {String} type */ (type) => `Min ${type} Archetype: `
+        cost: "Ability Points: ",
+        rely: "Required Ability: ",
+        lock: "Unlocking will block: ",
+        archetype: /** @param {String} type */ (type) => `Min ${type} Archetype: `,
+        apoint: "Ability Points",
+        apoint_descr: "Ability Points are used to unlock new abilities",
+        apoint_rmain: "Available Points:",
+        apoint_info1: "(Left-Click to copy URL to clipboard)",
+        apoint_info2: "(Shift + Left-Click to reset Ability Tree)"
     }
 };
 const regex = {
@@ -1120,7 +1251,7 @@ const regex = {
 };
 const routedata = {
     archer: {
-        cost: {},
+        cost: new Orb('archer'),
         lock: {},
         rely: {},
         archetype: {
@@ -1130,7 +1261,7 @@ const routedata = {
         }
     },
     warrior: {
-        cost: {},
+        cost: new Orb('warrior'),
         lock: {},
         rely: {},
         archetype: {
@@ -1140,7 +1271,7 @@ const routedata = {
         }
     },
     mage: {
-        cost: {},
+        cost: new Orb('mage'),
         lock: {},
         rely: {},
         archetype: {
@@ -1150,7 +1281,7 @@ const routedata = {
         }
     },
     assassin: {
-        cost: {},
+        cost: new Orb('assassin'),
         lock: {},
         rely: {},
         archetype: {
@@ -1160,7 +1291,7 @@ const routedata = {
         }
     },
     shaman: {
-        cost: {},
+        cost: new Orb('shaman'),
         lock: {},
         rely: {},
         archetype: {
@@ -1341,7 +1472,7 @@ const database = {
         "Quadruple Bash": {
             "name": "Quadruple Bash",
             "level": 2,
-            "import": ["Earth Mastery"],
+            "import": ["Earth Mastery", "Fireworks"],
             "export": ["Bak'al's Grasp", "Fireworks"],
             "cost": 2,
             "rely": "Bash",
@@ -1352,7 +1483,7 @@ const database = {
         "Fireworks": {
             "name": "Fireworks",
             "level": 2,
-            "import": ["Thunder Mastery"],
+            "import": ["Thunder Mastery", "Quadruple Bash"],
             "export": ["Bak'al's Grasp", "Quadruple Bash"],
             "cost": 2,
             "archetype": {"name": "Fallen", "req": 0},

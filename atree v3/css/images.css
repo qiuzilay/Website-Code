@@ -12,6 +12,7 @@ div#main .container img {
     image-rendering: pixelated;
 }
 
+
 /*---------------- nodes ---------------- */
 
 img.button_archer,
@@ -167,45 +168,6 @@ button.standby > img.button_4 {
 button.lock > img.button_4 {
     content: url(../resources/images/buttons/button_4_lock.png) !important;
 }
-
-
-/*---------------- archetypes ---------------- */
-
-img.archetype {
-    width: 100%;
-    transform: scale(1.2);
-}
-
-/* -------- archetype -------- */
-
-img.archetype.blue {
-    content: url(../resources/images/archetypes/icon-archetype-blue.png);
-}
-
-img.archetype.white {
-    content: url(../resources/images/archetypes/icon-archetype-white.png);
-}
-
-img.archetype.yellow {
-    content: url(../resources/images/archetypes/icon-archetype-yellow.png);
-}
-
-img.archetype.purple {
-    content: url(../resources/images/archetypes/icon-archetype-purple.png);
-}
-
-img.archetype.green {
-    content: url(../resources/images/archetypes/icon-archetype-green.png);
-}
-
-img.archetype.orange {
-    content: url(../resources/images/archetypes/icon-archetype-orange.png);
-}
-
-img.archetype.red {
-    content: url(../resources/images/archetypes/icon-archetype-red.png);
-}
-
 
 
 /*---------------- branches ---------------- */
@@ -378,39 +340,61 @@ img.br_NSEW.NSEW {
 }
 
 
-
 /*---------------- archetypes ---------------- */
 
-img[class^='archetype-'] {
+img.archetype {
     width: 100%;
     height: 100%;
     transform: scale(1.2);
 }
 
-img.archetype-blue {
+/* -------- archetype -------- */
+
+img.archetype.blue {
     content: url(../resources/images/archetypes/icon-archetype-blue.png);
 }
 
-img.archetype-white {
+img.archetype.white {
     content: url(../resources/images/archetypes/icon-archetype-white.png);
 }
 
-img.archetype-yellow {
+img.archetype.yellow {
     content: url(../resources/images/archetypes/icon-archetype-yellow.png);
 }
 
-img.archetype-purple {
+img.archetype.purple {
     content: url(../resources/images/archetypes/icon-archetype-purple.png);
 }
 
-img.archetype-green {
+img.archetype.green {
     content: url(../resources/images/archetypes/icon-archetype-green.png);
 }
 
-img.archetype-gold {
+img.archetype.gold {
     content: url(../resources/images/archetypes/icon-archetype-gold.png);
 }
 
-img.archetype-red {
+img.archetype.red {
     content: url(../resources/images/archetypes/icon-archetype-red.png);
+}
+
+
+/*---------------- Miscellaneous ---------------- */
+
+img.misc {
+    transform: scale(.9);
+}
+
+img.misc.orb {
+    content: url(../resources/images/misc/icon-orb.png);
+}
+
+img.misc.arrow_up {
+    content: url(../resources/images/misc/icon-arrow-up.png);
+    padding-top: .2em;
+}
+
+img.misc.arrow_down {
+    content: url(../resources/images/misc/icon-arrow-down.png);
+    padding-bottom: .2em;
 }
