@@ -871,6 +871,9 @@ class Archetype extends Set {
     /** @type {html} */             #body;
     /** @type {HTMLSpanElement} */  #foot;
     /** @type {HTMLSpanElement} */  #value;
+    /** @type {number} */           #_value;
+    /** @type {HTMLSpanElement} */  #prefix;
+    /** @type {HTMLSpanElement} */  #suffix;
 
     /**
      * @param {Archetypes}  name
@@ -878,12 +881,12 @@ class Archetype extends Set {
      **/
     constructor(name, clsname) {
         super();
-
         /** @type {Archetypes} */
         this.name = name;
         /** @type {Classes} */
         this.class = clsname;
         
+        this.#_value = 0;
         this.#tooltip = document.createElement('span');
         this.#body = languages.reduce((object, lang) => ({...object, [lang]: document.createElement('span')}), {});
         this.#image = document.createElement('img');
@@ -926,6 +929,17 @@ class Archetype extends Set {
         this.#__foot__();
     }
 
+    /** @return {number} */
+    get value() {
+        return this.#_value;
+    }
+
+    /** @param {number} _val Integer only */
+    set value(_val) {
+        this.#_value = _val;
+        this.#value.textContent = _val;
+    }
+
     #__head__() {
         this.#head = document.createElement('span');
         this.#head.className = `color-${this.#color} style-bold`;
@@ -950,23 +964,33 @@ class Archetype extends Set {
     #__foot__() {
         this.#foot = document.createElement('span');
         this.#foot.className = 'symbol-checkmark';
+        this.#foot.style.display = 'block';
+        this.#foot.style.marginTop = '1em';
+
+        this.#prefix = document.createTextNode('');
+
         this.#value = document.createElement('span');
         this.#value.dataset.update = 'atype_unlocked';
         this.#value.textContent = 0;
+
+        this.#suffix = document.createTextNode('/');
+
+        this.#foot.replaceChildren(this.#prefix, this.#value, this.#suffix);
     }
 
     get html() {
+        const lang = translate[languages[using]];
         const fragment = document.createDocumentFragment();
 
-        const footext = document.createElement('span');
-        footext.textContent = translate[languages[using]].atype_unlocked;
+        this.#prefix.textContent = lang.atype_unlocked;
+        this.#suffix.textContent = `/${this.size}`;
         
-        const suffix = document.createElement('span');
-        suffix.textContent = `/${this.size}`;
+        this.#tooltip.replaceChildren(
+            this.#head,
+            this.#body[languages[using]],
+            this.#foot
+        );
         
-        this.#foot.append(footext, this.#value, );
-        this.#tooltip.appendChild(this.#head);
-        this.#tooltip.appendChild(this.#body[languages[using]]);
         fragment.appendChild(this.#image);
         fragment.appendChild(this.#tooltip);
 
@@ -976,34 +1000,70 @@ class Archetype extends Set {
 
 class Orb extends Array {
     #image;
+    #tooltip;
+    #header;
+    #descr;
+    #suffix;
+    #rmain;
+    #info;
     #value;
+    #_value;
 
     /** @param {Classes} clsname*/
     constructor(clsname) {
         super();
-
+        
         /** @type {Classes} */
         this.class = clsname;
-        /** @type {number} */
-        this._value = 45;
-        
+        this.#_value = 45;
+
         this.#image = document.createElement('img');
-        this.#value = document.createElement('span');
-        
         this.#image.className = 'misc orb';
+        
+        this.#tooltip = document.createElement('span');
+        this.#tooltip.className = 'tooltip';
+        
+        this.#header = document.createElement('span');
+        this.#header.className = 'color-dark_aqua style-bold style-larger';
+        this.#header.style.display = 'block';
+        this.#header.style.lineHeight = '1.4em';
+
+        this.#descr = document.createElement('span');
+        this.#descr.className = 'color-gray';
+        this.#descr.style.display = 'block';
+        
+        this.#value = document.createElement('span');
         this.#value.dataset.update = 'apoint';
-        this.#value.textContent = this._value;
+        this.#value.textContent = this.#_value;
+
+        this.#suffix = document.createElement('span');
+        this.#suffix.className = 'color-gray';
+
+        this.#rmain = document.createElement('span');
+        this.#rmain.className = 'color-aqua';
+        this.#rmain.style.display = 'block';
+        this.#rmain.style.marginTop = '1em';
+        
+        this.#info = document.createElement('span');
+        this.#info.className = 'color-dark_gray';
+        this.#info.style.display = 'block';
+        this.#info.style.lineHeight = 'normal';
+
+        this.#tooltip.appendChild(this.#header);
+        this.#tooltip.appendChild(this.#descr);
+        this.#tooltip.appendChild(this.#rmain);
+        this.#tooltip.appendChild(this.#info);
     }
 
     /** @return {number} */
     get value() {
-        return this._value;
+        return this.#_value;
     }
 
     /** @param {number} _val Integer only */
     set value(_val) {
-        const incre = this._value < _val;
-        this.#value.textContent = this._value = _val;
+        const incre = this.#_value < _val;
+        this.#value.textContent = this.#_value = _val;
         this.filter((_, cost) => incre ? (cost <= _val) : (cost > _val))
             .forEach(
                 /** @param {Set<NODE>} group */
@@ -1020,42 +1080,15 @@ class Orb extends Array {
     get html() {
         const lang = translate[languages[using]];
         const fragment = document.createDocumentFragment();
-        const tooltip = document.createElement('span');
-        tooltip.className = 'tooltip';
 
-        const header = document.createElement('span');
-        header.className = 'color-dark_aqua style-bold style-larger';
-        header.style.display = 'block';
-        header.style.lineHeight = '1.4em';
-        header.append(`${lang.apoint}`);
+        this.#header.textContent = lang.apoint;
+        this.#descr.textContent = lang.apoint_descr;
+        this.#suffix.replaceChildren(this.#value, '/45');
+        this.#rmain.replaceChildren(`\u2726 ${lang.apoint_rmain}`, this.#suffix);
+        this.#info.textContent = [lang.apoint_info1, lang.apoint_info2].join('\n');
         
-        const descr = document.createElement('span');
-        descr.className = 'color-gray';
-        descr.style.display = 'block';
-        descr.append(`${lang.apoint_descr}`);
-
-        const suffix = document.createElement('span');
-        suffix.className = 'color-gray';
-        suffix.append(this.#value, `/45`);
-
-        const rmain = document.createElement('span');
-        rmain.className = 'color-aqua';
-        rmain.style.display = 'block';
-        rmain.style.marginTop = '1em';
-        rmain.append(`\u2726 ${lang.apoint_rmain}`, suffix);
-        
-        const info = document.createElement('span');
-        info.className = 'color-dark_gray';
-        info.style.display = 'block';
-        info.style.lineHeight = 'normal';
-        info.append([lang.apoint_info1, lang.apoint_info2].join('\n'));
-
-        tooltip.appendChild(header);
-        tooltip.appendChild(descr);
-        tooltip.appendChild(rmain);
-        tooltip.appendChild(info);
         fragment.appendChild(this.#image);
-        fragment.appendChild(tooltip);
+        fragment.appendChild(this.#tooltip);
 
         return fragment;
     }
@@ -1280,6 +1313,7 @@ function generateElement(stringHTML) {
     return fragment;
 }
 
+/** @type {['zh-TW', 'en']} */
 const languages = ['zh-TW', 'en'];
 const using = 0;
 
