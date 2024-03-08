@@ -606,8 +606,12 @@ class Tooltip {
     constructor(node) {
         /** @type {NODE} */
         this.master = node;
-        /** @type {{Languages: HTMLSpanElement}} */
+        if (this.master.proto.cost) /** @type {{Languages: HTMLSpanElement}} */
         this.cost = languages.reduce((object, lang) => ({...object, [lang]: document.createElement('span')}), {});
+        if (this.master.proto.rely) /** @type {{Languages: HTMLSpanElement}} */
+        this.rely = languages.reduce((object, lang) => ({...object, [lang]: document.createElement('span')}), {});
+        if (this.master.proto.archetype?.req) /** @type {{Languages: HTMLSpanElement}} */
+        this.atype = languages.reduce((object, lang) => ({...object, [lang]: document.createElement('span')}), {});
         /** @type {html} */
         this.html = languages.reduce((object, lang) => ({...object, [lang]: document.createElement('span')}), {});
         languages.forEach(/** @param {Languages} lang */(lang) => {
@@ -677,7 +681,7 @@ class Tooltip {
                         if (text) {
                             text.split(regex.reset)
                                 .map((subtext) => this.analyst(subtext))
-                                .forEach((frag) => {body.appendChild(frag)});
+                                .forEach((frag) => body.appendChild(frag));
                         }
                     });
     }
@@ -764,7 +768,7 @@ class Tooltip {
         }
 
         if (info.rely) {
-            const rely = document.createElement('span');
+            const rely = tooltip.rely[lang] = document.createElement('span');
             const name = document.createElement('span');
             rely.style.display = 'block';
             name.dataset.update = 'rely';
@@ -781,7 +785,7 @@ class Tooltip {
         }
 
         if (info.archetype?.req) {
-            const archetype = document.createElement('span');
+            const archetype = tooltip.atype = document.createElement('span');
             const value = document.createElement('span');
             archetype.classList.add('symbol-deny');
             archetype.style.display = 'block';
@@ -860,49 +864,59 @@ class Tooltip {
 }
 
 class Archetype extends Set {
+    #image;
+    #color;
+    #content;
+
     /** @param {Archetypes} name */
     constructor(name) {
         super();
+
         /** @type {Archetypes} */
         this.name = name;
-    }
 
-    get html() {
-        const fragment = document.createDocumentFragment();
-        const image = document.createElement('img');
-        image.classList.add('archetype');
+        this.#image = document.createElement('img');
         switch (this.name) {
             case 'Boltslinger':
             case 'Battle Monk':
-                image.classList.add('yellow');
+                this.#color = 'yellow';
                 break;
             case 'Sharpshooter':
             case 'Arcanist':
             case 'Trickster':
-                image.classList.add('purple');
+                this.#color = 'purple';
                 break;
             case 'Trapper':
             case 'Ritualist':
-                image.classList.add('green');
+                this.#color = 'green';
                 break;
             case 'Fallen':
             case 'Shadestepper':
             case 'Acolyte':
-                image.classList.add('red');
+                this.#color = 'red';
                 break;
             case 'Paladin':
             case 'Riftwalker':
-                image.classList.add('blue');
+                this.#color = 'blue';
                 break;
             case 'Light Bender':
             case 'Acrobat':
-                image.classList.add('white');
+                this.#color = 'white';
                 break;
             case 'Summoner':
-                image.classList.add('gold');
+                this.#color = 'gold';
                 break;
         }
-        fragment.appendChild(image);
+        this.#image.classList.add('archetype');
+        this.#image.classList.add(this.#color);
+    }
+
+    get html() {
+        const fragment = document.createDocumentFragment();
+        const tooltip = document.createElement('span');
+        tooltip.classList.add('tooltip');
+
+        fragment.appendChild(this.#image);
 
         return fragment;
     }
@@ -1256,8 +1270,8 @@ const routedata = {
         rely: {},
         archetype: {
             "Boltslinger": new Archetype('Boltslinger'),
-            "Sharpshooter": new Archetype('Sharpshooter'),
-            "Trapper": new Archetype('Trapper')
+            "Trapper": new Archetype('Trapper'),
+            "Sharpshooter": new Archetype('Sharpshooter')
         }
     },
     warrior: {
