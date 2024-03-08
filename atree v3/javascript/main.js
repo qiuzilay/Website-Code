@@ -791,7 +791,7 @@ class Tooltip {
             archetype.style.display = 'block';
             value.dataset.update = 'archetype';
             value.appendChild(document.createTextNode(0));
-            archetype.append(translate[lang].archetype(info.archetype.name), value, `/${info.archetype.req}`);
+            archetype.append(translate[lang].atype(info.archetype.name), value, `/${info.archetype.req}`);
             footer.appendChild(archetype);
         }
 
@@ -864,17 +864,28 @@ class Tooltip {
 }
 
 class Archetype extends Set {
-    #image;
-    #color;
-    #content;
+    /** @type {HTMLSpanElement} */  #image;
+    /** @type {string} */           #color;
+    /** @type {HTMLSpanElement} */  #tooltip;
+    /** @type {HTMLSpanElement} */  #head;
+    /** @type {html} */             #body;
+    /** @type {HTMLSpanElement} */  #foot;
+    /** @type {HTMLSpanElement} */  #value;
 
-    /** @param {Archetypes} name */
-    constructor(name) {
+    /**
+     * @param {Archetypes}  name
+     * @param {Classes}     clsname
+     **/
+    constructor(name, clsname) {
         super();
 
         /** @type {Archetypes} */
         this.name = name;
-
+        /** @type {Classes} */
+        this.class = clsname;
+        
+        this.#tooltip = document.createElement('span');
+        this.#body = languages.reduce((object, lang) => ({...object, [lang]: document.createElement('span')}), {});
         this.#image = document.createElement('img');
         switch (this.name) {
             case 'Boltslinger':
@@ -884,7 +895,7 @@ class Archetype extends Set {
             case 'Sharpshooter':
             case 'Arcanist':
             case 'Trickster':
-                this.#color = 'purple';
+                this.#color = 'pink';
                 break;
             case 'Trapper':
             case 'Ritualist':
@@ -907,16 +918,57 @@ class Archetype extends Set {
                 this.#color = 'gold';
                 break;
         }
+        this.#tooltip.classList.add('tooltip');
         this.#image.classList.add('archetype');
         this.#image.classList.add(this.#color);
+        this.#__head__();
+        this.#__body__();
+        this.#__foot__();
+    }
+
+    #__head__() {
+        this.#head = document.createElement('span');
+        this.#head.className = `color-${this.#color} style-bold`;
+        this.#head.textContent = `${this.name} Archetype`;
+        this.#head.style.display = 'block';
+        this.#head.style.fontSize = '1.5em';
+        this.#head.style.lineHeight = '1.4em';
+        return this;
+    }
+
+    #__body__() {
+        languages.forEach(/** @param {Languages} lang */async (lang) => {
+            const text = await window.fetch(`https://raw.githubusercontent.com/qiuzilay/Website-Code/main/atree%20v3/resources/texts/${lang}/${this.class}/Archetype%20-%20${this.name}.txt`)
+                                        .catch((error) => console.error(error))
+                                        .then(/** @param {Response} response */ (response) => response.ok ? response.text() : void(0));
+            this.#body[lang].style.display = 'block';
+            this.#body[lang].style.marginTop = '1em';
+            this.#body[lang].appendChild(Tooltip.analyst(text));
+        });
+    }
+
+    #__foot__() {
+        this.#foot = document.createElement('span');
+        this.#foot.className = 'symbol-checkmark';
+        this.#value = document.createElement('span');
+        this.#value.dataset.update = 'atype_unlocked';
+        this.#value.textContent = 0;
     }
 
     get html() {
         const fragment = document.createDocumentFragment();
-        const tooltip = document.createElement('span');
-        tooltip.classList.add('tooltip');
 
+        const footext = document.createElement('span');
+        footext.textContent = translate[languages[using]].atype_unlocked;
+        
+        const suffix = document.createElement('span');
+        suffix.textContent = `/${this.size}`;
+        
+        this.#foot.append(footext, this.#value, );
+        this.#tooltip.appendChild(this.#head);
+        this.#tooltip.appendChild(this.#body[languages[using]]);
         fragment.appendChild(this.#image);
+        fragment.appendChild(this.#tooltip);
 
         return fragment;
     }
@@ -1239,7 +1291,8 @@ const translate = {
         cost: "技能點數：",
         rely: "技能需求：",
         lock: "衝突技能：",
-        archetype: /** @param {String} type */ (type) => `最低 ${type} Archetype 點數需求：`,
+        atype: /** @param {String} type */ (type) => `最低 ${type} Archetype 點數需求：`,
+        atype_unlocked: "已解鎖技能：",
         apoint: "技能點",
         apoint_descr: "技能點可以用來解鎖新的技能",
         apoint_rmain: "剩餘點數：",
@@ -1250,7 +1303,8 @@ const translate = {
         cost: "Ability Points: ",
         rely: "Required Ability: ",
         lock: "Unlocking will block: ",
-        archetype: /** @param {String} type */ (type) => `Min ${type} Archetype: `,
+        atype: /** @param {String} type */ (type) => `Min ${type} Archetype: `,
+        atype_unlocked: "Unlocked Abilities:",
         apoint: "Ability Points",
         apoint_descr: "Ability Points are used to unlock new abilities",
         apoint_rmain: "Available Points:",
@@ -1269,9 +1323,9 @@ const routedata = {
         lock: {},
         rely: {},
         archetype: {
-            "Boltslinger": new Archetype('Boltslinger'),
-            "Trapper": new Archetype('Trapper'),
-            "Sharpshooter": new Archetype('Sharpshooter')
+            "Boltslinger": new Archetype('Boltslinger', 'archer'),
+            "Trapper": new Archetype('Trapper', 'archer'),
+            "Sharpshooter": new Archetype('Sharpshooter', 'archer')
         }
     },
     warrior: {
@@ -1279,9 +1333,9 @@ const routedata = {
         lock: {},
         rely: {},
         archetype: {
-            "Fallen": new Archetype('Fallen'),
-            "Battle Monk": new Archetype('Battle Monk'),
-            "Paladin": new Archetype('Paladin')
+            "Fallen": new Archetype('Fallen', 'warrior'),
+            "Battle Monk": new Archetype('Battle Monk', 'warrior'),
+            "Paladin": new Archetype('Paladin', 'warrior')
         }
     },
     mage: {
@@ -1289,9 +1343,9 @@ const routedata = {
         lock: {},
         rely: {},
         archetype: {
-            "Riftwalker": new Archetype('Riftwalker'),
-            "Light Bender": new Archetype('Light Bender'),
-            "Arcanist": new Archetype('Arcanist')
+            "Riftwalker": new Archetype('Riftwalker', 'mage'),
+            "Light Bender": new Archetype('Light Bender', 'mage'),
+            "Arcanist": new Archetype('Arcanist', 'mage')
         }
     },
     assassin: {
@@ -1299,9 +1353,9 @@ const routedata = {
         lock: {},
         rely: {},
         archetype: {
-            "Shadestepper": new Archetype('Shadestepper'),
-            "Trickster": new Archetype('Trickster'),
-            "Acrobat": new Archetype('Acrobat')
+            "Shadestepper": new Archetype('Shadestepper', 'assassin'),
+            "Trickster": new Archetype('Trickster', 'assassin'),
+            "Acrobat": new Archetype('Acrobat', 'assassin')
         }
     },
     shaman: {
@@ -1309,9 +1363,9 @@ const routedata = {
         lock: {},
         rely: {},
         archetype: {
-            "Summoner": new Archetype('Summoner'),
-            "Ritualist": new Archetype('Ritualist'),
-            "Acolyte": new Archetype('Acolyte')
+            "Summoner": new Archetype('Summoner', 'shaman'),
+            "Ritualist": new Archetype('Ritualist', 'shaman'),
+            "Acolyte": new Archetype('Acolyte', 'shaman')
         }
     }
 }
