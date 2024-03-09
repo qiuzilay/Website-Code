@@ -219,7 +219,7 @@ class NODE extends UNIT{
     get html() {
         const fragment = document.createDocumentFragment();
         fragment.appendChild(this.buttonElement);
-        fragment.appendChild(this.tooltip.html[languages[using]]);
+        fragment.appendChild(this.tooltip.html);
         return fragment;
     }
 
@@ -596,6 +596,19 @@ class BRANCH extends UNIT {
 class PATH extends BRANCH {}
 
 class Tooltip {
+    /** @type {HTMLSpanElement} */  #tooltip;
+    /** @type {HTMLSpanElement} */  #head;
+    /** @type {html}            */  #body;
+    /** @type {HTMLSpanElement} */  #foot;
+    /** @type {HTMLSpanElement} */  #lock;
+    /** @type {Text}            */  #lock_prefix;
+    /** @type {HTMLSpanElement} */  #cost;
+    /** @type {Text}            */  #cost_prefix;
+    /** @type {HTMLSpanElement} */  #rely;
+    /** @type {Text}            */  #rely_prefix;
+    /** @type {HTMLSpanElement} */  #atype;
+    /** @type {Text}            */  #atype_prefix;
+    /** @type {HTMLSpanElement} */  #atype_value;
 
     /**
      * @typedef {Object} html
@@ -606,200 +619,213 @@ class Tooltip {
     constructor(node) {
         /** @type {NODE} */
         this.master = node;
-        if (this.master.proto.cost) /** @type {{Languages: HTMLSpanElement}} */
-        this.cost = languages.reduce((object, lang) => ({...object, [lang]: document.createElement('span')}), {});
-        if (this.master.proto.rely) /** @type {{Languages: HTMLSpanElement}} */
-        this.rely = languages.reduce((object, lang) => ({...object, [lang]: document.createElement('span')}), {});
-        if (this.master.proto.archetype?.req) /** @type {{Languages: HTMLSpanElement}} */
-        this.atype = languages.reduce((object, lang) => ({...object, [lang]: document.createElement('span')}), {});
-        /** @type {html} */
-        this.html = languages.reduce((object, lang) => ({...object, [lang]: document.createElement('span')}), {});
-        languages.forEach(/** @param {Languages} lang */(lang) => {
-            this.html[lang].classList.add('tooltip');
-            Tooltip.#__header__(this, lang);
-            Tooltip.#__body__(this, lang);
-            Tooltip.#__footer__(this, lang);
+
+        this.#tooltip = document.createElement('span');
+        this.#tooltip.className = 'tooltip';
+        this.#body = languages.reduce((object, lang) => ({...object, [lang]: document.createElement('span')}), {});
+        this.#__head__();
+        this.#__body__();
+        this.#__foot__();        
+    }
+
+    get html() {
+        const lang = translate[languages[using]];
+        const node = this.master.proto;
+
+        if (this.#lock_prefix) this.#lock_prefix.textContent = lang.lock;
+        if (this.#cost_prefix) this.#cost_prefix.textContent = lang.cost;
+        if (this.#rely_prefix) this.#rely_prefix.textContent = lang.rely;
+        if (this.#atype_prefix) this.#atype_prefix.textContent = lang.atype(node.archetype.name);
+        this.#tooltip.replaceChildren(
+            this.#head,
+            this.#body[languages[using]],
+            this.#foot
+        );
+        return this.#tooltip;
+    }
+
+    #__head__() {
+        const node = this.master.proto;
+
+        this.#head = document.createElement('span');
+        this.#head.className = 'tooltip-header';
+
+        const name = document.createElement('span');
+        name.className = 'style-bold';
+        name.textContent = node.realname ?? node.name;
+        name.style.display = 'block';
+        name.style.fontSize = '1.4em';
+        name.style.lineHeight = '1.4em';
+        switch (node.level) {
+            case 0: name.classList.add('color-green'); break;
+            case 1: name.classList.add('color-white'); break;
+            case 2: name.classList.add('color-gold'); break;
+            case 3: name.classList.add('color-pink'); break;
+            case 4: name.classList.add('color-red'); break;
+        }
+        this.#head.appendChild(name);
+
+        if (node.combo) {
+            const combo = document.createElement('span');
+            combo.style.display = 'block';
+
+            const descr = document.createElement('span');
+            descr.className = 'color-gold';
+            descr.textContent = 'Click Combo: ';
+
+            const click = Array.from(node.combo).map((button) => {
+                const span = document.createElement('span');
+                span.className = 'color-pink';
+                switch (button) {
+                    case 'L': span.textContent = 'LEFT'; break;
+                    case 'R': span.textContent = 'RIGHT'; break;
+                }
+                return span.outerHTML;
+            }).join('-');
+
+            combo.innerHTML = descr.outerHTML + click;
+            this.#head.appendChild(combo);
+            // const innerHTML =
+            //     '<span class="color-gray" display="block">' +
+            //         '<span class="color-gold"> Click Combo: </span>' +
+            //         Array.from(node.combo).map((button) => {
+            //             switch (button) {
+            //                 case 'L': return '<span class="color-pink">LEFT</span>'
+            //                 case 'R': return '<span class="color-pink">RIGHT</span>'
+            //             }
+            //         }).join('-') +
+            //     '</span>';
+            //
+            //this.#head.appendChild(generateElement(innerHTML));
+        }
+    }
+
+    #__body__() {
+        const node = this.master;
+        languages.forEach(/** @param {Languages} lang */async (lang) => {
+            let text;
+            try {
+                text = await window.fetch(`https://raw.githubusercontent.com/qiuzilay/Website-Code/main/atree%20v3/resources/texts/${lang}/${node.class}/${node.name}.txt`)
+                                            .catch((error) => console.error(error))
+                                            .then(/** @param {Response} response */ (response) => response.ok ? response.text() : void(0));
+            } finally {
+                text?.split(regex.reset)
+                     .map((subtext) => Tooltip.analyst(subtext))
+                     .forEach((subtext) => this.#body[lang].appendChild(subtext));
+                this.#body[lang].className = 'tooltip-body';
+                this.#body[lang].style.display = 'block';
+                this.#body[lang].style.marginTop = '1em';
+            }
         });
     }
 
-    /**
-     * @param {Tooltip} tooltip
-     * @param {Languages} lang
-     **/
-    static #__header__(tooltip, lang) {
-        const info = tooltip.master.proto;
-        const header = document.createElement('span');
-        const nodeName = document.createElement('span');
-        header.classList.add('tooltip-header');
-        nodeName.appendChild(document.createTextNode(info.realname ?? info.name));
-        nodeName.className = "style-bold";
-        nodeName.style.display = 'block';
-        nodeName.style.fontSize = '1.5em';
-        nodeName.style.lineHeight = '1.4em';
-        switch (info.level) {
-            case 0: nodeName.classList.add('color-green'); break;
-            case 1: nodeName.classList.add('color-white'); break;
-            case 2: nodeName.classList.add('color-gold'); break;
-            case 3: nodeName.classList.add('color-pink'); break;
-            case 4: nodeName.classList.add('color-red'); break;
-        }
-        header.appendChild(nodeName);
+    #__foot__() {
+        const node = this.master.proto;
+        const data = routedata[this.master.class];
+        this.#foot = document.createElement('span');
+        this.#foot.className = 'tooltip-footer';
 
-        if (info.combo) {
-            const innerHTML =
-                '<span class="color-gray" display="block">' +
-                    '<span class="color-gold"> Click Combo: </span>' +
-                    Array.from(info.combo).map((btn) => {
-                        switch (btn) {
-                            case 'L': return '<span class="color-pink">LEFT</span>'
-                            case 'R': return '<span class="color-pink">RIGHT</span>'
-                        }
-                    }).join('-') +
-                '</span>';
+        if (node.lock) {
+            this.#lock = document.createElement('span');
+            this.#lock.className = 'color-red';
+            this.#lock.style.display = 'block';
+            this.#lock.style.marginTop = '1em';
+            
+            this.#lock_prefix = document.createTextNode('');
 
-            header.appendChild(generateElement(innerHTML));
-        }
-
-        tooltip.html[lang].appendChild(header);
-    }
-
-    /**
-     * @param {Tooltip} tooltip
-     * @param {Languages} lang
-     **/
-    static #__body__(tooltip, lang) {
-        const body = document.createElement('span');
-        body.classList.add('tooltip-body');
-        body.style.display = 'block';
-        body.style.marginTop = '1em';
-        tooltip.html[lang].appendChild(body);
-        return;
-        window.fetch(`https://raw.githubusercontent.com/qiuzilay/Website-Code/main/atree%20v3/resources/texts/${lang}/${tooltip.master.class}/${tooltip.master.proto.name}.txt`)
-                    .catch((error) => console.error(error))
-                    .then(/** @param {Response} response */ (response) => response.ok ? response.text() : void(0))
-                    .then(/** @param {String}   text     */ (text) => {
-                        if (text) {
-                            text.split(regex.reset)
-                                .map((subtext) => this.analyst(subtext))
-                                .forEach((frag) => body.appendChild(frag));
-                        }
-                    });
-    }
-
-    /**
-     * @param {Tooltip} tooltip
-     * @param {Languages} lang
-     **/
-    static #__footer__(tooltip, lang) {
-        const info = tooltip.master.proto;
-        const footer = document.createElement('span');
-        footer.classList.add('tooltip-footer');
-
-        if (info.lock) {
-            const lock = document.createElement('span');
-            lock.style.display = 'block';
-            lock.style.marginTop = '1em';
-            lock.appendChild(generateElement(`<span class="color-red">${translate[lang].lock}</span>`));
-            info.lock.forEach((name) => {
-                lock.appendChild(
-                    generateElement(`<span style="display: block;"><span class="color-red">-</span> ${name}</span>`)
+            this.#lock.appendChild(this.#lock_prefix);
+            
+            node.lock.forEach((name) => {
+                this.#lock.appendChild(
+                    generateElement(`<span style="display: block;">- <span class="color-gray">${name}</span></span>`)
                 );
             });
-            footer.appendChild(lock);
 
-            // add to routedata.<class>.lock
-            info.lock.forEach((name) => {
+            this.#foot.appendChild(this.#lock);
+
+            node.lock.forEach((name) => {
                 try {
-                    routedata[tooltip.master.class].lock[name].add(tooltip.master);
+                    data.lock[name].add(this.master);
                 } catch {
-                    routedata[tooltip.master.class].lock[name] = new Set([tooltip.master]);
+                    data.lock[name] = new Set([this.master]);
                 }
             })
         }
 
-        if (info.archetype?.name) {
+        if (node.archetype?.name) {
+            const atype = data.archetype[node.archetype.name];
             const archetype = document.createElement('span');
             archetype.style.display = 'block';
             archetype.style.marginTop = '1em';
-            archetype.style.fontSize = '1.25em';
-            archetype.classList.add('style-bold');
-            switch (info.archetype.name) {
-                case 'Boltslinger': archetype.classList.add('color-yellow'); break;
-                case 'Sharpshooter': archetype.classList.add('color-pink'); break;
-                case 'Trapper': archetype.classList.add('color-dark_green'); break;
-                case 'Fallen': archetype.classList.add('color-red'); break;
-                case 'Battle Monk': archetype.classList.add('color-yellow'); break;
-                case 'Paladin': archetype.classList.add('color-aqua'); break;
-                case 'Riftwalker': archetype.classList.add('color-aqua'); break;
-                case 'Light Bender': archetype.classList.add('color-white'); break;
-                case 'Arcanist': archetype.classList.add('color-dark_purple'); break;
-                case 'Shadestepper': archetype.classList.add('color-dark_red'); break;
-                case 'Trickster': archetype.classList.add('color-pink'); break;
-                case 'Acrobat': archetype.classList.add('color-white'); break;
-                case 'Summoner': archetype.classList.add('color-gold'); break;
-                case 'Ritualist': archetype.classList.add('color-green'); break;
-                case 'Acolyte': archetype.classList.add('color-red'); break;
-                default: throw Error('unknown archetype.', tooltip.master.proto);
-            }
-            archetype.appendChild(document.createTextNode(`${info.archetype.name} Archetype`));
-            footer.appendChild(archetype);
+            archetype.className = `style-bold style-larger color-${atype.color}`;
+            archetype.textContent = `${node.archetype.name} Archetype`;
+            this.#foot.appendChild(archetype);
 
-            // add to routedata.<class>.archetype
-            routedata[tooltip.master.class].archetype[info.archetype.name].add(tooltip.master);
+            atype.add(this.master);
         }
         
-        if (info.cost) {
-            const cost = tooltip.cost[lang] = document.createElement('span');
-            const text = document.createTextNode(translate[lang].cost);
+        if (node.cost) {
+            this.#cost = document.createElement('span');
+            this.#cost.classList.add('symbol-checkmark');
+            this.#cost.style.display = 'block';
+            this.#cost.style.marginTop = '1em';
+
+            this.#cost_prefix = document.createTextNode('');
+            
             const value = document.createElement('span');
-            cost.classList.add('symbol-checkmark');
-            cost.style.display = 'block';
-            cost.style.marginTop = '1em';
             value.dataset.update = 'cost';
-            value.appendChild(document.createTextNode(info.cost));
-            cost.appendChild(text);
-            cost.appendChild(value);
-            footer.appendChild(cost);
+            value.textContent = node.cost;
+            
+            this.#cost.append(this.#cost_prefix, value);
+            this.#foot.appendChild(this.#cost);
             try {
-                routedata[tooltip.master.class].cost[info.cost].add(tooltip.master);
+                data.cost[node.cost].add(this.master);
             } catch {
-                routedata[tooltip.master.class].cost[info.cost] = new Set([tooltip.master]);
+                data.cost[node.cost] = new Set([this.master]);
             }
         }
 
-        if (info.rely) {
-            const rely = tooltip.rely[lang] = document.createElement('span');
-            const name = document.createElement('span');
-            rely.style.display = 'block';
-            name.dataset.update = 'rely';
-            rely.classList.add('symbol-deny');
-            name.appendChild(document.createTextNode(info.rely));
-            rely.appendChild(document.createTextNode(translate[lang].rely));
-            rely.appendChild(name);
-            footer.appendChild(rely);
+        if (node.rely) {
+            this.#rely = document.createElement('span');
+            this.#rely.style.display = 'block';
+            this.#rely.className = 'symbol-deny';
+
+            this.#rely_prefix = document.createTextNode('');
+
+            const relied = document.createElement('span');
+            relied.dataset.update = 'rely';
+            relied.textContent = node.rely;
+            
+            this.#rely.append(this.#rely_prefix, relied);
+            this.#foot.appendChild(this.#rely);
             try {
-                routedata[tooltip.master.class].rely[info.rely].add(tooltip.master);
+               data.rely[node.rely].add(this.master);
             } catch {
-                routedata[tooltip.master.class].rely[info.rely] = new Set([tooltip.master]);
+               data.rely[node.rely] = new Set([this.master]);
             }
         }
 
-        if (info.archetype?.req) {
-            const archetype = tooltip.atype = document.createElement('span');
-            const value = document.createElement('span');
-            archetype.classList.add('symbol-deny');
-            archetype.style.display = 'block';
-            value.dataset.update = 'archetype';
-            value.appendChild(document.createTextNode(0));
-            archetype.append(translate[lang].atype(info.archetype.name), value, `/${info.archetype.req}`);
-            footer.appendChild(archetype);
-        }
+        if (node.archetype?.req) {
+            this.#atype = document.createElement('span');
+            this.#atype.className = 'symbol-deny';
+            this.#atype.style.display = 'block';
 
-        tooltip.html[lang].appendChild(footer);
+            this.#atype_prefix = document.createTextNode('');
+
+            this.#atype_value = document.createElement('span');
+            this.#atype_value.dataset.update = 'archetype';
+            this.#atype_value.textContent = '0';
+
+            this.#atype.append(this.#atype_prefix, this.#atype_value, `/${node.archetype.req}`);
+            this.#foot.appendChild(this.#atype);
+        }
     }
 
 
-    /** @param {string} string */
+    /**
+     * @param {string} string
+     * @return {string}
+     **/
     static analyst(string) {
         const [outer, inner, _] = string.split(regex.text);
         const bin = document.createDocumentFragment();
@@ -865,7 +891,6 @@ class Tooltip {
 
 class Archetype extends Set {
     /** @type {HTMLSpanElement} */  #image;
-    /** @type {string} */           #color;
     /** @type {HTMLSpanElement} */  #tooltip;
     /** @type {HTMLSpanElement} */  #head;
     /** @type {html} */             #body;
@@ -893,37 +918,37 @@ class Archetype extends Set {
         switch (this.name) {
             case 'Boltslinger':
             case 'Battle Monk':
-                this.#color = 'yellow';
+                this.color = 'yellow';
                 break;
             case 'Sharpshooter':
             case 'Arcanist':
             case 'Trickster':
-                this.#color = 'pink';
+                this.color = 'pink';
                 break;
             case 'Trapper':
             case 'Ritualist':
-                this.#color = 'green';
+                this.color = 'green';
                 break;
             case 'Fallen':
             case 'Shadestepper':
             case 'Acolyte':
-                this.#color = 'red';
+                this.color = 'red';
                 break;
             case 'Paladin':
             case 'Riftwalker':
-                this.#color = 'blue';
+                this.color = 'blue';
                 break;
             case 'Light Bender':
             case 'Acrobat':
-                this.#color = 'white';
+                this.color = 'white';
                 break;
             case 'Summoner':
-                this.#color = 'gold';
+                this.color = 'gold';
                 break;
         }
         this.#tooltip.classList.add('tooltip');
         this.#image.classList.add('archetype');
-        this.#image.classList.add(this.#color);
+        this.#image.classList.add(this.color);
         this.#__head__();
         this.#__body__();
         this.#__foot__();
@@ -942,10 +967,10 @@ class Archetype extends Set {
 
     #__head__() {
         this.#head = document.createElement('span');
-        this.#head.className = `color-${this.#color} style-bold`;
+        this.#head.className = `color-${this.color} style-bold`;
         this.#head.textContent = `${this.name} Archetype`;
         this.#head.style.display = 'block';
-        this.#head.style.fontSize = '1.5em';
+        this.#head.style.fontSize = '1.4em';
         this.#head.style.lineHeight = '1.4em';
         return this;
     }

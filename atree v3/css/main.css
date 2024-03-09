@@ -265,13 +265,3 @@ div#main td:hover .tooltip {
         padding: .48em 3.25em .48em .65em;
     }
 }
-
-.tooltip span[data-update] {
-    color: #FFFFFF;
-    text-shadow: 2px 2px #3F3F3F;
-}
-
-.tooltip .symbol-deny > span[data-update='archetype'] {
-    color: #FF5555;
-    text-shadow: 2px 2px #3F1515;
-}
