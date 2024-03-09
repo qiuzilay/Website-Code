@@ -291,12 +291,12 @@ class NODE extends UNIT{
         });
 
         switch (state) {
+            case 'enable':
+                if (!history.includes('enable')) this.#update('enable');
+                break;
             case 'disable':
             case 'standby':
-                if (history.includes('enable')) routedata[this.class].cost.value += this.proto.cost;
-                break;
-            case 'enable':
-                if (!history.includes('enable')) routedata[this.class].cost.value -= this.proto.cost;
+                if (history.includes('enable')) this.#update('disable');
                 break;
         }
 
@@ -333,6 +333,42 @@ class NODE extends UNIT{
             }
         } else {
             console.warn(`<${this.name}> has been locked.`);
+        }
+    }
+
+    /** @param {("enable" | "disable")} state */
+    #update(state) {
+        const dataset = routedata[this.class];
+        const self = this.proto;
+        switch (state) {
+            case 'enable':
+                // update remain apoint value in Orb
+                // Orb will handle the part of update the tooltip state all the Nodes have
+                dataset.cost.value -= self.cost;
+
+                // update current archetype points in Archetype
+                // Archetype will handle the part of update the tooltip state all the Nodes have
+                if (self.archetype?.name) dataset.archetype[self.archetype.name].value += 1;
+                
+                // update tooltip footer "Required Ability" status of all Nodes which rely on this node
+                dataset.rely[self.name]?.forEach(/** @param {NODE} node*/(node) => {
+                    node.tooltip.rely.className = 'symbol-checkmark';
+                });
+                break;
+            case 'disable':
+                // update remain apoint value in Orb
+                // Orb will handle the part of update the tooltip state all the Nodes have
+                dataset.cost.value += self.cost;
+
+                // update current archetype points in Archetype
+                // Archetype will handle the part of update the tooltip state all the Nodes have
+                if (self.archetype?.name) dataset.archetype[self.archetype.name].value -= 1;
+                
+                // update tooltip footer "Required Ability" status of all Nodes which rely on this node
+                dataset.rely[self.name]?.forEach(/** @param {NODE} node*/(node) => {
+                    node.tooltip.rely.className = 'symbol-deny';
+                });
+                break;
         }
     }
 
@@ -626,6 +662,22 @@ class Tooltip {
         this.#__head__();
         this.#__body__();
         this.#__foot__();        
+    }
+    
+    get cost() {return this.#cost}
+
+    get rely() {return this.#rely}
+
+    get atype() {return this.#atype}
+
+    get atype_value() {
+        return this.#atype_value ? parseInt(this.#atype_value.textContent) : undefined;
+    }
+
+    /** @param {number} _val */
+    set atype_value(_val) {
+        this.#atype_value.textContent = _val;
+        this.#atype.className = (_val >= this.master.proto.archetype.req) ? 'symbol-checkmark' : 'symbol-deny';
     }
 
     get html() {
@@ -963,6 +1015,9 @@ class Archetype extends Set {
     set value(_val) {
         this.#_value = _val;
         this.#value.textContent = _val;
+        this.forEach(/** @param {NODE} node*/(node) => {
+            if (node.tooltip.atype) node.tooltip.atype_value = _val;
+        });
     }
 
     #__head__() {
@@ -1094,9 +1149,7 @@ class Orb extends Array {
                 /** @param {Set<NODE>} group */
                 (group, _) => {
                     group.forEach((node) => {
-                        Object.values(node.tooltip.cost).forEach((span) => {
-                            span.className = incre ? 'symbol-checkmark' : 'symbol-deny';
-                        });
+                        node.tooltip.cost.className = incre ? 'symbol-checkmark' : 'symbol-deny';
                     });
                 }
             );
