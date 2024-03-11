@@ -115,6 +115,10 @@ button.lock > img.button_1 {
     content: url(../resources/images/buttons/button_1_lock.png) !important;
 }
 
+button:not(.enable):has(+ .tooltip .symbol-deny[data-update="cost"]) > img.button_1 {
+    content: url(../resources/images/buttons/button_1_disable.png) !important;
+}
+
 /* -------- button_2 -------- */
 
 button.enable > img.button_2 {
@@ -131,6 +135,10 @@ button.standby > img.button_2 {
 
 button.lock > img.button_2 {
     content: url(../resources/images/buttons/button_2_lock.png) !important;
+}
+
+button:not(.enable):has(+ .tooltip .symbol-deny[data-update="cost"]) > img.button_2 {
+    content: url(../resources/images/buttons/button_2_disable.png) !important;
 }
 
 /* -------- button_3 -------- */
@@ -151,6 +159,10 @@ button.lock > img.button_3 {
     content: url(../resources/images/buttons/button_3_lock.png) !important;
 }
 
+button:not(.enable):has(+ .tooltip .symbol-deny[data-update="cost"]) > img.button_3 {
+    content: url(../resources/images/buttons/button_3_disable.png) !important;
+}
+
 /* -------- button_4 -------- */
 
 button.enable > img.button_4 {
@@ -167,6 +179,10 @@ button.standby > img.button_4 {
 
 button.lock > img.button_4 {
     content: url(../resources/images/buttons/button_4_lock.png) !important;
+}
+
+button:not(.enable):has(+ .tooltip .symbol-deny[data-update="cost"]) > img.button_4 {
+    content: url(../resources/images/buttons/button_4_disable.png) !important;
 }
 
 

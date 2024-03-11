@@ -307,12 +307,12 @@ span.symbol-gap::before {
 
 /* -------- miscs -------- */
 
-.tooltip span[data-update] {
+.tooltip span[data-value] {
     color: #FFFFFF;
     text-shadow: 2px 2px #3F3F3F;
 }
 
-.tooltip .symbol-deny > span[data-update='archetype'] {
+.tooltip .symbol-deny[data-update='archetype'] > span[data-value] {
     color: #FF5555;
     text-shadow: 2px 2px #3F1515;
 }

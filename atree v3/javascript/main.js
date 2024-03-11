@@ -821,11 +821,12 @@ class Tooltip {
             this.#cost.classList.add('symbol-checkmark');
             this.#cost.style.display = 'block';
             this.#cost.style.marginTop = '1em';
+            this.#cost.dataset.update = 'cost';
 
             this.#cost_prefix = document.createTextNode('');
             
             const value = document.createElement('span');
-            value.dataset.update = 'cost';
+            value.dataset.value = 'cost';
             value.textContent = node.cost;
             
             this.#cost.append(this.#cost_prefix, value);
@@ -841,11 +842,12 @@ class Tooltip {
             this.#rely = document.createElement('span');
             this.#rely.style.display = 'block';
             this.#rely.className = 'symbol-deny';
+            this.#rely.dataset.update = 'rely';
 
             this.#rely_prefix = document.createTextNode('');
 
             const relied = document.createElement('span');
-            relied.dataset.update = 'rely';
+            relied.dataset.value = 'rely';
             relied.textContent = node.rely;
             
             this.#rely.append(this.#rely_prefix, relied);
@@ -861,11 +863,12 @@ class Tooltip {
             this.#atype = document.createElement('span');
             this.#atype.className = 'symbol-deny';
             this.#atype.style.display = 'block';
+            this.#atype.dataset.update = 'archetype';
 
             this.#atype_prefix = document.createTextNode('');
 
             this.#atype_value = document.createElement('span');
-            this.#atype_value.dataset.update = 'archetype';
+            this.#atype_value.dataset.value = 'archetype';
             this.#atype_value.textContent = '0';
 
             this.#atype.append(this.#atype_prefix, this.#atype_value, `/${node.archetype.req}`);
@@ -1046,11 +1049,12 @@ class Archetype extends Set {
         this.#foot.className = 'symbol-checkmark';
         this.#foot.style.display = 'block';
         this.#foot.style.marginTop = '1em';
+        this.#foot.dataset.update = 'atype_unlocked';
 
         this.#prefix = document.createTextNode('');
 
         this.#value = document.createElement('span');
-        this.#value.dataset.update = 'atype_unlocked';
+        this.#value.dataset.value = 'atype_unlocked';
         this.#value.textContent = 0;
 
         this.#suffix = document.createTextNode('/');
@@ -1113,7 +1117,7 @@ class Orb extends Array {
         this.#descr.style.display = 'block';
         
         this.#value = document.createElement('span');
-        this.#value.dataset.update = 'apoint';
+        this.#value.dataset.value = 'apoint';
         this.#value.textContent = this.#_value;
 
         this.#suffix = document.createElement('span');
