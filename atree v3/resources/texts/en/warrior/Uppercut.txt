@@ -1,0 +1,8 @@
+Hurls enemies upwards and deal massive damage.
+
+§MMana Cost: §f40§r
+§STotal Damage: §f280% §8(of your DPS)§r
+§G§8(§UDamage: 200%)§r
+§G§8(§EEarth: 40%)§r
+§G§8(§TThunder: 40%)§r
+§OArea of Effect: §f4 Blocks§r

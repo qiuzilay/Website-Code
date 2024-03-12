@@ -82,7 +82,7 @@ class Packet {
         }
     }
 
-    /** @returns {params} */
+    /** @return {params} */
     get params() {return {
         task: this.payload.task,
         send: this.header.send,
@@ -223,23 +223,23 @@ class NODE extends UNIT{
         return fragment;
     }
 
-    get state_s() {
+    get status() {
         return this.buttonElement.className;
     }
 
-    /** @returns {Gate[]} */
+    /** @return {Gate[]} */
     get importGates() {return this.gateway.filter((gate) => gate.connect.some((node) => this.proto.import?.includes(node.name)))}
 
-    /** @returns {Gate[]} */
+    /** @return {Gate[]} */
     get exportGates() {return this.gateway.filter((gate) => gate.connect.some((node) => this.proto.export?.includes(node.name)))}
 
-    /** @returns {NODE[]} */
+    /** @return {NODE[]} */
     get family() {return unique(this.gateway.flatMap((gate) => gate.connect))}
 
-    /** @returns {NODE[]} */
+    /** @return {NODE[]} */
     get importNodes() {return this.family.filter((node) => this.proto.import?.includes(node.name))}
 
-    /** @returns {NODE[]} */
+    /** @return {NODE[]} */
     get exportNodes() {return this.family.filter((node) => this.proto.export?.includes(node.name))}
 
 
@@ -304,9 +304,8 @@ class NODE extends UNIT{
     }
     
     click() {
-        if (!this.buttonElement.classList.contains('lock')) {
+        if (this.#examine()) {
             switch (true) {
-                case this.state.contains('disable'): break;
                 case this.state.contains('enable'):
                     this.set('standby');
                     this.#send({
@@ -331,9 +330,42 @@ class NODE extends UNIT{
                     break;
                 default: throw Error(`invalid state of Node was detected at <${this.proto.name}>`);
             }
-        } else {
-            console.warn(`<${this.name}> has been locked.`);
         }
+    }
+
+    #examine() {
+        const dataset = routedata[this.class];
+        const chain =/** @param {Array<string>} arr */(arr) => {
+            const _last = arr.pop();
+            return (arr.length > 1) ? [arr.join(', '), _last].join(' and ') : _last;
+        };
+
+        switch (true) {
+            case this.state.contains('disable'): {
+                return false;
+            }
+            case this.state.contains('lock'): {
+                const locker = Array.from(dataset.lock[this.name])
+                                    .filter((node) => node.state.contains('enable'))
+                                    .map((node) => `<${node.name}>`);
+                console.warn(`<${this.name}> This ability was locked by ${chain(locker)}!`);
+                return false;
+            }
+            case this.tooltip.rely?.classList.contains('symbol-deny'): {
+                console.warn(`<${this.name}> this ability is dependent on <${this.proto.rely}> !`)
+                return false;
+            }
+            case this.tooltip.cost?.classList.contains('symbol-deny'): {
+                console.warn(`<${this.name}> Not enough points to unlock this ability!`)
+                return false;
+            }
+            case this.tooltip.atype?.classList.contains('symbol-deny'): {
+                console.warn(`<${this.name}> Not enough "${this.proto.archetype.name}" archetype to unlock this ability!`)
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /** @param {("enable" | "disable")} state */
@@ -354,7 +386,13 @@ class NODE extends UNIT{
                 dataset.rely[self.name]?.forEach(/** @param {NODE} node*/(node) => {
                     node.tooltip.rely.className = 'symbol-checkmark';
                 });
+
+                // add html 'lock' class to state of all Nodes which is locked by this node
+                dataset.lock[self.name]?.forEach(/** @param {NODE} node*/(node) => {
+                    node.buttonElement.classList.add('lock');
+                });
                 break;
+
             case 'disable':
                 // update remain apoint value in Orb
                 // Orb will handle the part of update the tooltip state all the Nodes have
@@ -368,7 +406,13 @@ class NODE extends UNIT{
                 dataset.rely[self.name]?.forEach(/** @param {NODE} node*/(node) => {
                     node.tooltip.rely.className = 'symbol-deny';
                 });
+
+                // remove html 'lock' class to state of all Nodes which is locked by this node
+                dataset.lock[self.name]?.forEach(/** @param {NODE} node*/(node) => {
+                    node.buttonElement.classList.remove('lock');
+                });
                 break;
+
         }
     }
 
@@ -379,7 +423,7 @@ class NODE extends UNIT{
      * @property {boolean}  interrupt
      * @property {any}      base        Default return if result collector is empty.
      * @param {host}
-     * @returns {boolean | null}
+     * @return {boolean | null}
      **/
     #send({gates, packet, interrupt=false, base=null}) {
         
@@ -394,11 +438,11 @@ class NODE extends UNIT{
                 via: opposite(gate.pos),
                 ignore: this.name
             });
-            console.groupCollapsed(`<${this.name}> [${this.state_s}] (Gate ${gate.pos}) Send a packet!`);
+            console.groupCollapsed(`<${this.name}> [${this.status}] (Gate ${gate.pos}) Send a packet!`);
             console.info(`packet:`, readpacket(subpack));
             const bin = gate.connect_with.transmit(subpack);
             console.groupEnd();
-            console.info(`<${this.name}> [${this.state_s}] (Gate ${gate.pos}) response: ${bin}`);
+            console.info(`<${this.name}> [${this.status}] (Gate ${gate.pos}) response: ${bin}`);
 
             collector.push(bin);
             if (bin && packet.payload.task.endsWith('?')) {
@@ -416,19 +460,19 @@ class NODE extends UNIT{
         const GID = packet.footer.gid;
         routelogs[GID] ??= {serial: 0, 'reachable?': {}};
         const SID = routelogs[GID].serial++;
-        console.groupCollapsed(`<${this.name}> [${this.state_s}] Route ${GID}.${SID} start.`, `(task: '${packet.payload.task}')`);
+        console.groupCollapsed(`<${this.name}> [${this.status}] Route ${GID}.${SID} start.`, `(task: '${packet.payload.task}')`);
         
         const bin = (interrupt ? gates.some(host) : gates.map(host).some((_) => _)) ? true : bool(collector, {base: base});
 
         console.groupEnd();
-        console.info(`<${this.name}> [${this.state_s}] Route ${GID}.${SID} end. collector: ${str(collector)}, final: ${bin}.`);
+        console.info(`<${this.name}> [${this.status}] Route ${GID}.${SID} end. collector: ${str(collector)}, final: ${bin}.`);
         if (!SID) {delete routelogs[GID]};
         return bin;
     }
 
-    /** @param {Packet} packet @returns {(boolean | null)} */
+    /** @param {Packet} packet @return {(boolean | null)} */
     transmit(packet) {
-        console.info(`<${this.name}> [${this.state_s}] received packet.`, readpacket(packet));
+        console.info(`<${this.name}> [${this.status}] received packet.`, readpacket(packet));
         const router = packet.footer.router;
         const from_parent = this.proto.import?.includes(router.name) ?? false;
         const from_children = this.proto.export?.includes(router.name) ?? false;
@@ -439,13 +483,13 @@ class NODE extends UNIT{
         return bin;
     }
 
-    /** @param {Packet} packet @returns {(boolean | null)} */
+    /** @param {Packet} packet @return {(boolean | null)} */
     #manager(packet) {
         let bin = null;
         const task = packet.payload.task;
         const send = packet.header.send;
         const recv = packet.header.recv;
-        console.groupCollapsed(`<${this.name}> [${this.state_s}] start handling the task '${task}'.`);
+        console.groupCollapsed(`<${this.name}> [${this.status}] start handling the task '${task}'.`);
         switch (task) {
             case 'disable':
             case 'standby': {
@@ -560,7 +604,7 @@ class NODE extends UNIT{
 
         
         console.groupEnd();
-        console.info(`<${this.name}> [${this.state_s}] task '${task}' was over.`, `return: ${bin}`);
+        console.info(`<${this.name}> [${this.status}] task '${task}' was over.`, `return: ${bin}`);
         return bin;
     }
 
@@ -600,7 +644,7 @@ class BRANCH extends UNIT {
         this.base.className = base;
     }
 
-    /** @param {Packet} packet @returns {(boolean | null)} */
+    /** @param {Packet} packet @return {(boolean | null)} */
     transmit(packet) {
         const input = packet.footer.via;
         console.info(`branch[${this.axis}](Gate ${input}) received packet.`);
@@ -1313,7 +1357,7 @@ function is_defined(...obj) {
  * @property {bool}     base
  * @param {Array<bool>} arr
  * @param {bool_args}
- * @returns {bool}
+ * @return {bool}
  **/
 function bool(arr, {base}={base: null}) {
     let bin = base;
@@ -1330,7 +1374,7 @@ function bool(arr, {base}={base: null}) {
 
 /**
  * @param {Array} arr
- * @returns {Array}
+ * @return {Array}
  **/
 function unique(arr) {
     return Array.from(new Set(arr));
@@ -1436,8 +1480,8 @@ const regex = {
 const routedata = {
     archer: {
         cost: new Orb('archer'),
-        lock: {},
-        rely: {},
+        /** @type {Object<string, Set<NODE>>} */lock: {},
+        /** @type {Object<string, Set<NODE>>} */rely: {},
         archetype: {
             "Boltslinger": new Archetype('Boltslinger', 'archer'),
             "Trapper": new Archetype('Trapper', 'archer'),
@@ -1446,8 +1490,8 @@ const routedata = {
     },
     warrior: {
         cost: new Orb('warrior'),
-        lock: {},
-        rely: {},
+        /** @type {Object<string, Set<NODE>>} */lock: {},
+        /** @type {Object<string, Set<NODE>>} */rely: {},
         archetype: {
             "Fallen": new Archetype('Fallen', 'warrior'),
             "Battle Monk": new Archetype('Battle Monk', 'warrior'),
@@ -1456,8 +1500,8 @@ const routedata = {
     },
     mage: {
         cost: new Orb('mage'),
-        lock: {},
-        rely: {},
+        /** @type {Object<string, Set<NODE>>} */lock: {},
+        /** @type {Object<string, Set<NODE>>} */rely: {},
         archetype: {
             "Riftwalker": new Archetype('Riftwalker', 'mage'),
             "Light Bender": new Archetype('Light Bender', 'mage'),
@@ -1466,8 +1510,8 @@ const routedata = {
     },
     assassin: {
         cost: new Orb('assassin'),
-        lock: {},
-        rely: {},
+        /** @type {Object<string, Set<NODE>>} */lock: {},
+        /** @type {Object<string, Set<NODE>>} */rely: {},
         archetype: {
             "Shadestepper": new Archetype('Shadestepper', 'assassin'),
             "Trickster": new Archetype('Trickster', 'assassin'),
@@ -1476,8 +1520,8 @@ const routedata = {
     },
     shaman: {
         cost: new Orb('shaman'),
-        lock: {},
-        rely: {},
+        /** @type {Object<string, Set<NODE>>} */lock: {},
+        /** @type {Object<string, Set<NODE>>} */rely: {},
         archetype: {
             "Summoner": new Archetype('Summoner', 'shaman'),
             "Ritualist": new Archetype('Ritualist', 'shaman'),
@@ -1486,7 +1530,7 @@ const routedata = {
     }
 }
 const routelogs = {
-    query: /** @returns {boolean} */ function ({gid, task, nodeName}) {try {return this[gid][task][nodeName]} catch {return undefined}},
+    query: /** @return {boolean} */ function ({gid, task, nodeName}) {try {return this[gid][task][nodeName]} catch {return undefined}},
     write: function ({gid, task, nodeName, value}) {this[gid][task][nodeName] = value; return value;}
 };
 const routemap = {"archer": [], "warrior": [], "mage": [], "assassin": [], "shaman": []};

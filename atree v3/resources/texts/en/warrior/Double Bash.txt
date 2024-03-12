@@ -1,0 +1,5 @@
+§nBash§r will hit a second time at a farther range.
+
+§STotal Damage: §c-40% §8(of your DPS, per bash)§r
+§G§8(§UDamage: -40%)§r
+§RRange: §f+3 Blocks§r

@@ -1,0 +1,3 @@
+Reduce the Mana cost of §nCharge§r.
+
+§MMana Cost: §f-5§r
