@@ -23,10 +23,6 @@ div#tab {
     border: none;
     border-radius: 1.5em;
     background-color: #323232;
-    color: #FFFFFF;
-    font-family: Roboto;
-    font-weight: bold;
-    font-size: medium;
     text-align: center;
 }
 
@@ -44,10 +40,10 @@ div#tab #tab_span button {
     border: none;
     outline: none;
     background-color: inherit;
-    color: inherit;
-    font-family: inherit;
-    font-weight: inherit;
-    font-size: inherit;
+    color: #FFFFFF;
+    font-family: 'wynn', 'nunito', 'Microsoft JhengHei', sans-serif;
+    font-weight: bold;
+    font-size: medium;
     text-align: inherit;
     cursor: pointer;
     transition: 0.3s;
@@ -264,4 +260,60 @@ div#main td:hover .tooltip {
         font-size: small;
         padding: .48em 3.25em .48em .65em;
     }
+}
+
+/* ------- languages-config ------- */
+
+div#lang {
+    position: fixed;
+    background-color: #323232;
+    opacity: .8;
+    top: 8.5%;
+    left: 100%;
+    padding: .5em .5em .5em .25em;
+    font-size: large;
+    z-index: 101;
+    transition: all .5s .5s;
+}
+
+div#lang:hover {
+    transform: translateX(-100%);
+    transition: all .5s;
+}
+
+div#lang::before {
+    content: "〈";
+    color: #FFFFFF;
+    font-size: 1.25em;
+    font-weight: bold;
+    font-family: 'wynn', 'nunito', 'Microsoft JhengHei', sans-serif;
+    background-color: #323232;
+    position: absolute;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    top: 0;
+    right: 100%;
+    width: 15%;
+    height: 100%;
+    padding-right: .25em;
+    transform: translateX(1px);
+}
+
+div#lang > select#lang-config {
+    background: transparent;
+    color: white;
+    font-size: large;
+    padding: .5em 2em;
+    border: 1.5px solid;
+}
+
+select#lang-config > option {
+    background-color: #444444;
+    padding: .5em 2em;
+}
+
+select:-internal-list-box {
+    text-align: center;
 }
