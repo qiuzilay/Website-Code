@@ -1,0 +1,7 @@
+§nUppercut§r will deal a footsweep attack at a longer and wider angle.
+
+§MMana Cost: §f-5§r
+§STotal Damage: §c-40% §8(of your DPS)§r
+§G§8(§UDamage: -70%)§r
+§G§8(§WWater: +30%)§r
+§RRange: §f+1.5 Blocks§r

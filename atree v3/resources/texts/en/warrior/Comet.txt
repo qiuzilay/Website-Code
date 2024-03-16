@@ -1,0 +1,5 @@
+After being hit by §nFireworks§r, enemies will crash unto the ground and receive more damage.
+
+§STotal Damage: §f+100% §8(of your DPS)§r
+§G§8(§UDamage: +80%)§r
+§G§8(§EEarth: +20%)§r

@@ -1,0 +1,5 @@
+§nBash§r will cast at the player's position at double the speed and with an increased area of effect.
+
+§STotal Damage: §f+25% §8(of your DPS, per bash)§r
+§G§8(§TThunder: +25%)§r
+§OArea of Effect: §f+3 Blocks §7(Circle-Shaped)

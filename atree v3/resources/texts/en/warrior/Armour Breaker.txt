@@ -1,0 +1,4 @@
+While §bCorrupted§7, losing §f30% §7Health will make you next §nUppercut §rreduce the enemies' defense stats.
+
+§VEffect: §f-30% §7Resistance Bonus to Enemies§r
+§DDuration: §f8s§r

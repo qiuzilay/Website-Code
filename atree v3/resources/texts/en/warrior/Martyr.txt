@@ -1,0 +1,5 @@
+When you receive a fatal blow, all nearby allies become invincible.
+
+§VEffect: §fInvincibility to Allies§r
+§DDuration: §f3s§r
+§OArea of Effect: §f12 Blocks §7(Circle-Shaped)

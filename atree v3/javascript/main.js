@@ -37,6 +37,98 @@ function main() {
     });
 }
 
+function is_defined(...obj) {
+    return obj.every((_) => _ !== undefined);
+}
+
+/** 
+ * @typedef {(boolean | null)}  bool
+ * @typedef {Object}    bool_args
+ * @property {bool}     base
+ * @param {Array<bool>} arr
+ * @param {bool_args}
+ * @return {bool}
+ **/
+function bool(arr, {base}={base: null}) {
+    let bin = base;
+    for (const elem of arr) {
+        switch (elem) {
+            case true: bin = true; break;
+            case false: bin = false; break;
+            case null: continue;
+        }
+        if (bin) {break}
+    }
+    return bin;
+}
+
+/**
+ * @param {Array} arr
+ * @return {Array}
+ **/
+function unique(arr) {
+    return Array.from(new Set(arr));
+}
+
+function NSEW(arg1, arg2) {
+    const seq = {'N': 0, 'S': 1, 'E': 2, 'W': 3};
+    [arg1, arg2] = [seq[arg1], seq[arg2]]
+    return (arg1 > arg2) ? 1 : ((arg1 < arg2) ? -1 : 0)
+}
+
+function opposite(dir) {
+    switch (dir) {
+        case 'N': return 'S';
+        case 'S': return 'N';
+        case 'E': return 'W';
+        case 'W': return 'E';
+        default: throw Error('invalid direction.')
+    }
+}
+
+function newline(column, delcount, value) {
+    const line = new Array(9).fill(null);
+    is_defined(column, delcount, value) ? line.splice(column, delcount, value) : undefined;
+    return line;
+}
+
+/** @param {Packet} packet  */
+function readpacket(packet) {
+    function string(text) {return ((text === null)||(text === undefined)) ? text : `'${text}'`}
+    function unit(obj) {return obj.name ? `<${obj.name}>` : `branch${str(obj.axis)}`}
+    return `
+    {
+        header: {
+            send: ${string(packet.header.send)},
+            recv: ${string(packet.header.recv)},
+            mode: ${string(packet.header.mode)},
+            ignore: ${str(packet.header.ignore)}
+        },
+        payload: {
+            task: ${string(packet.payload.task)},
+            data: ${packet.payload.data}
+        },
+        footer: {
+            router: ${unit(packet.footer.router)},
+            via: ${string(packet.footer.via)}
+        }
+    }`
+}
+
+function readmap(clsname, x, y) {
+    const classMap = routemap[clsname];
+    while (classMap.length <= y) {classMap[classMap.length] ||= newline()}
+    return classMap[y][x];
+}
+
+function generateElement(stringHTML) {
+    const fragment = document.createDocumentFragment();
+    const block = document.createElement('div');
+    block.innerHTML = stringHTML;
+    for (const child of block.childNodes) {fragment.appendChild(child)}
+    return fragment;
+}
+
 class Action {
 
     static buildTree() {
@@ -218,96 +310,1224 @@ class EventHandler {
     }
 }
 
-function is_defined(...obj) {
-    return obj.every((_) => _ !== undefined);
-}
+/* -------------------------------- */
 
-/** 
- * @typedef {(boolean | null)}  bool
- * @typedef {Object}    bool_args
- * @property {bool}     base
- * @param {Array<bool>} arr
- * @param {bool_args}
- * @return {bool}
- **/
-function bool(arr, {base}={base: null}) {
-    let bin = base;
-    for (const elem of arr) {
-        switch (elem) {
-            case true: bin = true; break;
-            case false: bin = false; break;
-            case null: continue;
+class Packet {
+    /**    
+     * @typedef  {Object}           params      
+     * @property {string}           task        Command
+     * @property {NODE}             send        Sender Name
+     * @property {NODE}             recv        Destination
+     * @property {Modes}            mode        Transmit mode
+     * @property {Units}            router      Transmitter
+     * @property {Direction}        via         Pass by the gate
+     * @property {Object}           data        Attachment
+     * @property {String[]}         ignores     Ignore List
+     * @property {String}           ignore      Ignore
+     * @property {number}           ttl         Time To Live
+     * @property {number}           gid         Main-Route ID
+     * 
+     * @param {params}
+     */
+    constructor({task, send, recv=null, mode='normal', router, via, data=null, ignores, ttl=-1, gid=globalID}) {
+        /**
+         * @typedef    {Object}         header
+         * @property   {NODE}           send
+         * @property   {NODE}           recv
+         * @property   {Modes}          mode
+         * @property   {String[]}       ignore
+         * @property   {Set<String>}    __ignore
+         * 
+         * @typedef    {Object}   payload
+         * @property   {String}   task
+         * @property   {Object}   data
+         * 
+         * @typedef    {Object}     footer
+         * @property   {Units}      router
+         * @property   {Direction}  via
+         * @property   {number}     ttl
+         * @property   {number}     gid
+         */
+        
+        /** @type {header} */
+        this.header = {
+            send: send,
+            recv: recv,
+            mode: mode,
+            __ignore: new Set(ignores),
+            get ignore() {return Array.from(this.__ignore)},
+            set ignore(iter) {this.__ignore = new Set(iter)}
+        };
+        /** @type {payload} */
+        this.payload = {
+            task: task,
+            data: data
+        };
+        /** @type {footer} */
+        this.footer = {
+            router: router,
+            via: via,
+            ttl: ttl,
+            gid: gid
         }
-        if (bin) {break}
     }
-    return bin;
-}
 
-/**
- * @param {Array} arr
- * @return {Array}
- **/
-function unique(arr) {
-    return Array.from(new Set(arr));
-}
+    /** @return {params} */
+    get params() {return {
+        task: this.payload.task,
+        send: this.header.send,
+        recv: this.header.recv,
+        mode: this.header.mode,
+        router: this.footer.router,
+        via: this.footer.via,
+        data: this.payload.data,
+        ignores: this.header.ignore,
+        ttl: this.footer.ttl,
+        gid: this.footer.gid
+    }}
 
-function NSEW(arg1, arg2) {
-    const seq = {'N': 0, 'S': 1, 'E': 2, 'W': 3};
-    [arg1, arg2] = [seq[arg1], seq[arg2]]
-    return (arg1 > arg2) ? 1 : ((arg1 < arg2) ? -1 : 0)
-}
-
-function opposite(dir) {
-    switch (dir) {
-        case 'N': return 'S';
-        case 'S': return 'N';
-        case 'E': return 'W';
-        case 'W': return 'E';
-        default: throw Error('invalid direction.')
+    /** @param {params} */
+    config({task, send, recv, mode, router, via, data, ignore, ttl, gid}) {
+        if (send !== undefined) {this.header.send = send}
+        if (recv !== undefined) {this.header.recv = recv}
+        if (mode !== undefined) {this.header.mode = mode}
+        if (ignore !== undefined) {this.header.__ignore.add(ignore)}
+        if (task !== undefined) {this.payload.task = task}
+        if (data !== undefined) {this.payload.data = data}
+        if (router !== undefined) {this.footer.router = router}
+        if (via !== undefined) {this.footer.via = via}
+        if (ttl !== undefined) {this.footer.ttl = ttl}
+        if (gid !== undefined) {this.footer.gid = gid}
+        return this;
     }
 }
 
-function newline(column, delcount, value) {
-    const line = new Array(9).fill(null);
-    is_defined(column, delcount, value) ? line.splice(column, delcount, value) : undefined;
-    return line;
+class Gate {
+    constructor(pos) {
+        /** @type {Direction} */
+        this.pos = pos;
+        /** @type {Set<NODE>} */
+        this._connect = new Set();
+        /** @type {Units}} */
+        this.connect_with = null;
+    }
+    get bound() {return this.connect.length ? true : false}
+    get connect() {return Array.from(this._connect)}
+    set connect(iter) {this._connect = new Set(iter)}
 }
 
-/** @param {Packet} packet  */
-function readpacket(packet) {
-    function string(text) {return ((text === null)||(text === undefined)) ? text : `'${text}'`}
-    function unit(obj) {return obj.name ? `<${obj.name}>` : `branch${str(obj.axis)}`}
-    return `
-    {
-        header: {
-            send: ${string(packet.header.send)},
-            recv: ${string(packet.header.recv)},
-            mode: ${string(packet.header.mode)},
-            ignore: ${str(packet.header.ignore)}
-        },
-        payload: {
-            task: ${string(packet.payload.task)},
-            data: ${packet.payload.data}
-        },
-        footer: {
-            router: ${unit(packet.footer.router)},
-            via: ${string(packet.footer.via)}
+class UNIT {
+
+    constructor(axis) {
+        this.axis = axis;
+        this.gates = {
+            N: new Gate('N'),
+            S: new Gate('S'),
+            E: new Gate('E'),
+            W: new Gate('W'),
+        };
+    }
+
+    get gateway() {return Object.values(this.gates).filter((gate) => gate.bound)}
+
+    get usable() {return this.gateway.map((gate) => gate.pos).sort(NSEW).join('')}
+    
+    get active() {
+        const retval = (
+            Object.values(this.gates)
+                  .filter((gate) => gate.connect.some((node) => node.state.contains('enable')))
+                  .map((gate) => gate.pos)
+                  .sort(NSEW)
+                  .join('')
+        );
+        return (retval.length >= 2) ? retval : ''
+    }
+    
+    /**
+     * @param {Direction}   pos
+     * @param {NODE}        node
+     * @param {Units}       closest
+     */
+    __bind__(pos, node, closest) {
+        const gate = this.gates[pos]
+        gate._connect.add(node)
+        try {
+            if ((gate.connect_with !== null) && (gate.connect_with !== closest)) {
+                throw Error(`Suspecious rebind the "connect_with" property, occurred at [${this.axis}]`);
+            } else {
+                gate.connect_with ??= closest;
+            }
+        } catch {
+            console.error(routemap)
         }
-    }`
+    }
+
 }
 
-function readmap(clsname, x, y) {
-    const classMap = routemap[clsname];
-    while (classMap.length <= y) {classMap[classMap.length] ||= newline()}
-    return classMap[y][x];
+class NODE extends UNIT{
+
+    /**
+     * @typedef     {Object}      ndata
+     * @property    {String}      ndata.name
+     * @property    {String}      ndata.combo
+     * @property    {number}      ndata.level
+     * @property    {String[]}    ndata.import
+     * @property    {String[]}    ndata.export
+     * @property    {number}      ndata.cost
+     * @property    {String[]}    ndata.lock
+     * @property    {String}      ndata.rely
+     * @property    {Object}      ndata.archetype
+     * @property    {Archetypes}  ndata.archetype.name
+     * @property    {number}      ndata.archetype.req
+     * @property    {number[]}    ndata.axis
+     * @property    {String[]}    ndata.draft
+     * 
+     * @param {Classes} clsname
+     * @param {ndata}   info
+     */
+    constructor(clsname, info) {
+        super(info.axis);
+        /** @type {ndata} */
+        this.proto = info;
+        /** @type {String} */
+        this.name = info.name;
+        /** @type {Classes} */
+        this.class = clsname;
+        /** @type {Tooltip} */
+        this.tooltip = new Tooltip(this);
+        /** @type {HTMLTableCellElement} */
+        this.parentElement = undefined;
+        /** @type {HTMLButtonElement} */
+        this.buttonElement = document.createElement('button');
+        /** @type {DOMTokenList} */
+        this.state = this.buttonElement.classList;
+        this.state.add((str(info.axis) === '[4,1]') ? 'standby' : 'disable');
+        this.buttonElement.appendChild(generateElement(`<img class="${info.level ? `button_${info.level}` : `button_${clsname}`}">`));
+
+        this.#__buildpath__();
+    }
+
+    /** @return {DocumentFragment} */
+    get html() {
+        const fragment = document.createDocumentFragment();
+        fragment.appendChild(this.buttonElement);
+        fragment.appendChild(this.tooltip.html);
+        return fragment;
+    }
+
+    get status() {
+        return this.buttonElement.className;
+    }
+
+    /** @return {Gate[]} */
+    get importGates() {return this.gateway.filter((gate) => gate.connect.some((node) => this.proto.import?.includes(node.name)))}
+
+    /** @return {Gate[]} */
+    get exportGates() {return this.gateway.filter((gate) => gate.connect.some((node) => this.proto.export?.includes(node.name)))}
+
+    /** @return {NODE[]} */
+    get family() {return unique(this.gateway.flatMap((gate) => gate.connect))}
+
+    /** @return {NODE[]} */
+    get importNodes() {return this.family.filter((node) => this.proto.import?.includes(node.name))}
+
+    /** @return {NODE[]} */
+    get exportNodes() {return this.family.filter((node) => this.proto.export?.includes(node.name))}
+
+
+    #__buildpath__() {
+
+        this.proto.draft.forEach((path) => {
+
+            let [x, y] = this.proto.axis;
+            let object = this;
+            
+            Array.from(path).forEach((dir) => {
+
+                switch (dir) {
+                    case 'N': y--; break;
+                    case 'S': y++; break;
+                    case 'E': x++; break;
+                    case 'W': x--; break;
+                    default: throw Error(`invalid direction "${dir}" detected in the draft of <${this.name}> under ${this.class}.`);
+                }
+
+                const branch = (readmap(this.class, x, y) instanceof PATH) ? routemap[this.class][y][x] : new PATH([x, y]);
+
+                branch.__bind__(opposite(dir), this, object);
+
+                routemap[this.class][y][x] = object = branch;
+
+            });
+        });
+    }
+
+    /** @param {States} state  */
+    set(state) {
+        const def = ['enable', 'disable', 'standby', 'lock'];
+
+        if (state === undefined) return this.state;
+        if (!def.includes(state)) throw Error(`invalid state of Node was detected at <${this.proto.name}>`);
+
+        const history = Array.from(this.state.values());
+
+        def.forEach((name) => {
+            switch (name) {
+                case 'lock':
+                    if (name === state) this.state.toggle('lock');
+                    break;
+                default:
+                    if (name !== state) this.state.remove(name);
+                    else this.state.add(name);
+            }
+        });
+
+        switch (state) {
+            case 'enable':
+                if (!history.includes('enable')) this.#update('enable');
+                break;
+            case 'disable':
+            case 'standby':
+                if (history.includes('enable')) this.#update('disable');
+                break;
+        }
+
+        return this.state;
+    }
+    
+    click() {
+        if (this.#examine()) {
+            switch (true) {
+                case this.state.contains('enable'):
+                    this.set('standby');
+                    this.#send({
+                        gates: this.gateway,
+                        packet: new Packet({
+                            task: 'standby',
+                            send: this.name,
+                            gid: globalID++
+                        })
+                    });
+                    break;
+                case this.state.contains('standby'):
+                    this.set('enable');
+                    this.#send({
+                        gates: this.gateway,
+                        packet: new Packet({
+                            task: 'enable',
+                            send: this.name,
+                            gid: globalID++
+                        })
+                    });
+                    break;
+                default: throw Error(`invalid state of Node was detected at <${this.proto.name}>`);
+            }
+        }
+    }
+
+    #examine() {
+        const dataset = routedata[this.class];
+        const chain =/** @param {Array<string>} arr */(arr) => {
+            const _last = arr.pop();
+            return (arr.length > 1) ? [arr.join(', '), _last].join(' and ') : _last;
+        };
+
+        switch (true) {
+            case this.state.contains('disable'): {
+                return false;
+            }
+            case this.state.contains('lock'): {
+                const locker = Array.from(dataset.lock[this.name])
+                                    .filter((node) => node.state.contains('enable'))
+                                    .map((node) => `<${node.name}>`);
+                console.warn(`<${this.name}> This ability was locked by ${chain(locker)}!`);
+                return false;
+            }
+            case this.tooltip.rely?.classList.contains('symbol-deny'): {
+                console.warn(`<${this.name}> this ability is dependent on <${this.proto.rely}> !`)
+                return false;
+            }
+            case this.tooltip.cost?.classList.contains('symbol-deny'): {
+                console.warn(`<${this.name}> Not enough points to unlock this ability!`)
+                return false;
+            }
+            case this.tooltip.atype?.classList.contains('symbol-deny'): {
+                console.warn(`<${this.name}> Not enough "${this.proto.archetype.name}" archetype to unlock this ability!`)
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /** @param {("enable" | "disable")} state */
+    #update(state) {
+        const dataset = routedata[this.class];
+        const self = this.proto;
+        switch (state) {
+            case 'enable':
+                // update remain apoint value in Orb
+                // Orb will handle the part of update the tooltip state all the Nodes have
+                dataset.cost.value -= self.cost;
+
+                // update current archetype points in Archetype
+                // Archetype will handle the part of update the tooltip state all the Nodes have
+                if (self.archetype?.name) dataset.archetype[self.archetype.name].value += 1;
+                
+                // update tooltip footer "Required Ability" status of all Nodes which rely on this node
+                dataset.rely[self.name]?.forEach(/** @param {NODE} node*/(node) => {
+                    node.tooltip.rely.className = 'symbol-checkmark';
+                });
+
+                // add html 'lock' class to state of all Nodes which is locked by this node
+                dataset.lock[self.name]?.forEach(/** @param {NODE} node*/(node) => {
+                    node.buttonElement.classList.add('lock');
+                });
+                break;
+
+            case 'disable':
+                // update remain apoint value in Orb
+                // Orb will handle the part of update the tooltip state all the Nodes have
+                dataset.cost.value += self.cost;
+
+                // update current archetype points in Archetype
+                // Archetype will handle the part of update the tooltip state all the Nodes have
+                if (self.archetype?.name) dataset.archetype[self.archetype.name].value -= 1;
+                
+                // update tooltip footer "Required Ability" status of all Nodes which rely on this node
+                dataset.rely[self.name]?.forEach(/** @param {NODE} node*/(node) => {
+                    node.tooltip.rely.className = 'symbol-deny';
+                });
+
+                // remove html 'lock' class to state of all Nodes which is locked by this node
+                dataset.lock[self.name]?.forEach(/** @param {NODE} node*/(node) => {
+                    node.buttonElement.classList.remove('lock');
+                });
+                break;
+
+        }
+    }
+
+    /**
+     * @typedef {object}    host
+     * @property {Gate[]}   gates
+     * @property {Packet}   packet
+     * @property {boolean}  interrupt
+     * @property {any}      base        Default return if result collector is empty.
+     * @param {host}
+     * @return {boolean | null}
+     **/
+    #send({gates, packet, interrupt=false, base=null}) {
+        
+        const collector = [];
+
+        /** @param {Gate} gate */
+        const host = (gate) => {
+            if (gate.connect.every((node) => packet.header.ignore.includes(node.name))) {return null}
+            
+            const subpack = new Packet(packet.params).config({
+                router: this,
+                via: opposite(gate.pos),
+                ignore: this.name
+            });
+            console.groupCollapsed(`<${this.name}> [${this.status}] (Gate ${gate.pos}) Send a packet!`);
+            console.info(`packet:`, readpacket(subpack));
+            const bin = gate.connect_with.transmit(subpack);
+            console.groupEnd();
+            console.info(`<${this.name}> [${this.status}] (Gate ${gate.pos}) response: ${bin}`);
+
+            collector.push(bin);
+            if (bin && packet.payload.task.endsWith('?')) {
+                routelogs.write({
+                    gid: subpack.footer.gid,
+                    task: subpack.payload.task,
+                    nodeName: this.name,
+                    value: bin
+                })
+            }
+
+            return bin;
+        }
+
+        const GID = packet.footer.gid;
+        routelogs[GID] ??= {serial: 0, 'reachable?': {}};
+        const SID = routelogs[GID].serial++;
+        console.groupCollapsed(`<${this.name}> [${this.status}] Route ${GID}.${SID} start.`, `(task: '${packet.payload.task}')`);
+        
+        const bin = (interrupt ? gates.some(host) : gates.map(host).some((_) => _)) ? true : bool(collector, {base: base});
+
+        console.groupEnd();
+        console.info(`<${this.name}> [${this.status}] Route ${GID}.${SID} end. collector: ${str(collector)}, final: ${bin}.`);
+        if (!SID) {delete routelogs[GID]};
+        return bin;
+    }
+
+    /** @param {Packet} packet @return {(boolean | null)} */
+    transmit(packet) {
+        console.info(`<${this.name}> [${this.status}] received packet.`, readpacket(packet));
+        const router = packet.footer.router;
+        const from_parent = this.proto.import?.includes(router.name) ?? false;
+        const from_children = this.proto.export?.includes(router.name) ?? false;
+        const relative = (from_parent || from_children);
+        
+        const bin = relative ? this.#manager(packet) : null;
+        
+        return bin;
+    }
+
+    /** @param {Packet} packet @return {(boolean | null)} */
+    #manager(packet) {
+        let bin = null;
+        const task = packet.payload.task;
+        const send = packet.header.send;
+        const recv = packet.header.recv;
+        console.groupCollapsed(`<${this.name}> [${this.status}] start handling the task '${task}'.`);
+        switch (task) {
+            case 'disable':
+            case 'standby': {
+                switch (true) {
+                    case this.state.contains('disable'): break;
+                    case this.state.contains('standby'):
+                    case this.state.contains('enable'): {
+                        const connecting = this.importNodes.filter((node) => !packet.header.ignore.includes(node.name)).some((node) => node.state.contains('enable'));
+                        console.info('connecting:', connecting);
+                        if (connecting || !this.proto.import) {
+                            const reachable = routelogs.query({
+                                gid: packet.footer.gid,
+                                task: 'reachable?',
+                                nodeName: this.name
+                            }) ?? routelogs.write({
+                                gid: packet.footer.gid,
+                                task: 'reachable?',
+                                nodeName: this.name,
+                                value: (
+                                    this.importGates.length ?
+                                    this.#send({
+                                        gates: this.importGates,
+                                        packet: new Packet({
+                                            task: 'reachable?',
+                                            send: this.name,
+                                            mode: 'traceback',
+                                            ignores: this.proto.export?.filter((name) => !this.proto.import?.includes(name)),
+                                            gid: packet.footer.gid
+                                        })
+                                    }) : true
+                                )
+                            });
+                            if (reachable) {break};
+                        }
+
+                        this.set('disable');
+                        bin = this.exportGates.length ? this.#send({
+                            gates: this.exportGates,
+                            packet: packet.config({task: 'disable'})
+                        }): null;
+
+                        break;
+                    }
+                }
+                break;
+            }
+            case 'enable': {
+                switch (true) {
+                    case this.state.contains('disable'): {
+                        if (this.proto.import?.includes(send)) {
+                            this.set('standby');
+                        } else {
+                            console.info(`enable signal was ignored cause this packet was sent by child node.`)
+                        }
+                        break;
+                    }
+                    case this.state.contains('standby'): break;
+                    case this.state.contains('enable'): break;
+                }
+                break;
+            }
+            case 'reachable?': {
+                bin = false;
+                switch (true) {
+                    case this.state.contains('disable'): break;
+                    case this.state.contains('standby'): break;
+                    case this.state.contains('enable'): {
+                        bin = routelogs.query({
+                            gid: packet.footer.gid,
+                            task: 'reachable?',
+                            nodeName: this.name
+                        }) ?? this.proto.import?.some((name) => {
+                            return routelogs.query({
+                                gid: packet.footer.gid,
+                                task: 'reachable?',
+                                nodeName: name
+                            })
+                        }) ? true : routelogs.write({
+                            gid: packet.footer.gid,
+                            task: 'reachable?',
+                            nodeName: this.name,
+                            value: (
+                                this.importGates.length ?
+                                this.#send({
+                                    gates: this.importGates,
+                                    packet: packet,
+                                    interrupt: true,
+                                    base: false
+                                }) : true
+                            )
+                        });
+
+                        if (!bin) {
+                            this.set('disable')
+                            this.exportGates.length ? this.#send({
+                                gates: this.exportGates,
+                                packet: new Packet({
+                                    task: 'disable',
+                                    send: this.name,
+                                    mode: 'normal',
+                                    ignores: packet.header.ignore,
+                                    gid: packet.footer.gid
+                                })
+                            }) : null;
+                        }
+                        break;
+                    }
+                }
+                break;
+            }
+        }
+
+        
+        console.groupEnd();
+        console.info(`<${this.name}> [${this.status}] task '${task}' was over.`, `return: ${bin}`);
+        return bin;
+    }
+
 }
 
-function generateElement(stringHTML) {
-    const fragment = document.createDocumentFragment();
-    const block = document.createElement('div');
-    block.innerHTML = stringHTML;
-    for (const child of block.childNodes) {fragment.appendChild(child)}
-    return fragment;
+class BRANCH extends UNIT {
+
+    constructor(axis) {
+        super(axis);
+        this.layer = document.createElement('img');
+        this.base = document.createElement('img');
+        this.layer.style.zIndex = 1;
+        this.base.style.zIndex = 0;
+    }
+
+    get html() {
+        const fragment = document.createDocumentFragment();
+        fragment.appendChild(this.layer);
+        fragment.appendChild(this.base);
+        return fragment;
+    }
+
+    /**
+     * @param {Direction} pos 
+     * @param {NODE} node 
+     * @param {Units} closest
+     */
+    __bind__(pos, node, closest) {
+        super.__bind__(pos, node, closest);
+        this.#update();
+    }
+
+    #update() {
+        const active = this.active;
+        const base = `br_${this.usable}`;
+        this.layer.className = `${base} ${active}`;
+        this.base.className = base;
+    }
+
+    /** @param {Packet} packet @return {(boolean | null)} */
+    transmit(packet) {
+        const input = packet.footer.via;
+        console.info(`branch[${this.axis}](Gate ${input}) received packet.`);
+
+        const bin = bool(this.gateway.filter((gate) => gate.pos !== input).map((gate) => {
+
+            if (gate.connect.every((node) => packet.header.ignore.includes(node.name))) {
+                console.info(`branch[${this.axis}](Gate ${gate.pos}) blocked the packet.`);
+                return null;
+            } else {
+                console.groupCollapsed(`branch[${this.axis}](Gate ${gate.pos}) send packet.`);
+                const bin = gate.connect_with.transmit(
+                    packet.config({via: opposite(gate.pos)})
+                );
+                console.groupEnd();
+                console.info(`branch[${this.axis}](Gate ${gate.pos}) got: ${bin}`);
+                return bin;
+            }
+
+        }));
+
+        this.#update();
+        console.info(`branch[${this.axis}](Gate ${input}) return: ${bin}`);
+        return bin;
+    }
+
+}
+
+class PATH extends BRANCH {
+    // nothing
+}
+
+class Archetype extends Set {
+    /** @type {HTMLSpanElement} */  #image;
+    /** @type {HTMLSpanElement} */  #tooltip;
+    /** @type {HTMLSpanElement} */  #head;
+    /** @type {html} */             #body;
+    /** @type {HTMLSpanElement} */  #foot;
+    /** @type {HTMLSpanElement} */  #value;
+    /** @type {number} */           #_value;
+    /** @type {HTMLSpanElement} */  #prefix;
+    /** @type {HTMLSpanElement} */  #suffix;
+
+    /**
+     * @param {Archetypes}  name
+     * @param {Classes}     clsname
+     **/
+    constructor(name, clsname) {
+        super();
+        /** @type {Archetypes} */
+        this.name = name;
+        /** @type {Classes} */
+        this.class = clsname;
+        /** @type {HTMLTableCellElement} */
+        this.parentElement = undefined;
+        
+        this.#_value = 0;
+        this.#tooltip = document.createElement('span');
+        this.#body = languages.reduce((object, lang) => ({...object, [lang]: document.createElement('span')}), {});
+        this.#image = document.createElement('img');
+        switch (this.name) {
+            case 'Boltslinger':
+            case 'Battle Monk':
+                this.color = 'yellow';
+                break;
+            case 'Sharpshooter':
+            case 'Arcanist':
+            case 'Trickster':
+                this.color = 'pink';
+                break;
+            case 'Trapper':
+            case 'Ritualist':
+                this.color = 'green';
+                break;
+            case 'Fallen':
+            case 'Shadestepper':
+            case 'Acolyte':
+                this.color = 'red';
+                break;
+            case 'Paladin':
+            case 'Riftwalker':
+                this.color = 'blue';
+                break;
+            case 'Light Bender':
+            case 'Acrobat':
+                this.color = 'white';
+                break;
+            case 'Summoner':
+                this.color = 'gold';
+                break;
+        }
+        this.#tooltip.classList.add('tooltip');
+        this.#image.classList.add('archetype');
+        this.#image.classList.add(this.color);
+        this.#__head__();
+        this.#__body__();
+        this.#__foot__();
+    }
+
+    /** @return {number} */
+    get value() {
+        return this.#_value;
+    }
+
+    /** @param {number} _val Integer only */
+    set value(_val) {
+        this.#_value = _val;
+        this.#value.textContent = _val;
+        this.forEach(/** @param {NODE} node*/(node) => {
+            if (node.tooltip.atype) node.tooltip.atype_value = _val;
+        });
+    }
+
+    #__head__() {
+        this.#head = document.createElement('span');
+        this.#head.className = `color-${this.color} style-bold`;
+        this.#head.textContent = `${this.name} Archetype`;
+        this.#head.style.display = 'block';
+        this.#head.style.fontSize = '1.4em';
+        this.#head.style.lineHeight = '1.4em';
+        return this;
+    }
+
+    #__body__() {
+        languages.forEach(/** @param {Languages} lang */async (lang) => {
+            const text = await window.fetch(`https://raw.githubusercontent.com/qiuzilay/Website-Code/main/atree%20v3/resources/texts/${lang}/${this.class}/Archetype%20-%20${this.name}.txt`)
+                                        .catch((error) => console.error(error))
+                                        .then(/** @param {Response} response */ (response) => response.ok ? response.text() : void(0));
+            this.#body[lang].style.display = 'block';
+            this.#body[lang].style.marginTop = '1em';
+            this.#body[lang].appendChild(Tooltip.analyst(text));
+        });
+    }
+
+    #__foot__() {
+        this.#foot = document.createElement('span');
+        this.#foot.className = 'symbol-checkmark';
+        this.#foot.style.display = 'block';
+        this.#foot.style.marginTop = '1em';
+        this.#foot.dataset.update = 'atype_unlocked';
+
+        this.#prefix = document.createTextNode('');
+
+        this.#value = document.createElement('span');
+        this.#value.dataset.value = 'atype_unlocked';
+        this.#value.textContent = 0;
+
+        this.#suffix = document.createTextNode('/');
+
+        this.#foot.replaceChildren(this.#prefix, this.#value, this.#suffix);
+    }
+
+    get html() {
+        const lang = translate[languages[using]];
+        const fragment = document.createDocumentFragment();
+
+        this.#prefix.textContent = lang.atype_unlocked;
+        this.#suffix.textContent = `/${this.size}`;
+        
+        this.#tooltip.replaceChildren(
+            this.#head,
+            this.#body[languages[using]],
+            this.#foot
+        );
+        
+        fragment.appendChild(this.#image);
+        fragment.appendChild(this.#tooltip);
+
+        return fragment;
+    }
+}
+
+class Orb extends Array {
+    #image;
+    #tooltip;
+    #header;
+    #descr;
+    #suffix;
+    #rmain;
+    #info;
+    #value;
+    #_value;
+
+    /** @param {Classes} clsname*/
+    constructor(clsname) {
+        super();
+        
+        /** @type {Classes} */
+        this.class = clsname;
+        /** @type {HTMLTableCellElement} */
+        this.parentElement = undefined;
+        this.#_value = 45;
+
+        this.#image = document.createElement('img');
+        this.#image.className = 'misc orb';
+        
+        this.#tooltip = document.createElement('span');
+        this.#tooltip.className = 'tooltip';
+        
+        this.#header = document.createElement('span');
+        this.#header.className = 'color-dark_aqua style-bold style-larger';
+        this.#header.style.display = 'block';
+        this.#header.style.lineHeight = '1.4em';
+
+        this.#descr = document.createElement('span');
+        this.#descr.className = 'color-gray';
+        this.#descr.style.display = 'block';
+        
+        this.#value = document.createElement('span');
+        this.#value.dataset.value = 'apoint';
+        this.#value.textContent = this.#_value;
+
+        this.#suffix = document.createElement('span');
+        this.#suffix.className = 'color-gray';
+
+        this.#rmain = document.createElement('span');
+        this.#rmain.className = 'color-aqua';
+        this.#rmain.style.display = 'block';
+        this.#rmain.style.marginTop = '1em';
+        
+        this.#info = document.createElement('span');
+        this.#info.className = 'color-dark_gray';
+        this.#info.style.display = 'block';
+        this.#info.style.lineHeight = 'normal';
+
+        this.#tooltip.appendChild(this.#header);
+        this.#tooltip.appendChild(this.#descr);
+        this.#tooltip.appendChild(this.#rmain);
+        this.#tooltip.appendChild(this.#info);
+    }
+
+    /** @return {number} */
+    get value() {
+        return this.#_value;
+    }
+
+    /** @param {number} _val Integer only */
+    set value(_val) {
+        const incre = this.#_value < _val;
+        this.#value.textContent = this.#_value = _val;
+        this.filter((_, cost) => incre ? (cost <= _val) : (cost > _val))
+            .forEach(
+                /** @param {Set<NODE>} group */
+                (group, _) => {
+                    group.forEach((node) => {
+                        node.tooltip.cost.className = incre ? 'symbol-checkmark' : 'symbol-deny';
+                    });
+                }
+            );
+    }
+
+    get html() {
+        const lang = translate[languages[using]];
+        const fragment = document.createDocumentFragment();
+
+        this.#header.textContent = lang.apoint;
+        this.#descr.textContent = lang.apoint_descr;
+        this.#suffix.replaceChildren(this.#value, '/45');
+        this.#rmain.replaceChildren(`\u2726 ${lang.apoint_rmain}`, this.#suffix);
+        this.#info.textContent = [lang.apoint_info1, lang.apoint_info2].join('\n');
+        
+        fragment.appendChild(this.#image);
+        fragment.appendChild(this.#tooltip);
+
+        return fragment;
+    }
+}
+
+class Tooltip {
+    /** @type {HTMLSpanElement} */  #tooltip;
+    /** @type {HTMLSpanElement} */  #head;
+    /** @type {html}            */  #body;
+    /** @type {HTMLSpanElement} */  #foot;
+    /** @type {HTMLSpanElement} */  #lock;
+    /** @type {Text}            */  #lock_prefix;
+    /** @type {HTMLSpanElement} */  #cost;
+    /** @type {Text}            */  #cost_prefix;
+    /** @type {HTMLSpanElement} */  #rely;
+    /** @type {Text}            */  #rely_prefix;
+    /** @type {HTMLSpanElement} */  #atype;
+    /** @type {Text}            */  #atype_prefix;
+    /** @type {HTMLSpanElement} */  #atype_value;
+
+    /**
+     * @typedef {Object} html
+     * @property {HTMLSpanElement} en
+     * @property {HTMLSpanElement} zh-TW
+     * @param {NODE} node
+     **/
+    constructor(node) {
+        /** @type {NODE} */
+        this.master = node;
+
+        this.#tooltip = document.createElement('span');
+        this.#tooltip.className = 'tooltip';
+        this.#body = languages.reduce((object, lang) => ({...object, [lang]: document.createElement('span')}), {});
+        this.#__head__();
+        this.#__body__();
+        this.#__foot__();        
+    }
+    
+    get cost() {return this.#cost}
+
+    get rely() {return this.#rely}
+
+    get atype() {return this.#atype}
+
+    get atype_value() {
+        return this.#atype_value ? parseInt(this.#atype_value.textContent) : undefined;
+    }
+
+    /** @param {number} _val */
+    set atype_value(_val) {
+        this.#atype_value.textContent = _val;
+        this.#atype.className = (_val >= this.master.proto.archetype.req) ? 'symbol-checkmark' : 'symbol-deny';
+    }
+
+    get html() {
+        const lang = translate[languages[using]];
+        const node = this.master.proto;
+
+        if (this.#lock_prefix) this.#lock_prefix.textContent = lang.lock;
+        if (this.#cost_prefix) this.#cost_prefix.textContent = lang.cost;
+        if (this.#rely_prefix) this.#rely_prefix.textContent = lang.rely;
+        if (this.#atype_prefix) this.#atype_prefix.textContent = lang.atype(node.archetype.name);
+        this.#tooltip.replaceChildren(
+            this.#head,
+            this.#body[languages[using]],
+            this.#foot
+        );
+        return this.#tooltip;
+    }
+
+    #__head__() {
+        const node = this.master.proto;
+
+        this.#head = document.createElement('span');
+        this.#head.className = 'tooltip-header';
+
+        const name = document.createElement('span');
+        name.className = 'style-bold';
+        name.textContent = node.realname ?? node.name;
+        name.style.display = 'block';
+        name.style.fontSize = '1.4em';
+        name.style.lineHeight = '1.4em';
+        switch (node.level) {
+            case 0: name.classList.add('color-green'); break;
+            case 1: name.classList.add('color-white'); break;
+            case 2: name.classList.add('color-gold'); break;
+            case 3: name.classList.add('color-pink'); break;
+            case 4: name.classList.add('color-red'); break;
+        }
+        this.#head.appendChild(name);
+
+        if (node.combo) {
+            const combo = document.createElement('span');
+            combo.style.display = 'block';
+
+            const descr = document.createElement('span');
+            descr.className = 'color-gold';
+            descr.textContent = 'Click Combo: ';
+
+            const click = Array.from(node.combo).map((button) => {
+                const span = document.createElement('span');
+                span.className = 'color-pink';
+                switch (button) {
+                    case 'L': span.textContent = 'LEFT'; break;
+                    case 'R': span.textContent = 'RIGHT'; break;
+                }
+                return span.outerHTML;
+            }).join('-');
+
+            combo.innerHTML = descr.outerHTML + click;
+            this.#head.appendChild(combo);
+            // const innerHTML =
+            //     '<span class="color-gray" display="block">' +
+            //         '<span class="color-gold"> Click Combo: </span>' +
+            //         Array.from(node.combo).map((button) => {
+            //             switch (button) {
+            //                 case 'L': return '<span class="color-pink">LEFT</span>'
+            //                 case 'R': return '<span class="color-pink">RIGHT</span>'
+            //             }
+            //         }).join('-') +
+            //     '</span>';
+            //
+            //this.#head.appendChild(generateElement(innerHTML));
+        }
+    }
+
+    #__body__() {
+        const node = this.master;
+        languages.forEach(/** @param {Languages} lang */async (lang) => {
+            let text;
+            try {
+                // throw new Error(`<${this.master.name}> Fetching was blocked!`);
+                text = await window.fetch(`https://raw.githubusercontent.com/qiuzilay/Website-Code/main/atree%20v3/resources/texts/${lang}/${node.class}/${node.name}.txt`)
+                                            .catch((error) => console.error(error))
+                                            .then(/** @param {Response} response */ (response) => response.ok ? response.text() : void(0));
+            } catch (E) {
+                console.info(E);
+            } finally {
+                this.#body[lang].appendChild(Tooltip.analyst(text));
+                this.#body[lang].className = 'tooltip-body';
+                this.#body[lang].style.display = 'block';
+                this.#body[lang].style.marginTop = '1em';
+            }
+        });
+    }
+
+    #__foot__() {
+        const node = this.master.proto;
+        const data = routedata[this.master.class];
+        this.#foot = document.createElement('span');
+        this.#foot.className = 'tooltip-footer';
+
+        if (node.lock) {
+            this.#lock = document.createElement('span');
+            this.#lock.className = 'color-red';
+            this.#lock.style.display = 'block';
+            this.#lock.style.marginTop = '1em';
+            
+            this.#lock_prefix = document.createTextNode('');
+
+            this.#lock.appendChild(this.#lock_prefix);
+            
+            node.lock.forEach((name) => {
+                this.#lock.appendChild(
+                    generateElement(`<span style="display: block;">- <span class="color-gray">${name}</span></span>`)
+                );
+            });
+
+            this.#foot.appendChild(this.#lock);
+
+            node.lock.forEach((name) => {
+                try {
+                    data.lock[name].add(this.master);
+                } catch {
+                    data.lock[name] = new Set([this.master]);
+                }
+            })
+        }
+
+        if (node.archetype?.name) {
+            const atype = data.archetype[node.archetype.name];
+            const archetype = document.createElement('span');
+            archetype.style.display = 'block';
+            archetype.style.marginTop = '1em';
+            archetype.className = `style-bold style-larger color-${atype.color}`;
+            archetype.textContent = `${node.archetype.name} Archetype`;
+            this.#foot.appendChild(archetype);
+
+            atype.add(this.master);
+        }
+        
+        if (node.cost) {
+            this.#cost = document.createElement('span');
+            this.#cost.classList.add('symbol-checkmark');
+            this.#cost.style.display = 'block';
+            this.#cost.style.marginTop = '1em';
+            this.#cost.dataset.update = 'cost';
+
+            this.#cost_prefix = document.createTextNode('');
+            
+            const value = document.createElement('span');
+            value.dataset.value = 'cost';
+            value.textContent = node.cost;
+            
+            this.#cost.append(this.#cost_prefix, value);
+            this.#foot.appendChild(this.#cost);
+            try {
+                data.cost[node.cost].add(this.master);
+            } catch {
+                data.cost[node.cost] = new Set([this.master]);
+            }
+        }
+
+        if (node.rely) {
+            this.#rely = document.createElement('span');
+            this.#rely.style.display = 'block';
+            this.#rely.className = 'symbol-deny';
+            this.#rely.dataset.update = 'rely';
+
+            this.#rely_prefix = document.createTextNode('');
+
+            const relied = document.createElement('span');
+            relied.dataset.value = 'rely';
+            relied.textContent = node.rely;
+            
+            this.#rely.append(this.#rely_prefix, relied);
+            this.#foot.appendChild(this.#rely);
+            try {
+               data.rely[node.rely].add(this.master);
+            } catch {
+               data.rely[node.rely] = new Set([this.master]);
+            }
+        }
+
+        if (node.archetype?.req) {
+            this.#atype = document.createElement('span');
+            this.#atype.className = 'symbol-deny';
+            this.#atype.style.display = 'block';
+            this.#atype.dataset.update = 'archetype';
+
+            this.#atype_prefix = document.createTextNode('');
+
+            this.#atype_value = document.createElement('span');
+            this.#atype_value.dataset.value = 'archetype';
+            this.#atype_value.textContent = '0';
+
+            this.#atype.append(this.#atype_prefix, this.#atype_value, `/${node.archetype.req}`);
+            this.#foot.appendChild(this.#atype);
+        }
+    }
+
+
+    /**
+     * @param {string} string
+     * @return {string}
+     **/
+    static analyst(string) {
+        
+        function analyzer(subtext) {
+            const [outer, inner, _] = subtext.split(regex.text);
+            const bin = document.createDocumentFragment();
+            if (outer) {bin.appendChild(document.createTextNode(outer))}
+            if (inner) {
+                const style = Tooltip.palette(subtext.match(regex.general)?.shift());
+                style.appendChild(analyzer(inner));
+                bin.appendChild(style);
+            }
+            return bin;
+        }
+
+        const fragment = document.createDocumentFragment();
+        
+        string?.split(regex.reset).forEach((text) => {
+            if (text) fragment.appendChild(analyzer(text));
+        });
+
+        return fragment;
+    }
+
+    /**
+     * @param {string} hashtag
+     * @return {HTMLSpanElement}
+     **/
+    static palette(hashtag) {
+        const span = document.createElement('span');
+        switch (hashtag) {
+            case '§0': span.classList.add('color-black'); break;
+            case '§1': span.classList.add('color-dark_blue'); break;
+            case '§2': span.classList.add('color-dark_green'); break;
+            case '§3': span.classList.add('color-dark_aqua'); break;
+            case '§4': span.classList.add('color-dark_red'); break;
+            case '§5': span.classList.add('color-dark_purple'); break;
+            case '§6': span.classList.add('color-gold'); break;
+            case '§7': span.classList.add('color-gray'); break;
+            case '§8': span.classList.add('color-dark_gray'); break;
+            case '§9': span.classList.add('color-blue'); break;
+            case '§a': span.classList.add('color-green'); break;
+            case '§b': span.classList.add('color-aqua'); break;
+            case '§c': span.classList.add('color-red'); break;  
+            case '§d': span.classList.add('color-pink'); break;
+            case '§e': span.classList.add('color-yellow'); break;
+            case '§f': span.classList.add('color-white'); break;
+            case '§l': span.classList.add('style-bold'); break;
+            case '§n': span.classList.add('style-underline'); break;
+            case '§o': span.classList.add('style-smaller'); break;
+            case '§h': span.classList.add('style-larger'); break;
+            case '§I': span.classList.add('style-oblique'); break;
+            case '§B': span.classList.add('style-wrapper'); break;
+            case '§U': span.classList.add('symbol-neutral'); break;
+            case '§E': span.classList.add('symbol-earth'); break; 
+            case '§T': span.classList.add('symbol-thunder'); break; 
+            case '§W': span.classList.add('symbol-water'); break; 
+            case '§F': span.classList.add('symbol-fire'); break;
+            case '§A': span.classList.add('symbol-air'); break;
+            case '§M': span.classList.add('symbol-mana'); break;
+            case '§Y': span.classList.add('symbol-checkmark'); break;
+            case '§N': span.classList.add('symbol-deny'); break;
+            case '§S': span.classList.add('symbol-sword'); break;
+            case '§D': span.classList.add('symbol-duration'); break;
+            case '§R': span.classList.add('symbol-range'); break;
+            case '§O': span.classList.add('symbol-aoe'); break;
+            case '§H': span.classList.add('symbol-heart'); break;
+            case '§V': span.classList.add('symbol-shield'); break;
+            case '§G': span.classList.add('symbol-gap'); break;
+        }
+        return span;
+    }
+
 }
 
 var globalID = 0;

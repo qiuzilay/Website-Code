@@ -5,4 +5,5 @@ Hurls enemies upwards and deal massive damage.
 §G§8(§UDamage: 200%)§r
 §G§8(§EEarth: 40%)§r
 §G§8(§TThunder: 40%)§r
-§OArea of Effect: §f4 Blocks§r
+§OArea of Effect: §f1-3 Blocks §7(Cone-Shaped)§r
+§RRange: §f5 Blocks§r
