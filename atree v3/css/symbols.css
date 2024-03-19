@@ -169,7 +169,7 @@ span.style-bold {
 
 span.style-underline {
     text-decoration: underline;
-    text-underline-offset: 3px;
+    text-underline-offset: 4px;
     vertical-align: top;
 }
 
@@ -177,7 +177,7 @@ span.style-underline {
 
     span.style-underline {
         text-decoration: underline;
-        text-underline-offset: 2px;
+        text-underline-offset: 3px;
         vertical-align: top;
     }
     
@@ -187,7 +187,7 @@ span.style-underline {
 
     span.style-underline {
         text-decoration: underline;
-        text-underline-offset: 1px;
+        text-underline-offset: 2px;
         vertical-align: top;
     }
 
@@ -305,7 +305,7 @@ span.symbol-duration::before {
     color: #FF55FF;
     text-shadow: 2px 2px #3F153F;
     vertical-align: text-bottom;
-    transform: scale(1.6) translateY(-10%);
+    transform: scale(1.6);
 }
 
 span.symbol-sword::before {
@@ -328,32 +328,6 @@ span.symbol-shield::before {
 
 span.symbol-gap::before {
     content: '\3000';
-}
-
-/* ---- config ---- */
-
-.en span.symbol-neutral::before {
-    vertical-align: bottom;
-}
-
-.en span.symbol-earth::before {
-    vertical-align: bottom;
-}
-
-.en span.symbol-thunder::before {
-    vertical-align: bottom;
-}
-
-.en span.symbol-water::before {
-    vertical-align: bottom;
-}
-
-.en span.symbol-fire::before {
-    vertical-align: bottom;
-}
-
-span.tooltip.en > span.symbol-air::before {
-    vertical-align: bottom;
 }
 
 /* -------- miscs -------- */
