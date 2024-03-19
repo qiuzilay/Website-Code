@@ -304,6 +304,8 @@ span.symbol-duration::before {
     content: '\29D6';
     color: #FF55FF;
     text-shadow: 2px 2px #3F153F;
+    vertical-align: text-bottom;
+    transform: scale(1.6) translateY(-10%);
 }
 
 span.symbol-sword::before {
