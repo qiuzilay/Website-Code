@@ -214,8 +214,14 @@ span.style-wrapper {
 span[class^='symbol-']::before {
     display: inline-block !important;
     text-align: center;
-    width: 1em;
+    width: 1.25em;
     overflow: visible;
+}
+
+span.symbol-checkmark::before,
+span.symbol-deny::before {
+    width: unset;
+    padding-right: .5em;
 }
 
 span.symbol-neutral::before,
