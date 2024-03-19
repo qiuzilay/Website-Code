@@ -1,5 +1,5 @@
 Increases the damage of §bSacred Surge§7.
 
-§STotal Damage: §f+80% §8(of your DPS)§r
-§G§8(§UDamage: +70%)§r
-§G§8(§TThunder: +10%)§r
+§S Total Damage: §f+80% §8(of your DPS)§r
+§G§8(§U Damage: +70%)§r
+§G§8(§T Thunder: +10%)

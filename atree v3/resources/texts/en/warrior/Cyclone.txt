@@ -1,8 +1,8 @@
 After casting §nWar Scream§r, envelop yourself with a vortex that damages nearby enemies every §f0.5s§7.
 
-§STotal Damage: §f25% §8(of your DPS)§r
-§G§8(§UDamage: 10%)§r
-§G§8(§AAir: 10%)§r
-§G§8(§FFire: 5%)§r
-§DDuration: §f20s§r
-§OArea of Effect: §f4 Blocks §7(Circle-Shaped)
+§S Total Damage: §f25% §8(of your DPS)§r
+§G§8(§U Damage: 10%)§r
+§G§8(§A Air: 10%)§r
+§G§8(§F Fire: 5%)§r
+§D Duration: §f20s§r
+§O Area of Effect: §f4 Blocks §7(Circle-Shaped)

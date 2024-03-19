@@ -215,7 +215,6 @@ span[class^='symbol-']::before {
     display: inline-block !important;
     text-align: center;
     width: 1em;
-    padding-right: .5em;
     overflow: visible;
 }
 

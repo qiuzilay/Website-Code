@@ -1,5 +1,5 @@
 §nWar Scream§r becomes deafening, increasing its duration and granting players a damage bonus.
 
-§MMana Cost: §c+10§r
-§VEffect: §f20% §7Damage Bonus to Players
-§DDuration: §f+15s§r
+§M Mana Cost: §c+10§r
+§V Effect: §f20% §7Damage Bonus to Players
+§D Duration: §f+15s

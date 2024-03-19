@@ -1,5 +1,5 @@
 Mobs hit by §nUppercut§r will explode mid-air and receive addtional damage.
 
-§STotal Damage: §f+100% §8(of your DPS)§r
-§G§8(§UDamage: +80%)§r
-§G§8(§TThunder: +20%)§r
+§S Total Damage: §f+100% §8(of your DPS)§r
+§G§8(§U Damage: +80%)§r
+§G§8(§T Thunder: +20%)

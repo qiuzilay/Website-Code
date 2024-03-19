@@ -1,6 +1,6 @@
 Damages enemies in your way when using §nCharge§r.
 
-§STotal Damage: §f120%§r
-§G§8(§UDamage: 100%)§r
-§G§8(§AAir: 20%)§r
-§OArea of Effect: §f2 Blocks§r
+§S Total Damage: §f120%§r
+§G§8(§U Damage: 100%)§r
+§G§8(§A Air: 20%)§r
+§O Area of Effect: §f2 Blocks

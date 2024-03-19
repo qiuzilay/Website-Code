@@ -1,4 +1,4 @@
 Charge forward at a high speed.
 §8(Hold shift while charging to cancel)§r
 
-§MMana cost: §f25§r
+§M Mana cost: §f25

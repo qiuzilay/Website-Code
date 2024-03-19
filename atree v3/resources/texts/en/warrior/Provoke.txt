@@ -2,4 +2,4 @@ Mobs damaged by §nWar Scream§r will target only you for at least §f8s§7. §B
 
 Reduce the Mana cost of §nWar Scream§r.
 
-§MMana Cost: §f-5§r
+§M Mana Cost: §f-5
