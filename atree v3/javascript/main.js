@@ -12,16 +12,6 @@ let using = 0;
  * @typedef  {('enable' | 'disable' | 'standby' | 'lock')}  States
  * @typedef  {('archer' | 'warrior' | 'mage' | 'assassin' | 'shaman')}  Classes
  * @typedef  {('Boltslinger' | 'Sharpshooter' | 'Trapper' | 'Fallen' | 'Battle Monk' | 'Paladin' | 'Riftwalker' | 'Light Bender' | 'Arcanist' | 'Shadestepper' | 'Trickster' | 'Acrobat' | 'Summoner' | 'Ritualist' | 'Acolyte')}   Archetypes
- * 
- * @typedef {import('./unit.js').Gate} Gate
- * @typedef {import('./unit.js').UNIT} UNIT
- * @typedef {import('./node.js').NODE} NODE
- * @typedef {import('./branch.js').BRANCH} BRANCH
- * @typedef {import('./branch.js').PATH} PATH
- * @typedef {import('./packet.js').Packet} Packet
- * @typedef {import('./tooltip.js').Tooltip} Tooltip
- * @typedef {import('./archetype.js').Archetype} Archetype
- * @typedef {import('./orb.js').Orb} Orb
  **/
 
 function main() {
@@ -233,6 +223,7 @@ class Action {
 
                             case unit instanceof NODE:
                                 unit.parentElement = td;
+                                td.addEventListener('click', (event) => EventHandler.nodeInteractEvent(event));
                                 
                         }
                     }
@@ -248,12 +239,6 @@ class Action {
     }
 
     static register() {
-
-        for (const node of $('div#main .frame.body td:has(button)')) {
-            node.addEventListener('click', function (event) {
-                EventHandler.nodeInteractEvent(event);
-            });
-        }
 
         document.getElementById('lang-config').addEventListener('change', function (event) {
             using = parseInt(event.target.value);
@@ -1339,7 +1324,7 @@ class Tooltip {
                 console.info(E);
             } finally {
                 this.#body[lang].appendChild(Tooltip.analyst(text));
-                this.#body[lang].className = 'tooltip-body';
+                this.#body[lang].className = `tooltip-body ${lang}`;
                 this.#body[lang].style.display = 'block';
                 this.#body[lang].style.marginTop = '1em';
             }
@@ -1486,44 +1471,44 @@ class Tooltip {
     static palette(hashtag) {
         const span = document.createElement('span');
         switch (hashtag) {
-            case '§0': span.classList.add('color-black'); break;
-            case '§1': span.classList.add('color-dark_blue'); break;
-            case '§2': span.classList.add('color-dark_green'); break;
-            case '§3': span.classList.add('color-dark_aqua'); break;
-            case '§4': span.classList.add('color-dark_red'); break;
-            case '§5': span.classList.add('color-dark_purple'); break;
-            case '§6': span.classList.add('color-gold'); break;
-            case '§7': span.classList.add('color-gray'); break;
-            case '§8': span.classList.add('color-dark_gray'); break;
-            case '§9': span.classList.add('color-blue'); break;
-            case '§a': span.classList.add('color-green'); break;
-            case '§b': span.classList.add('color-aqua'); break;
-            case '§c': span.classList.add('color-red'); break;  
-            case '§d': span.classList.add('color-pink'); break;
-            case '§e': span.classList.add('color-yellow'); break;
-            case '§f': span.classList.add('color-white'); break;
-            case '§l': span.classList.add('style-bold'); break;
-            case '§n': span.classList.add('style-underline'); break;
-            case '§o': span.classList.add('style-smaller'); break;
-            case '§h': span.classList.add('style-larger'); break;
-            case '§I': span.classList.add('style-oblique'); break;
-            case '§B': span.classList.add('style-wrapper'); break;
-            case '§U': span.classList.add('symbol-neutral'); break;
-            case '§E': span.classList.add('symbol-earth'); break; 
-            case '§T': span.classList.add('symbol-thunder'); break; 
-            case '§W': span.classList.add('symbol-water'); break; 
-            case '§F': span.classList.add('symbol-fire'); break;
-            case '§A': span.classList.add('symbol-air'); break;
-            case '§M': span.classList.add('symbol-mana'); break;
-            case '§Y': span.classList.add('symbol-checkmark'); break;
-            case '§N': span.classList.add('symbol-deny'); break;
-            case '§S': span.classList.add('symbol-sword'); break;
-            case '§D': span.classList.add('symbol-duration'); break;
-            case '§R': span.classList.add('symbol-range'); break;
-            case '§O': span.classList.add('symbol-aoe'); break;
-            case '§H': span.classList.add('symbol-heart'); break;
-            case '§V': span.classList.add('symbol-shield'); break;
-            case '§G': span.classList.add('symbol-gap'); break;
+            case '\u00A70': span.classList.add('color-black'); break;
+            case '\u00A71': span.classList.add('color-dark_blue'); break;
+            case '\u00A72': span.classList.add('color-dark_green'); break;
+            case '\u00A73': span.classList.add('color-dark_aqua'); break;
+            case '\u00A74': span.classList.add('color-dark_red'); break;
+            case '\u00A75': span.classList.add('color-dark_purple'); break;
+            case '\u00A76': span.classList.add('color-gold'); break;
+            case '\u00A77': span.classList.add('color-gray'); break;
+            case '\u00A78': span.classList.add('color-dark_gray'); break;
+            case '\u00A79': span.classList.add('color-blue'); break;
+            case '\u00A7a': span.classList.add('color-green'); break;
+            case '\u00A7b': span.classList.add('color-aqua'); break;
+            case '\u00A7c': span.classList.add('color-red'); break;  
+            case '\u00A7d': span.classList.add('color-pink'); break;
+            case '\u00A7e': span.classList.add('color-yellow'); break;
+            case '\u00A7f': span.classList.add('color-white'); break;
+            case '\u00A7l': span.classList.add('style-bold'); break;
+            case '\u00A7n': span.classList.add('style-underline'); break;
+            case '\u00A7o': span.classList.add('style-smaller'); break;
+            case '\u00A7h': span.classList.add('style-larger'); break;
+            case '\u00A7I': span.classList.add('style-oblique'); break;
+            case '\u00A7B': span.classList.add('style-wrapper'); break;
+            case '\u00A7U': span.classList.add('symbol-neutral'); break;
+            case '\u00A7E': span.classList.add('symbol-earth'); break; 
+            case '\u00A7T': span.classList.add('symbol-thunder'); break; 
+            case '\u00A7W': span.classList.add('symbol-water'); break; 
+            case '\u00A7F': span.classList.add('symbol-fire'); break;
+            case '\u00A7A': span.classList.add('symbol-air'); break;
+            case '\u00A7M': span.classList.add('symbol-mana'); break;
+            case '\u00A7Y': span.classList.add('symbol-checkmark'); break;
+            case '\u00A7N': span.classList.add('symbol-deny'); break;
+            case '\u00A7S': span.classList.add('symbol-sword'); break;
+            case '\u00A7D': span.classList.add('symbol-duration'); break;
+            case '\u00A7R': span.classList.add('symbol-range'); break;
+            case '\u00A7O': span.classList.add('symbol-aoe'); break;
+            case '\u00A7H': span.classList.add('symbol-heart'); break;
+            case '\u00A7V': span.classList.add('symbol-shield'); break;
+            case '\u00A7G': span.classList.add('symbol-gap'); break;
         }
         return span;
     }
@@ -1531,21 +1516,20 @@ class Tooltip {
 }
 
 var globalID = 0;
-const $ = (selector) => document.querySelectorAll(selector);
 const str = JSON.stringify;
 const tab_buttons = document.getElementById('tab').getElementsByClassName('tab_button');
 const translate = {
     "zh-TW": {
-        cost: "技能點數：",
-        rely: "技能需求：",
-        lock: "衝突技能：",
-        atype: /** @param {String} type */ (type) => `最低 ${type} Archetype 點數需求：`,
-        atype_unlocked: "已解鎖技能：",
+        cost: "技能點數\uFF1A",
+        rely: "技能需求\uFF1A",
+        lock: "衝突技能\uFF1A",
+        atype: /** @param {String} type */ (type) => `最低 ${type} Archetype 點數需求\uFF1A`,
+        atype_unlocked: "已解鎖技能\uFF1A",
         apoint: "技能點",
         apoint_descr: "技能點可以用來解鎖新的技能",
-        apoint_rmain: "剩餘點數：",
-        apoint_info1: "（左鍵點擊複製分享連結）",
-        apoint_info2: "（Shift+左鍵重置技能樹）",
+        apoint_rmain: "剩餘點數\uFF1A",
+        apoint_info1: "\uFF08左鍵點擊複製分享連結\uFF09",
+        apoint_info2: "\uFF08Shift+左鍵重置技能樹\uFF09",
         archer: "弓箭手",
         warrior: "戰士",
         mage: "法師",

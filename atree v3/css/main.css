@@ -5,13 +5,13 @@ body {
 
 @font-face {
     font-family: 'wynn';
-    src: url(../resources/fonts/wynn_alter_regular.ttf) format('truetype');
+    src: url(https://cdn.jsdelivr.net/gh/qiuzilay/Website-Code@main/atree%20v3/resources/fonts/wynn_alter_regular.ttf) format('truetype');
     font-weight: 700;
 }
 
 @font-face {
     font-family: 'wynn';
-    src: url(../resources/fonts/wynn_alter_bold.ttf) format('truetype');
+    src: url(https://cdn.jsdelivr.net/gh/qiuzilay/Website-Code@main/atree%20v3/resources/fonts/wynn_alter_bold.ttf) format('truetype');
     font-weight: 900;
 }
 
@@ -94,17 +94,17 @@ div#main .frame {
 }
 
 div#main .frame.head {
-    background-image: url(../resources/images/misc/main-background-upper.png);
+    background-image: url(https://raw.githubusercontent.com/qiuzilay/Website-Code/main/atree%20v3/resources/images/misc/main-background-upper.png);
 }
 
 div#main .frame.body {
-    background-image: url(../resources/images/misc/main-background-body.png);
+    background-image: url(https://raw.githubusercontent.com/qiuzilay/Website-Code/main/atree%20v3/resources/images/misc/main-background-body.png);
     background-size: 100%;
     background-repeat: repeat-y;
 }
 
 div#main .frame.foot {
-    background-image: url(../resources/images/misc/main-background-lower.png);
+    background-image: url(https://raw.githubusercontent.com/qiuzilay/Website-Code/main/atree%20v3/resources/images/misc/main-background-lower.png);
 }
 
 
@@ -117,15 +117,15 @@ div#main .frame > img {
 }
 
 div#main .frame.head > img {
-    content: url(../resources/images/misc/main-background-upper.png);
+    content: url(https://raw.githubusercontent.com/qiuzilay/Website-Code/main/atree%20v3/resources/images/misc/main-background-upper.png);
 }
 
 div#main .frame.body > img {
-    content: url(../resources/images/misc/main-background-body.png);
+    content: url(https://raw.githubusercontent.com/qiuzilay/Website-Code/main/atree%20v3/resources/images/misc/main-background-body.png);
 }
 
 div#main .frame.foot > img {
-    content: url(../resources/images/misc/main-background-lower.png);
+    content: url(https://raw.githubusercontent.com/qiuzilay/Website-Code/main/atree%20v3/resources/images/misc/main-background-lower.png);
 }
 
 /* ------- main.page.frame.container ------- */
@@ -216,7 +216,8 @@ div#main td .tooltip {
     display: block;
     position: absolute;
     width: max-content;
-    max-width: 40vw;
+    max-width: 48vw;
+    min-width: 32vw;
     padding: .6em 4em .6em .8em;
     left: 120%;
     right: initial;
@@ -241,6 +242,11 @@ div#main td .tooltip {
     visibility: hidden;
 }
 
+div#main td .tooltip.reverse {
+    right: 120%;
+    left: initial;
+}
+
 div#main td:hover .tooltip {
     z-index: 100;
     visibility: visible;
@@ -248,7 +254,8 @@ div#main td:hover .tooltip {
 
 @media only screen and (max-width: 1024px) {
     div#main td .tooltip {
-        max-width: 37.5vw;
+        max-width: 45vw;
+        min-width: 30vw;
         font-size: medium;
         padding: .53em 3.55em .53em .71em;
     }
@@ -256,7 +263,8 @@ div#main td:hover .tooltip {
 
 @media only screen and (max-width: 768px) {
     div#main td .tooltip {
-        max-width: 40vw;
+        max-width: 30vw;
+        min-width: 20vw;
         font-size: small;
         padding: .48em 3.25em .48em .65em;
     }

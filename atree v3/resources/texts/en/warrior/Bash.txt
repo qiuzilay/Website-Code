@@ -5,4 +5,4 @@ Violently bash the ground, dealing high damage in a large area.
 §G§8(§UDamage: 150%)§r
 §G§8(§EEarth: 30%)§r
 §OArea of Effect: §f4 Blocks §7(Circle-Shaped)§r
-§RRange: §f3 Blocks§r
+§RRange: §f3 Blocks
