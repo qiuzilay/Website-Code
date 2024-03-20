@@ -27,10 +27,6 @@ function main() {
     });
 }
 
-function is_defined(...obj) {
-    return obj.every((_) => _ !== undefined);
-}
-
 /** 
  * @typedef {(boolean | null)}  bool
  * @typedef {Object}    bool_args
@@ -39,7 +35,7 @@ function is_defined(...obj) {
  * @param {bool_args}
  * @return {bool}
  **/
-function bool(arr, {base}={base: null}) {
+function bool(arr, base=null) {
     let bin = base;
     for (const elem of arr) {
         switch (elem) {
@@ -50,14 +46,6 @@ function bool(arr, {base}={base: null}) {
         if (bin) {break}
     }
     return bin;
-}
-
-/**
- * @param {Array} arr
- * @return {Array}
- **/
-function unique(arr) {
-    return Array.from(new Set(arr));
 }
 
 function NSEW(arg1, arg2) {
@@ -78,7 +66,7 @@ function opposite(dir) {
 
 function newline(column, delcount, value) {
     const line = new Array(9).fill(null);
-    is_defined(column, delcount, value) ? line.splice(column, delcount, value) : undefined;
+    if ([column, delcount, value].every((arg) => arg !== undefined)) line.splice(column, delcount, value);
     return line;
 }
 
@@ -296,6 +284,39 @@ class EventHandler {
 }
 
 /* -------------------------------- */
+
+class SoundEffect extends Audio {
+    /** @param {string} filename */
+    constructor(filename) {
+        super("../resources/audios/" + filename);
+        this.controls = false;
+        this.preload = true;
+        this.preservesPitch = false;
+    }
+
+    /**
+     * @param {number} volume
+     * @param {number} speed
+     **/
+    play(volume, speed) {
+        clearInterval(this.interval);
+
+        this.pause();
+        this.currentTime = 0;
+        this.volume = volume;
+        this.playbackRate = speed;
+        super.play();
+
+        this.interval = setInterval(() => {
+            if (this.volume >= 0.1) {
+                this.volume -= 0.1;
+            } else {
+                this.volume = 0;
+                clearInterval(this.interval);
+            }
+        }, 100);
+    }
+}
 
 class Packet {
     /**    
@@ -585,6 +606,7 @@ class NODE extends UNIT{
             switch (true) {
                 case this.state.contains('enable'):
                     this.set('standby');
+                    random([audio.high, audio.medium, audio.low]).play(0.8, 0.5);
                     this.#send({
                         gates: this.gateway,
                         packet: new Packet({
@@ -596,6 +618,7 @@ class NODE extends UNIT{
                     break;
                 case this.state.contains('standby'):
                     this.set('enable');
+                    random([audio.high, audio.medium, audio.low]).play(0.8, 1.5);
                     this.#send({
                         gates: this.gateway,
                         packet: new Packet({
@@ -739,7 +762,7 @@ class NODE extends UNIT{
         const SID = routelogs[GID].serial++;
         console.groupCollapsed(`<${this.name}> [${this.status}] Route ${GID}.${SID} start.`, `(task: '${packet.payload.task}')`);
         
-        const bin = (interrupt ? gates.some(host) : gates.map(host).some((_) => _)) ? true : bool(collector, {base: base});
+        const bin = (interrupt ? gates.some(host) : gates.map(host).some((_) => _)) ? true : bool(collector);
 
         console.groupEnd();
         console.info(`<${this.name}> [${this.status}] Route ${GID}.${SID} end. collector: ${str(collector)}, final: ${bin}.`);
@@ -1517,7 +1540,27 @@ class Tooltip {
 
 var globalID = 0;
 const str = JSON.stringify;
+/**
+ * @function
+ * @template T
+ * @param {T[]} arr
+ * @return {T[]}
+ **/
+const unique = (arr) => Array.from(new Set(arr));
+/**
+ * @function
+ * @template T
+ * @param {T[]} arr
+ * @return {T}
+ **/
+const random = (arr) => arr[Math.floor(Math.random() * arr.length)];
 const tab_buttons = document.getElementById('tab').getElementsByClassName('tab_button');
+const audio = {
+    high: new SoundEffect('end_portal_high.wav'),
+    medium: new SoundEffect('end_portal_medium.wav'),
+    low: new SoundEffect('end_portal_low.wav'),
+    levelup: new SoundEffect('levelup.wav')
+};
 const translate = {
     "zh-TW": {
         cost: "技能點數\uFF1A",
