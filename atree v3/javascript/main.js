@@ -2327,8 +2327,8 @@ const database = {
             "axis": [7, 37],
             "draft": ["NN", "S"]
         },
-        "Better Enraged Blood": {
-            "name": "Better Enraged Blood",
+        "Better Enraged Blow": {
+            "name": "Better Enraged Blow",
             "level": 1,
             "import": ["Cheaper War Scream II"],
             "export": null,
