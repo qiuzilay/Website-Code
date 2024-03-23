@@ -51,29 +51,6 @@ function NSEW(arg1, arg2) {
     return (arg1 > arg2) ? 1 : ((arg1 < arg2) ? -1 : 0)
 }
 
-/** @param {Packet} packet  */
-function readpacket(packet) {
-    function string(text) {return ((text === null)||(text === undefined)) ? text : `'${text}'`}
-    function unit(obj) {return obj.name ? `<${obj.name}>` : `branch${str(obj.axis)}`}
-    return `
-    {
-        header: {
-            send: ${string(packet.header.send)},
-            recv: ${string(packet.header.recv)},
-            mode: ${string(packet.header.mode)},
-            ignore: ${str(packet.header.ignore)}
-        },
-        payload: {
-            task: ${string(packet.payload.task)},
-            data: ${packet.payload.data}
-        },
-        footer: {
-            router: ${unit(packet.footer.router)},
-            via: ${string(packet.footer.via)}
-        }
-    }`
-}
-
 function generateElement(stringHTML) {
     const fragment = document.createDocumentFragment();
     const block = document.createElement('div');
@@ -210,7 +187,7 @@ class EventHandler {
         const/** @type {HTMLButtonElement} */tab = event.target;
         Action.buildTree(tab.dataset.class);
         Action.renderTree(tab.dataset.class);
-        tab.removeEventListener('click', this.tabInteractEvent);
+        tab.removeEventListener('click', EventHandler.tabInteractEvent);
     }
 
     /** @param {Event} event*/
@@ -251,7 +228,7 @@ class EventHandler {
         }
 
         // tab buttons
-        for (const button of Object.values(this.tabs)) {
+        for (const button of Object.values(EventHandler.tabs)) {
             button.textContent = translate[languages[using]][button.dataset.class];
         }
 
@@ -314,8 +291,8 @@ class Packet {
     constructor({task, send, recv=null, mode='normal', router, via, data=null, ignores, ttl=-1, gid=globalID}) {
         /**
          * @typedef    {Object}         header
-         * @property   {NODE}           send
-         * @property   {NODE}           recv
+         * @property   {string}         send
+         * @property   {string}         recv
          * @property   {Modes}          mode
          * @property   {String[]}       ignore
          * @property   {Set<String>}    __ignore
@@ -727,7 +704,7 @@ class NODE extends UNIT{
                 ignore: this.name
             });
             console.groupCollapsed(`<${this.name}> [${this.status}] (Gate ${gate.pos}) Send a packet!`);
-            console.info(`packet:`, readpacket(subpack));
+            console.info(`packet:`, NODE.readpacket(subpack));
             const bin = gate.connect_with.transmit(subpack);
             console.groupEnd();
             console.info(`<${this.name}> [${this.status}] (Gate ${gate.pos}) response: ${bin}`);
@@ -760,7 +737,7 @@ class NODE extends UNIT{
 
     /** @param {Packet} packet @return {(boolean | null)} */
     transmit(packet) {
-        console.info(`<${this.name}> [${this.status}] received packet.`, readpacket(packet));
+        console.info(`<${this.name}> [${this.status}] received packet.`, NODE.readpacket(packet));
         const router = packet.footer.router;
         const from_parent = this.proto.import?.includes(router.name) ?? false;
         const from_children = this.proto.export?.includes(router.name) ?? false;
@@ -810,7 +787,7 @@ class NODE extends UNIT{
                                     }) : true
                                 )
                             });
-                            if (reachable) {break};
+                            if (reachable) break;
                         }
 
                         this.set('disable');
@@ -896,6 +873,29 @@ class NODE extends UNIT{
         return bin;
     }
 
+    /** @param {Packet} packet  */
+    static readpacket(packet) {
+        function string(text) {return ((text === null)||(text === undefined)) ? text : `'${text}'`}
+        function unit(obj) {return obj.name ? `<${obj.name}>` : `branch${str(obj.axis)}`}
+        return `
+        {
+            header: {
+                send: ${string(packet.header.send)},
+                recv: ${string(packet.header.recv)},
+                mode: ${string(packet.header.mode)},
+                ignore: ${str(packet.header.ignore)}
+            },
+            payload: {
+                task: ${string(packet.payload.task)},
+                data: ${packet.payload.data}
+            },
+            footer: {
+                router: ${unit(packet.footer.router)},
+                via: ${string(packet.footer.via)}
+            }
+        }`
+    }
+
 }
 
 class BRANCH extends UNIT {
@@ -974,7 +974,7 @@ class BRANCH extends UNIT {
 }
 
 class PATH extends BRANCH {
-    // nothing
+    // Fan is gay
 }
 
 class Archetype extends Set {
