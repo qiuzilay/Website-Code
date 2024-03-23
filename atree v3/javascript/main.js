@@ -15,11 +15,8 @@ let using = 0;
  **/
 
 function main() {
-    Action.buildTree();
+    Action.register();
     document.addEventListener('DOMContentLoaded', () => {
-        Action.renderTree();
-        Action.register();
-
         console.info('routemap:', routemap);
         console.info('routelogs:', routelogs);
         console.info('routedata:', routedata);
@@ -31,7 +28,7 @@ function main() {
  * @typedef {(boolean | null)}  bool
  * @typedef {Object}    bool_args
  * @property {bool}     base
- * @param {Array<bool>} arr
+ * @param {bool[]} arr
  * @param {bool_args}
  * @return {bool}
  **/
@@ -52,22 +49,6 @@ function NSEW(arg1, arg2) {
     const seq = {'N': 0, 'S': 1, 'E': 2, 'W': 3};
     [arg1, arg2] = [seq[arg1], seq[arg2]]
     return (arg1 > arg2) ? 1 : ((arg1 < arg2) ? -1 : 0)
-}
-
-function opposite(dir) {
-    switch (dir) {
-        case 'N': return 'S';
-        case 'S': return 'N';
-        case 'E': return 'W';
-        case 'W': return 'E';
-        default: throw Error('invalid direction.')
-    }
-}
-
-function newline(column, delcount, value) {
-    const line = new Array(9).fill(null);
-    if ([column, delcount, value].every((arg) => arg !== undefined)) line.splice(column, delcount, value);
-    return line;
 }
 
 /** @param {Packet} packet  */
@@ -93,12 +74,6 @@ function readpacket(packet) {
     }`
 }
 
-function readmap(clsname, x, y) {
-    const classMap = routemap[clsname];
-    while (classMap.length <= y) {classMap[classMap.length] ||= newline()}
-    return classMap[y][x];
-}
-
 function generateElement(stringHTML) {
     const fragment = document.createDocumentFragment();
     const block = document.createElement('div');
@@ -109,46 +84,57 @@ function generateElement(stringHTML) {
 
 class Action {
 
-    static buildTree() {
+    static register() {
 
-        for (const [clsname, dataset] of Object.entries(database)) {
-            const clsmap = routemap[clsname];
-            for (const [name, info] of Object.entries(dataset)) {
-                console.groupCollapsed(`<${name}>`);
+        document.getElementById('lang-config')
+                .addEventListener('change', EventHandler.changeLangEvent);
 
-                const[x, y] = info.axis;
-
-                const node = new NODE(clsname, info);
-
-                try {
-                    clsmap[y].splice(x, 1, node);
-                } catch {
-                    clsmap[y] = newline(x, 1, node);
-                }
-
-                console.groupEnd();
-            }
-
-            for (let y = clsmap.length; clsmap.length % 6; y++) {
-                clsmap[y] = newline();
-            }
-        }
+        Object.values(EventHandler.tabs).forEach((tab) => {
+            tab.addEventListener('click', EventHandler.tabInteractEvent);
+        });
 
         return this;
-
     }
 
-    static renderTree() {
-        
-        for (const/** @type {Classes} */clsname in routedata) {
-            const page = document.querySelector(`div#main div#${clsname}.page`);
+    /** @param {Classes} clsname */
+    static buildTree(clsname) {
+        const dataset = database[clsname];
+        const tree = routemap[clsname];
 
-            /* ------ render footer ------ */
-            const f_table = page.querySelector(`.frame.foot table`);
-            const f_fragment = document.createDocumentFragment();
-            const/** @type {Archetype[]} */atypes = Object.values(routedata[clsname].archetype);
-            const/** @type {Orb} */ orb = routedata[clsname].cost;
+        for (const data of Object.values(dataset)) {
+            console.groupCollapsed(`<${data.name}>`);
 
+            const node = new NODE(clsname, data);
+            const [x, y] = data.axis;
+            
+            try {
+                tree[y].splice(x, 1, node);
+            } catch {
+                tree[y] = Tree.newline(x, 1, node);
+            }
+            
+
+            console.groupEnd();
+        }
+
+        for (let y = tree.length; tree.length % 6; y++) {
+            tree[y] = Tree.newline();
+        }
+
+        return this; 
+    }
+
+    /** @param {Classes} clsname */
+    static renderTree(clsname) {
+        const tree = routemap[clsname];
+        const page = document.querySelector(`div#main div#${clsname}.page`);
+
+        /* ------ render footer ------ */ {
+            const table = page.querySelector(`.frame.foot table`);
+            const fragment = document.createDocumentFragment();
+            const atypes = Object.values(routedata[clsname].archetype);
+            const orb = routedata[clsname].cost;
+            
             for (let row = 0; row < 4; row++) {
                 const tr = document.createElement('tr');
                 for (let col = 0; col < 9; col++) {
@@ -178,66 +164,54 @@ class Action {
                     }
                     tr.appendChild(td);
                 }
-                f_fragment.appendChild(tr);
+                fragment.appendChild(tr);
             }
-            f_table.appendChild(f_fragment);
 
+            table.replaceChildren(fragment);
+        }
 
-            /* ------ render body ------ */
-            const table  = page.querySelector(`.frame.body table`);
+        /* ------ render body ------ */ {
+            const table = page.querySelector(`.frame.body table`);
             const fragment = document.createDocumentFragment();
-            
-            for (const row of routemap[clsname]) {
+            const tree = routemap[clsname];
+
+            for (const row of tree) {
                 const tr = document.createElement('tr');
-                for (const unit of row) {
+                for (const elem of row) {
                     const td = document.createElement('td');
-                    
-                    if (unit instanceof UNIT) {
-                        td.appendChild(unit.html);
-                        switch (true) {
+                    if (elem instanceof UNIT) switch (true) {
 
-                            case unit instanceof PATH:
-                                unit.gateway
-                                    .map((gate) => [gate.pos, gate.connect_with])
-                                    .filter((/** @type {[Direction, Units]} */[pos, obj]) => obj instanceof NODE)
-                                    .forEach((/** @type {[Direction, NODE]} */[pos, node]) => {
-                                        const family = [node.proto.import, node.proto.export].flat();
-                                        node.gates[opposite(pos)].connect_with ??= unit;
-                                        node.gates[opposite(pos)].connect = (
-                                            unit.gateway.flatMap((_gate) => _gate.connect)
-                                                        .filter((_node) => family.includes(_node.name))
-                                        );
-                                    });
+                        case elem instanceof NODE:
+                            elem.parentElement = td;
+                            td.addEventListener('click', EventHandler.nodeInteractEvent);
 
-                            case unit instanceof NODE:
-                                unit.parentElement = td;
-                                td.addEventListener('click', (event) => EventHandler.nodeInteractEvent(event));
-                                
-                        }
+                        default:
+                            td.appendChild(elem.html);
+
                     }
-
                     tr.appendChild(td);
                 }
                 fragment.appendChild(tr);
             }
-            table.appendChild(fragment);
+
+            table.replaceChildren(fragment);
         }
-
-        return this;
-    }
-
-    static register() {
-
-        document.getElementById('lang-config').addEventListener('change', function (event) {
-            using = parseInt(event.target.value);
-            EventHandler.remapToTreeEvent(event);
-        });
 
         return this;
     }
 }
 
 class EventHandler {
+    /** @type {HTMLCollectionOf<HTMLButtonElement>}*/
+    static tabs = document.getElementById('tab').getElementsByClassName('tab_button');
+
+    /** @param {Event} event*/
+    static tabInteractEvent(event) {
+        const/** @type {HTMLButtonElement} */tab = event.target;
+        Action.buildTree(tab.dataset.class);
+        Action.renderTree(tab.dataset.class);
+        tab.removeEventListener('click', this.tabInteractEvent);
+    }
 
     /** @param {Event} event*/
     static nodeInteractEvent(event) {
@@ -256,27 +230,28 @@ class EventHandler {
     }
 
     /** @param {Event} event*/
-    static remapToTreeEvent(event) {
+    static changeLangEvent(event) {
+        using = parseInt(event.target.value);
         
         // re-mapping ability tree main body
         for (const clsmap of Object.values(routemap)) {
             for (const row of clsmap) {
                 for (const node of row) {
-                    if ((node instanceof NODE)) node.parentElement.replaceChildren(node.html);
+                    if ((node instanceof NODE)) node.parentElement?.replaceChildren(node.html);
                 }
             }
         }
 
         // archetypes & orbs
         for (const clsdata of Object.values(routedata)) {
-            clsdata.cost.parentElement.replaceChildren(clsdata.cost.html);
+            clsdata.cost.parentElement?.replaceChildren(clsdata.cost.html);
             for (const atype of Object.values(clsdata.archetype)) {
-                atype.parentElement.replaceChildren(atype.html);
+                atype.parentElement?.replaceChildren(atype.html);
             }
         }
 
         // tab buttons
-        for (const button of Object.values(tab_buttons)) {
+        for (const button of Object.values(this.tabs)) {
             button.textContent = translate[languages[using]][button.dataset.class];
         }
 
@@ -286,6 +261,7 @@ class EventHandler {
 /* -------------------------------- */
 
 class SoundEffect extends Audio {
+
     /** @param {string} filename */
     constructor(filename) {
         super("../resources/audios/" + filename);
@@ -454,17 +430,27 @@ class UNIT {
      * @param {NODE}        node
      * @param {Units}       closest
      */
-    __bind__(pos, node, closest) {
+    bind(pos, node, closest) {
         const gate = this.gates[pos]
         gate._connect.add(node)
         try {
             if ((gate.connect_with !== null) && (gate.connect_with !== closest)) {
-                throw Error(`Suspecious rebind the "connect_with" property, occurred at [${this.axis}]`);
+                throw Error(`Suspecious overwrite the "connect_with" property, occurred at [${this.axis}]`);
             } else {
                 gate.connect_with ??= closest;
             }
         } catch {
             console.error(routemap)
+        }
+    }
+
+    static opposite(dir) {
+        switch (dir) {
+            case 'N': return 'S';
+            case 'S': return 'N';
+            case 'E': return 'W';
+            case 'W': return 'E';
+            default: throw Error('invalid direction.')
         }
     }
 
@@ -510,7 +496,7 @@ class NODE extends UNIT{
         this.state.add((str(info.axis) === '[4,1]') ? 'standby' : 'disable');
         this.buttonElement.appendChild(generateElement(`<img class="${info.level ? `button_${info.level}` : `button_${clsname}`}">`));
 
-        this.#__buildpath__();
+        this.#buildpath();
     }
 
     /** @return {DocumentFragment} */
@@ -541,12 +527,13 @@ class NODE extends UNIT{
     get exportNodes() {return this.family.filter((node) => this.proto.export?.includes(node.name))}
 
 
-    #__buildpath__() {
+    #buildpath() {
+        const tree = routemap[this.class];
 
         this.proto.draft.forEach((path) => {
 
             let [x, y] = this.proto.axis;
-            let object = this;
+            let obj = this;
             
             Array.from(path).forEach((dir) => {
 
@@ -558,11 +545,12 @@ class NODE extends UNIT{
                     default: throw Error(`invalid direction "${dir}" detected in the draft of <${this.name}> under ${this.class}.`);
                 }
 
-                const branch = (readmap(this.class, x, y) instanceof PATH) ? routemap[this.class][y][x] : new PATH([x, y]);
+                /** @type {PATH} */
+                const branch = (tree.read(y, x) instanceof PATH) ? tree[y][x] : new PATH([x, y]);
 
-                branch.__bind__(opposite(dir), this, object);
+                branch.bind(UNIT.opposite(dir), this, obj);
 
-                routemap[this.class][y][x] = object = branch;
+                tree[y][x] = obj = branch;
 
             });
         });
@@ -635,7 +623,7 @@ class NODE extends UNIT{
 
     #examine() {
         const dataset = routedata[this.class];
-        const chain =/** @param {Array<string>} arr */(arr) => {
+        const chain =/** @param {string[]} arr */(arr) => {
             const _last = arr.pop();
             return (arr.length > 1) ? [arr.join(', '), _last].join(' and ') : _last;
         };
@@ -735,7 +723,7 @@ class NODE extends UNIT{
             
             const subpack = new Packet(packet.params).config({
                 router: this,
-                via: opposite(gate.pos),
+                via: UNIT.opposite(gate.pos),
                 ignore: this.name
             });
             console.groupCollapsed(`<${this.name}> [${this.status}] (Gate ${gate.pos}) Send a packet!`);
@@ -932,9 +920,21 @@ class BRANCH extends UNIT {
      * @param {NODE} node 
      * @param {Units} closest
      */
-    __bind__(pos, node, closest) {
-        super.__bind__(pos, node, closest);
+    bind(pos, node, closest) {
+        super.bind(pos, node, closest);
         this.#update();
+
+        this.gateway.filter((gate) => gate.connect_with instanceof NODE)
+                    .forEach((gate) => {
+                        const /** @type {NODE} */ node = gate.connect_with;
+                        const /** @type {Direction} */ pos = UNIT.opposite(gate.pos);
+                        const family = unique([node.proto.import, node.proto.export].flat());
+                        node.gates[pos].connect_with ??= this;
+                        node.gates[pos].connect = (
+                            this.gateway.flatMap((_gate) => _gate.connect)
+                                        .filter((_node) => family.includes(_node.name))
+                        );
+                    });
     }
 
     #update() {
@@ -957,7 +957,7 @@ class BRANCH extends UNIT {
             } else {
                 console.groupCollapsed(`branch[${this.axis}](Gate ${gate.pos}) send packet.`);
                 const bin = gate.connect_with.transmit(
-                    packet.config({via: opposite(gate.pos)})
+                    packet.config({via: UNIT.opposite(gate.pos)})
                 );
                 console.groupEnd();
                 console.info(`branch[${this.axis}](Gate ${gate.pos}) got: ${bin}`);
@@ -1227,6 +1227,11 @@ class Tooltip {
     /** @type {HTMLSpanElement} */  #atype;
     /** @type {Text}            */  #atype_prefix;
     /** @type {HTMLSpanElement} */  #atype_value;
+    static #regex = {
+        reset: new RegExp(/\u00A7r/, 'gus'),
+        general: new RegExp(/\u00A7\S/, 'us'),
+        text: new RegExp(/\u00A7\S(.+)/, 'us')
+    };
 
     /**
      * @typedef {Object} html
@@ -1467,11 +1472,11 @@ class Tooltip {
     static analyst(string) {
         
         function analyzer(subtext) {
-            const [outer, inner, _] = subtext.split(regex.text);
+            const [outer, inner, _] = subtext.split(Tooltip.#regex.text);
             const bin = document.createDocumentFragment();
             if (outer) {bin.appendChild(document.createTextNode(outer))}
             if (inner) {
-                const style = Tooltip.palette(subtext.match(regex.general)?.shift());
+                const style = Tooltip.palette(subtext.match(Tooltip.#regex.general)?.shift());
                 style.appendChild(analyzer(inner));
                 bin.appendChild(style);
             }
@@ -1480,7 +1485,7 @@ class Tooltip {
 
         const fragment = document.createDocumentFragment();
         
-        string?.split(regex.reset).forEach((text) => {
+        string?.split(Tooltip.#regex.reset).forEach((text) => {
             if (text) fragment.appendChild(analyzer(text));
         });
 
@@ -1538,6 +1543,24 @@ class Tooltip {
 
 }
 
+class Tree extends Array {
+    /**
+     * @param {number} row 
+     * @param {number} col
+     * @return {?Units}
+     **/
+    read(row, col) {
+        while (this.length <= row) {this[this.length] ||= Tree.newline()}
+        return this[row][col];
+    }
+
+    static newline(column, delcount, value) {
+        const line = new Array(9).fill(null);
+        if ([column, delcount, value].every((arg) => arg !== undefined)) line.splice(column, delcount, value);
+        return line;
+    }
+}
+
 var globalID = 0;
 const str = JSON.stringify;
 /**
@@ -1554,7 +1577,6 @@ const unique = (arr) => Array.from(new Set(arr));
  * @return {T}
  **/
 const random = (arr) => arr[Math.floor(Math.random() * arr.length)];
-const tab_buttons = document.getElementById('tab').getElementsByClassName('tab_button');
 const audio = {
     high: new SoundEffect('end_portal_high.wav'),
     medium: new SoundEffect('end_portal_medium.wav'),
@@ -1596,11 +1618,6 @@ const translate = {
         assassin: "Assassin",
         shaman: "Shaman"
     }
-};
-const regex = {
-    reset: new RegExp(/\u00A7r/, 'gus'),
-    general: new RegExp(/\u00A7\S/, 'us'),
-    text: new RegExp(/\u00A7\S(.+)/, 'us')
 };
 const routedata = {
     archer: {
@@ -1658,7 +1675,13 @@ const routelogs = {
     query: /** @return {boolean} */ function ({gid, task, nodeName}) {try {return this[gid][task][nodeName]} catch {return undefined}},
     write: function ({gid, task, nodeName, value}) {this[gid][task][nodeName] = value; return value;}
 };
-const routemap = {"archer": [], "warrior": [], "mage": [], "assassin": [], "shaman": []};
+const routemap = {
+    "archer": new Tree(),
+    "warrior": new Tree(),
+    "mage": new Tree(),
+    "assassin": new Tree(),
+    "shaman": new Tree()
+};
 const database = {
     "archer": {},
     "warrior": {
