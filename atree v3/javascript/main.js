@@ -7,8 +7,7 @@ let using = 0;
 /**
  * @typedef {('en' | 'zh-TW')}              Languages
  * @typedef  {("N" | "S" | "E" | "W")}      Direction
- * @typedef  {('normal' | 'traceback')}     Modes
- * @typedef  {(NODE | BRANCH)}              Units
+ * @typedef  {(NODE | WIRE)}              Units
  * @typedef  {('enable' | 'disable' | 'standby' | 'lock')}  States
  * @typedef  {('archer' | 'warrior' | 'mage' | 'assassin' | 'shaman')}  Classes
  * @typedef  {('Boltslinger' | 'Sharpshooter' | 'Trapper' | 'Fallen' | 'Battle Monk' | 'Paladin' | 'Riftwalker' | 'Light Bender' | 'Arcanist' | 'Shadestepper' | 'Trickster' | 'Acrobat' | 'Summoner' | 'Ritualist' | 'Acolyte')}   Archetypes
@@ -22,33 +21,6 @@ function main() {
         console.info('routedata:', routedata);
         console.info('using:', languages[using]);
     });
-}
-
-/** 
- * @typedef {(boolean | null)}  bool
- * @typedef {Object}    bool_args
- * @property {bool}     base
- * @param {bool[]} arr
- * @param {bool_args}
- * @return {bool}
- **/
-function bool(arr, base=null) {
-    let bin = base;
-    for (const elem of arr) {
-        switch (elem) {
-            case true: bin = true; break;
-            case false: bin = false; break;
-            case null: continue;
-        }
-        if (bin) {break}
-    }
-    return bin;
-}
-
-function NSEW(arg1, arg2) {
-    const seq = {'N': 0, 'S': 1, 'E': 2, 'W': 3};
-    [arg1, arg2] = [seq[arg1], seq[arg2]]
-    return (arg1 > arg2) ? 1 : ((arg1 < arg2) ? -1 : 0)
 }
 
 function generateElement(stringHTML) {
@@ -274,105 +246,100 @@ class SoundEffect extends Audio {
 class Packet {
     /**    
      * @typedef  {Object}           params      
-     * @property {string}           task        Command
-     * @property {NODE}             send        Sender Name
-     * @property {NODE}             recv        Destination
-     * @property {Modes}            mode        Transmit mode
-     * @property {Units}            router      Transmitter
-     * @property {Direction}        via         Pass by the gate
-     * @property {Object}           data        Attachment
-     * @property {String[]}         ignores     Ignore List
-     * @property {String}           ignore      Ignore
-     * @property {number}           ttl         Time To Live
-     * @property {number}           gid         Main-Route ID
+     * @property {string}           task        command
+     * @property {string}           response    response (optional)
+     * @property {NODE}             src         source
+     * @property {NODE[]}           dest        destinations
+     * @property {NODE | NODE[]}    ignore      ignore List
+     * @property {Direction}        gate        the gate which the packet came through
+     * @property {NODE}             router      transmitter
+     * @property {number}           RID         Main-Route ID (Global ID)
      * 
      * @param {params}
      */
-    constructor({task, send, recv=null, mode='normal', router, via, data=null, ignores, ttl=-1, gid=globalID}) {
-        /**
-         * @typedef    {Object}         header
-         * @property   {string}         send
-         * @property   {string}         recv
-         * @property   {Modes}          mode
-         * @property   {String[]}       ignore
-         * @property   {Set<String>}    __ignore
-         * 
-         * @typedef    {Object}   payload
-         * @property   {String}   task
-         * @property   {Object}   data
-         * 
-         * @typedef    {Object}     footer
-         * @property   {Units}      router
-         * @property   {Direction}  via
-         * @property   {number}     ttl
-         * @property   {number}     gid
-         */
-        
-        /** @type {header} */
-        this.header = {
-            send: send,
-            recv: recv,
-            mode: mode,
-            __ignore: new Set(ignores),
-            get ignore() {return Array.from(this.__ignore)},
-            set ignore(iter) {this.__ignore = new Set(iter)}
-        };
-        /** @type {payload} */
-        this.payload = {
-            task: task,
-            data: data
-        };
-        /** @type {footer} */
-        this.footer = {
-            router: router,
-            via: via,
-            ttl: ttl,
-            gid: gid
+    constructor({task, src, dest, ignore, gate, router, RID}) {
+        /** @type {string} */
+        this.task = task;
+        /** @type {NODE} */
+        this.src = src;
+        /** @type {NODE[]} */
+        this.dest = new Set((dest instanceof NODE) ? [dest] : dest);
+        /** @type {Set<NODE>} */
+        this.ignore = new Set((ignore instanceof NODE) ? [ignore] : ignore);
+        /** @type {Direction} */
+        this.gate = gate;
+        /** @type {NODE} */
+        this.router = router;
+        /** @type {number} */
+        this.RID = RID;
+    }
+
+    get params() {
+        return {
+            task: this.task,
+            src: this.src,
+            dest: this.dest,
+            ignore: this.ignore,
+            gate: this.gate,
+            router: this.router,
+            RID: this.RID
         }
     }
 
-    /** @return {params} */
-    get params() {return {
-        task: this.payload.task,
-        send: this.header.send,
-        recv: this.header.recv,
-        mode: this.header.mode,
-        router: this.footer.router,
-        via: this.footer.via,
-        data: this.payload.data,
-        ignores: this.header.ignore,
-        ttl: this.footer.ttl,
-        gid: this.footer.gid
-    }}
+    get parse() {
+        const std = (value) => (typeof value == 'string' || value instanceof String) ? `"${value}"` : `${value}`;
+        return `
+        {
+            task: ${std(this.task)},
+            source: ${std(this.src?.name)},
+            destination: ${Array.from(this.dest, (node) => std(node.name)).join(', ')},
+            ignore: [${Array.from(this.ignore, (node) => std(node.name)).join(', ')}],
+            gate: ${std(this.gate)},
+            router: ${std(this.router?.name)},
+            Route-ID: ${this.RID}
+        }`;
+    }
 
-    /** @param {params} */
-    config({task, send, recv, mode, router, via, data, ignore, ttl, gid}) {
-        if (send !== undefined) {this.header.send = send}
-        if (recv !== undefined) {this.header.recv = recv}
-        if (mode !== undefined) {this.header.mode = mode}
-        if (ignore !== undefined) {this.header.__ignore.add(ignore)}
-        if (task !== undefined) {this.payload.task = task}
-        if (data !== undefined) {this.payload.data = data}
-        if (router !== undefined) {this.footer.router = router}
-        if (via !== undefined) {this.footer.via = via}
-        if (ttl !== undefined) {this.footer.ttl = ttl}
-        if (gid !== undefined) {this.footer.gid = gid}
+    /** @param {params} args */
+    config(args) {
+        if (args.task !== undefined) this.task = args.task;
+        if (args.src !== undefined) this.src = args.src;
+        if (args.dest !== undefined) this.dest = new Set((args.dest instanceof NODE) ? [args.dest] : args.dest);
+        if (args.ignore !== undefined) this.ignore = new Set((args.ignore instanceof NODE) ? [args.ignore] : args.ignore);
+        if (args.gate !== undefined) this.gate = args.gate;
+        if (args.router !== undefined) this.router = args.router;
+        if (args.RID !== undefined) this.RID = args.RID;
+
         return this;
     }
+
 }
 
 class Gate {
+
     constructor(pos) {
         /** @type {Direction} */
         this.pos = pos;
         /** @type {Set<NODE>} */
-        this._connect = new Set();
+        this.__toward = new Set();
         /** @type {Units}} */
-        this.connect_with = null;
+        this.connect = null;
     }
-    get bound() {return this.connect.length ? true : false}
-    get connect() {return Array.from(this._connect)}
-    set connect(iter) {this._connect = new Set(iter)}
+
+    get bound() {return this.toward.length ? true : false}
+
+    get toward() {return Array.from(this.__toward)}
+
+    static opposite(dir) {
+        switch (dir) {
+            case 'N': return 'S';
+            case 'S': return 'N';
+            case 'E': return 'W';
+            case 'W': return 'E';
+            default: throw Error('invalid direction.')
+        }
+    }
+
 }
 
 class UNIT {
@@ -389,18 +356,7 @@ class UNIT {
 
     get gateway() {return Object.values(this.gates).filter((gate) => gate.bound)}
 
-    get usable() {return this.gateway.map((gate) => gate.pos).sort(NSEW).join('')}
-    
-    get active() {
-        const retval = (
-            Object.values(this.gates)
-                  .filter((gate) => gate.connect.some((node) => node.state.contains('enable')))
-                  .map((gate) => gate.pos)
-                  .sort(NSEW)
-                  .join('')
-        );
-        return (retval.length >= 2) ? retval : ''
-    }
+    get #info() { /** abstract property */ }
     
     /**
      * @param {Direction}   pos
@@ -408,32 +364,52 @@ class UNIT {
      * @param {Units}       closest
      */
     bind(pos, node, closest) {
-        const gate = this.gates[pos]
-        gate._connect.add(node)
+        const gate = this.gates[pos];
+        gate.__toward.add(node);
         try {
-            if ((gate.connect_with !== null) && (gate.connect_with !== closest)) {
-                throw Error(`Suspecious overwrite the "connect_with" property, occurred at [${this.axis}]`);
+            if ((gate.connect !== null) && (gate.connect !== closest)) {
+                throw Error(`Suspecious overwrite the "connect" property, occurred at [${this.axis}]`);
             } else {
-                gate.connect_with ??= closest;
+                gate.connect ??= closest;
             }
         } catch {
             console.error(routemap)
         }
     }
 
-    static opposite(dir) {
-        switch (dir) {
-            case 'N': return 'S';
-            case 'S': return 'N';
-            case 'E': return 'W';
-            case 'W': return 'E';
-            default: throw Error('invalid direction.')
-        }
-    }
+    /**
+     * @typedef {Object} UNIT_transmitParams
+     * @property {Gate}     gate        output gate
+     * @property {Packet}   packet      original packet
+     * @property {Packet}   subpack     packet you want to send
+     * @property {boolean}  suspend     stop transmit chain if met criteria in any response (optional, default `false`)
+     * @param   {UNIT_transmitParams}
+     * @return  {boolean?}
+     **/
+    transmit({gate, packet, subpack, suspend=false}) {
+
+        if (gate.toward.every((node) => packet.ignore.has(node))) return null;
+
+        console.groupCollapsed(`${this.#info} (Gate ${gate.pos}) send a packet!`);
+        console.info(`packet: ${subpack.parse}`);
+
+        const response = gate.connect.transmit({
+            packet: subpack,
+            suspend: suspend // 給 WIRE 看的
+        });
+
+        console.groupEnd();
+        console.info(`${this.#info} (Gate ${gate.pos}) received: ${response}`);
+
+        return response;
+
+    };
 
 }
 
 class NODE extends UNIT{
+
+    static #stateList = ['enable', 'disable', 'standby', 'lock'];
 
     /**
      * @typedef     {Object}      ndata
@@ -469,8 +445,8 @@ class NODE extends UNIT{
         /** @type {HTMLButtonElement} */
         this.buttonElement = document.createElement('button');
         /** @type {DOMTokenList} */
-        this.state = this.buttonElement.classList;
-        this.state.add((str(info.axis) === '[4,1]') ? 'standby' : 'disable');
+        this.classList = this.buttonElement.classList;
+        this.classList.add((str(info.axis) === '[4,1]') ? 'standby' : 'disable');
         this.buttonElement.appendChild(generateElement(`<img class="${info.level ? `button_${info.level}` : `button_${clsname}`}">`));
 
         this.#buildpath();
@@ -489,13 +465,13 @@ class NODE extends UNIT{
     }
 
     /** @return {Gate[]} */
-    get importGates() {return this.gateway.filter((gate) => gate.connect.some((node) => this.proto.import?.includes(node.name)))}
+    get importGates() {return this.gateway.filter((gate) => gate.toward.some((node) => this.proto.import?.includes(node.name)))}
 
     /** @return {Gate[]} */
-    get exportGates() {return this.gateway.filter((gate) => gate.connect.some((node) => this.proto.export?.includes(node.name)))}
+    get exportGates() {return this.gateway.filter((gate) => gate.toward.some((node) => this.proto.export?.includes(node.name)))}
 
     /** @return {NODE[]} */
-    get family() {return unique(this.gateway.flatMap((gate) => gate.connect))}
+    get family() {return unique(this.gateway.flatMap((gate) => gate.toward))}
 
     /** @return {NODE[]} */
     get importNodes() {return this.family.filter((node) => this.proto.import?.includes(node.name))}
@@ -503,6 +479,7 @@ class NODE extends UNIT{
     /** @return {NODE[]} */
     get exportNodes() {return this.family.filter((node) => this.proto.export?.includes(node.name))}
 
+    get #info() {return `<${this.name}> [${this.status}]`}
 
     #buildpath() {
         const tree = routemap[this.class];
@@ -522,10 +499,10 @@ class NODE extends UNIT{
                     default: throw Error(`invalid direction "${dir}" detected in the draft of <${this.name}> under ${this.class}.`);
                 }
 
-                /** @type {PATH} */
-                const branch = (tree.read(y, x) instanceof PATH) ? tree[y][x] : new PATH([x, y]);
+                /** @type {WIRE} */
+                const branch = (tree.read(y, x) instanceof WIRE) ? tree[y][x] : new WIRE([x, y]);
 
-                branch.bind(UNIT.opposite(dir), this, obj);
+                branch.bind(Gate.opposite(dir), this, obj);
 
                 tree[y][x] = obj = branch;
 
@@ -534,62 +511,63 @@ class NODE extends UNIT{
     }
 
     /** @param {States} state  */
-    set(state) {
-        const def = ['enable', 'disable', 'standby', 'lock'];
+    state(state) {
 
-        if (state === undefined) return this.state;
-        if (!def.includes(state)) throw Error(`invalid state of Node was detected at <${this.proto.name}>`);
+        if (state !== undefined) {
+            if (!NODE.#stateList.includes(state)) throw Error(`invalid state of Node was detected at <${this.proto.name}>`);
 
-        const history = Array.from(this.state.values());
+            const history = Array.from(this.classList);
 
-        def.forEach((name) => {
-            switch (name) {
-                case 'lock':
-                    if (name === state) this.state.toggle('lock');
+            NODE.#stateList.forEach((name) => {
+                switch (name) {
+                    case 'lock':
+                        if (name === state) this.classList.toggle('lock');
+                        break;
+                    default:
+                        if (name !== state) this.classList.remove(name);
+                        else this.classList.add(name);
+                }
+            });
+
+            switch (state) {
+                case 'enable':
+                    if (!history.includes('enable')) this.#update('enable');
                     break;
-                default:
-                    if (name !== state) this.state.remove(name);
-                    else this.state.add(name);
+                case 'disable':
+                case 'standby':
+                    if (history.includes('enable')) this.#update('disable');
+                    break;
             }
-        });
 
-        switch (state) {
-            case 'enable':
-                if (!history.includes('enable')) this.#update('enable');
-                break;
-            case 'disable':
-            case 'standby':
-                if (history.includes('enable')) this.#update('disable');
-                break;
         }
+        return this.classList;
 
-        return this.state;
     }
     
     click() {
         if (this.#examine()) {
             switch (true) {
-                case this.state.contains('enable'):
-                    this.set('standby');
+                case this.classList.contains('enable'):
+                    this.state('standby');
                     random([audio.high, audio.medium, audio.low]).play(0.8, 0.5);
                     this.#send({
                         gates: this.gateway,
                         packet: new Packet({
                             task: 'standby',
                             send: this.name,
-                            gid: globalID++
+                            gid: route++
                         })
                     });
                     break;
-                case this.state.contains('standby'):
-                    this.set('enable');
+                case this.classList.contains('standby'):
+                    this.state('enable');
                     random([audio.high, audio.medium, audio.low]).play(0.8, 1.5);
                     this.#send({
                         gates: this.gateway,
                         packet: new Packet({
                             task: 'enable',
                             send: this.name,
-                            gid: globalID++
+                            gid: route++
                         })
                     });
                     break;
@@ -606,12 +584,12 @@ class NODE extends UNIT{
         };
 
         switch (true) {
-            case this.state.contains('disable'): {
+            case this.classList.contains('disable'): {
                 return false;
             }
-            case this.state.contains('lock'): {
+            case this.classList.contains('lock'): {
                 const locker = Array.from(dataset.lock[this.name])
-                                    .filter((node) => node.state.contains('enable'))
+                                    .filter((node) => node.classList.contains('enable'))
                                     .map((node) => `<${node.name}>`);
                 console.warn(`<${this.name}> This ability was locked by ${chain(locker)}!`);
                 return false;
@@ -682,73 +660,65 @@ class NODE extends UNIT{
     }
 
     /**
-     * @typedef {object}    host
-     * @property {Gate[]}   gates
-     * @property {Packet}   packet
-     * @property {boolean}  interrupt
-     * @property {any}      base        Default return if result collector is empty.
-     * @param {host}
-     * @return {boolean | null}
+     * @typedef {Object} NODE_transmitParams
+     * @property {Packet}   packet      packet you want to send
+     * @property {Gate[]}   gateway     Gate filter (optional, default `all`)
+     * @property {boolean}  suspend     stop transmit chain if met criteria in any response (optional, default `false`)
+     * @param   {NODE_transmitParams}
+     * @return  {boolean?}
      **/
-    #send({gates, packet, interrupt=false, base=null}) {
+    transmit({packet, gateway=this.gateway, suspend=false}) {
+
+        let response = null;
         
-        const collector = [];
+        if (packet.router !== this) /* received */ {
 
-        /** @param {Gate} gate */
-        const host = (gate) => {
-            if (gate.connect.every((node) => packet.header.ignore.includes(node.name))) {return null}
+            console.groupCollapsed(`${this.#info} (Gate ${packet.gate}) received packet. packet: ${packet.parse}`);
             
-            const subpack = new Packet(packet.params).config({
-                router: this,
-                via: UNIT.opposite(gate.pos),
-                ignore: this.name
-            });
-            console.groupCollapsed(`<${this.name}> [${this.status}] (Gate ${gate.pos}) Send a packet!`);
-            console.info(`packet:`, NODE.readpacket(subpack));
-            const bin = gate.connect_with.transmit(subpack);
-            console.groupEnd();
-            console.info(`<${this.name}> [${this.status}] (Gate ${gate.pos}) response: ${bin}`);
+            response = this.#manager(packet);
 
-            collector.push(bin);
-            if (bin && packet.payload.task.endsWith('?')) {
-                routelogs.write({
-                    gid: subpack.footer.gid,
-                    task: subpack.payload.task,
-                    nodeName: this.name,
-                    value: bin
-                })
+            console.groupEnd();
+            console.info(`${this.#info} (Gate ${packet.gate}) return: ${response}`);
+
+        } else /* send */ {
+
+            const RID = packet.RID;
+            const SID = routelogs.prop('serial', 0);
+            routelogs[RID].serial++;
+
+            console.groupCollapsed(`${this.#info} Route ${RID}.${SID} start. (task: "${packet.task}")`);
+
+            for (const gate of this.gateway) {
+
+                const subpack = new Packet(packet.params).config({
+                    router: this,
+                    gate: Gate.opposite(gate.pos)
+                });
+
+                response ||= super.transmit(gate, packet, subpack);
+
+                if (suspend && response) break;
+
             }
 
-            return bin;
+            console.groupEnd();
+            console.info(`${this.#info} Route ${RID}.${SID} end. response: ${response}`);
+
+            if (SID === 0) {
+                delete routelogs[RID];
+                route++;
+            }
+
         }
 
-        const GID = packet.footer.gid;
-        routelogs[GID] ??= {serial: 0, 'reachable?': {}};
-        const SID = routelogs[GID].serial++;
-        console.groupCollapsed(`<${this.name}> [${this.status}] Route ${GID}.${SID} start.`, `(task: '${packet.payload.task}')`);
+        return response;
         
-        const bin = (interrupt ? gates.some(host) : gates.map(host).some((_) => _)) ? true : bool(collector);
-
-        console.groupEnd();
-        console.info(`<${this.name}> [${this.status}] Route ${GID}.${SID} end. collector: ${str(collector)}, final: ${bin}.`);
-        if (!SID) {delete routelogs[GID]};
-        return bin;
     }
 
-    /** @param {Packet} packet @return {(boolean | null)} */
-    transmit(packet) {
-        console.info(`<${this.name}> [${this.status}] received packet.`, NODE.readpacket(packet));
-        const router = packet.footer.router;
-        const from_parent = this.proto.import?.includes(router.name) ?? false;
-        const from_children = this.proto.export?.includes(router.name) ?? false;
-        const relative = (from_parent || from_children);
-        
-        const bin = relative ? this.#manager(packet) : null;
-        
-        return bin;
-    }
-
-    /** @param {Packet} packet @return {(boolean | null)} */
+    /**
+     * @param {Packet} packet
+     * @return {boolean?}
+     **/
     #manager(packet) {
         let bin = null;
         const task = packet.payload.task;
@@ -759,10 +729,10 @@ class NODE extends UNIT{
             case 'disable':
             case 'standby': {
                 switch (true) {
-                    case this.state.contains('disable'): break;
-                    case this.state.contains('standby'):
-                    case this.state.contains('enable'): {
-                        const connecting = this.importNodes.filter((node) => !packet.header.ignore.includes(node.name)).some((node) => node.state.contains('enable'));
+                    case this.classList.contains('disable'): break;
+                    case this.classList.contains('standby'):
+                    case this.classList.contains('enable'): {
+                        const connecting = this.importNodes.filter((node) => !packet.header.ignore.includes(node.name)).some((node) => node.classList.contains('enable'));
                         console.info('connecting:', connecting);
                         if (connecting || !this.proto.import) {
                             const reachable = routelogs.query({
@@ -790,7 +760,7 @@ class NODE extends UNIT{
                             if (reachable) break;
                         }
 
-                        this.set('disable');
+                        this.state('disable');
                         bin = this.exportGates.length ? this.#send({
                             gates: this.exportGates,
                             packet: packet.config({task: 'disable'})
@@ -803,25 +773,25 @@ class NODE extends UNIT{
             }
             case 'enable': {
                 switch (true) {
-                    case this.state.contains('disable'): {
+                    case this.classList.contains('disable'): {
                         if (this.proto.import?.includes(send)) {
-                            this.set('standby');
+                            this.state('standby');
                         } else {
                             console.info(`enable signal was ignored cause this packet was sent by child node.`)
                         }
                         break;
                     }
-                    case this.state.contains('standby'): break;
-                    case this.state.contains('enable'): break;
+                    case this.classList.contains('standby'): break;
+                    case this.classList.contains('enable'): break;
                 }
                 break;
             }
             case 'reachable?': {
                 bin = false;
                 switch (true) {
-                    case this.state.contains('disable'): break;
-                    case this.state.contains('standby'): break;
-                    case this.state.contains('enable'): {
+                    case this.classList.contains('disable'): break;
+                    case this.classList.contains('standby'): break;
+                    case this.classList.contains('enable'): {
                         bin = routelogs.query({
                             gid: packet.footer.gid,
                             task: 'reachable?',
@@ -848,7 +818,7 @@ class NODE extends UNIT{
                         });
 
                         if (!bin) {
-                            this.set('disable')
+                            this.state('disable')
                             this.exportGates.length ? this.#send({
                                 gates: this.exportGates,
                                 packet: new Packet({
@@ -873,47 +843,28 @@ class NODE extends UNIT{
         return bin;
     }
 
-    /** @param {Packet} packet  */
-    static readpacket(packet) {
-        function string(text) {return ((text === null)||(text === undefined)) ? text : `'${text}'`}
-        function unit(obj) {return obj.name ? `<${obj.name}>` : `branch${str(obj.axis)}`}
-        return `
-        {
-            header: {
-                send: ${string(packet.header.send)},
-                recv: ${string(packet.header.recv)},
-                mode: ${string(packet.header.mode)},
-                ignore: ${str(packet.header.ignore)}
-            },
-            payload: {
-                task: ${string(packet.payload.task)},
-                data: ${packet.payload.data}
-            },
-            footer: {
-                router: ${unit(packet.footer.router)},
-                via: ${string(packet.footer.via)}
-            }
-        }`
-    }
-
 }
 
-class BRANCH extends UNIT {
+class WIRE extends UNIT {
+    #upperImg;
+    #lowerImg;
 
     constructor(axis) {
         super(axis);
-        this.layer = document.createElement('img');
-        this.base = document.createElement('img');
-        this.layer.style.zIndex = 1;
-        this.base.style.zIndex = 0;
+        this.#upperImg = document.createElement('img');
+        this.#lowerImg = document.createElement('img');
+        this.#upperImg.style.zIndex = 1;
+        this.#lowerImg.style.zIndex = 0;
     }
 
     get html() {
         const fragment = document.createDocumentFragment();
-        fragment.appendChild(this.layer);
-        fragment.appendChild(this.base);
+        fragment.appendChild(this.#upperImg);
+        fragment.appendChild(this.#lowerImg);
         return fragment;
     }
+
+    get #info() {return `branch[${this.axis}]`}
 
     /**
      * @param {Direction} pos 
@@ -924,57 +875,74 @@ class BRANCH extends UNIT {
         super.bind(pos, node, closest);
         this.#update();
 
-        this.gateway.filter((gate) => gate.connect_with instanceof NODE)
+        this.gateway.filter((gate) => gate.connect instanceof NODE)
                     .forEach((gate) => {
-                        const /** @type {NODE} */ node = gate.connect_with;
-                        const /** @type {Direction} */ pos = UNIT.opposite(gate.pos);
+                        const /** @type {NODE} */ node = gate.connect;
+                        const /** @type {Direction} */ pos = Gate.opposite(gate.pos);
                         const family = unique([node.proto.import, node.proto.export].flat());
-                        node.gates[pos].connect_with ??= this;
-                        node.gates[pos].connect = (
-                            this.gateway.flatMap((_gate) => _gate.connect)
+                        node.gates[pos].connect ??= this;
+                        node.gates[pos].toward = (
+                            this.gateway.flatMap((_gate) => _gate.toward)
                                         .filter((_node) => family.includes(_node.name))
                         );
                     });
     }
 
     #update() {
-        const active = this.active;
-        const base = `br_${this.usable}`;
-        this.layer.className = `${base} ${active}`;
-        this.base.className = base;
+        const seq = {'N': 0, 'S': 1, 'E': 2, 'W': 3};
+        
+        /** @param {Direction} arg1 @param {Direction} arg2 */
+        const rule = (arg1, arg2) => (seq[arg1] > seq[arg2]) ? 1 : ((seq[arg1] < seq[arg2]) ? -1 : 0);
+        
+        /** @param {Gate[]} gates */
+        const stringify = (gates) => gates.map((gate) => gate.pos).sort(rule).join('');
+        
+        let /** @type {string} */ active;
+        active = (active = stringify(
+            Object.values(this.gates)
+                  .filter((gate) => gate.toward.some((node) => node.classList.contains('enable')))
+        )).length > 1 ? active : "";
+
+        const base = `br_${stringify(this.gateway)}`;
+        this.#upperImg.className = `${base} ${active}`;
+        this.#lowerImg.className = base;
     }
 
-    /** @param {Packet} packet @return {(boolean | null)} */
-    transmit(packet) {
-        const input = packet.footer.via;
-        console.info(`branch[${this.axis}](Gate ${input}) received packet.`);
+    /**
+     * @typedef {Object} WIRE_transmitParams
+     * @property {Packet}   packet      packet you want to send
+     * @property {boolean}  suspend     stop transmit chain if met criteria in any response (optional, default `false`)
+     * @param   {WIRE_transmitParams}
+     * @return  {boolean?}
+     **/
+    transmit({packet, suspend=false}) {
+        
+        console.groupCollapsed(`${this.#info} (Gate ${packet.gate}) received packet.`);
 
-        const bin = bool(this.gateway.filter((gate) => gate.pos !== input).map((gate) => {
+        let response = null;
+        const output = this.gateway.filter((gate) => gate.pos !== packet.gate);
 
-            if (gate.connect.every((node) => packet.header.ignore.includes(node.name))) {
-                console.info(`branch[${this.axis}](Gate ${gate.pos}) blocked the packet.`);
-                return null;
-            } else {
-                console.groupCollapsed(`branch[${this.axis}](Gate ${gate.pos}) send packet.`);
-                const bin = gate.connect_with.transmit(
-                    packet.config({via: UNIT.opposite(gate.pos)})
-                );
-                console.groupEnd();
-                console.info(`branch[${this.axis}](Gate ${gate.pos}) got: ${bin}`);
-                return bin;
-            }
+        if (output.length > 1) for (const gate of output) {
+            
+            const subpack = new Packet(packet.params).config({gate: Gate.opposite(gate)});
+            response ||= super.transmit(gate, packet, subpack);
 
-        }));
+            if (suspend && response) break;
+
+        } else if (output.length) {
+
+            response = super.transmit(output.pop(), packet, packet);
+
+        }
 
         this.#update();
-        console.info(`branch[${this.axis}](Gate ${input}) return: ${bin}`);
-        return bin;
+        console.groupEnd();
+        console.info(`${this.#info} (Gate ${packet.gate}) return: ${response}`);
+
+        return response;
+
     }
 
-}
-
-class PATH extends BRANCH {
-    // Fan is gay
 }
 
 class Archetype extends Set {
@@ -1561,7 +1529,7 @@ class Tree extends Array {
     }
 }
 
-var globalID = 0;
+var route = 0;
 const str = JSON.stringify;
 /**
  * @function
@@ -1672,8 +1640,19 @@ const routedata = {
     }
 }
 const routelogs = {
-    query: /** @return {boolean} */ function ({gid, task, nodeName}) {try {return this[gid][task][nodeName]} catch {return undefined}},
-    write: function ({gid, task, nodeName, value}) {this[gid][task][nodeName] = value; return value;}
+    /**
+     * @template T
+     * @param {string} propName  property name
+     * @param {T}      init      initial property value if null or undefined (optional)
+     * @returns {T}
+     **/
+    prop: function (propName, init, RID=route) {
+        return (this[RID] ??= {})[propName] ??= init;
+    },
+    write: function ({gid, task, nodeName, value}) {
+        this[gid][task][nodeName] = value;
+        return value;
+    }
 };
 const routemap = {
     "archer": new Tree(),
