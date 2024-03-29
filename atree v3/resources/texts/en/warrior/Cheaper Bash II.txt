@@ -1,3 +1,0 @@
-Reduce the Mana cost of §nBash§r.
-
-§M Mana Cost: §f-5

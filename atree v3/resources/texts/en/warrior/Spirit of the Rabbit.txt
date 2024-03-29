@@ -1,3 +1,0 @@
-Reduce the Mana cost of §nCharge§r and increase your Walk Speed by §f+20%§7.
-
-§M Mana Cost: §f-5

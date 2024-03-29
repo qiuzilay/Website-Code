@@ -1,4 +1,0 @@
-Increase your damage from all Water attacks.
-
-§W Water Damage: §f+2-4§r
-§W Water Damage: §f+15%

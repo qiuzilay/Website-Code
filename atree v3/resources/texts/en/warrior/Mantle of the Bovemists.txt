@@ -1,1 +1,0 @@
-When casting §nWar Scream§r, create a holy shield around you that reduces all incoming damage by §f-70% §7for §f3 §7hits. §B(25s Cooldown)
