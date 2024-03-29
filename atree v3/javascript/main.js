@@ -750,7 +750,7 @@ class NODE extends UNIT{
                     case this.classList.contains('enable'): {
                         const input = this.importNode.filter((node) => (node.classList.contains('enable')));
                         if (input) /* has other active node connecting */ {
-                            console.warn(`input: [${input.map((node) => node.name).join(', ')}]`);
+                            const sibling = [this.proto.import, this.proto.export].every((arr) => arr?.includes(packet.router.name) ?? true);
                             const reachable = this.proto.import ? (
                                 logs_reachable ?? this.transmit({
                                     gateway: this.importGate.filter((gate) => gate.toward.some((node) => node.classList.contains('enable'))),
@@ -758,7 +758,7 @@ class NODE extends UNIT{
                                     packet: new Packet({
                                         task: 'reachable?',
                                         src: packet.src,
-                                        ignore: (input.length > 1) ? [packet.router, ...packet.ignore] : packet.ignore,
+                                        ignore: sibling ? [this, ...packet.ignore] : packet.ignore,
                                         RID: packet.RID
                                     })
                                 })
@@ -806,7 +806,7 @@ class NODE extends UNIT{
                     case this.classList.contains('enable'): {
                         const input = this.importNode.filter((node) => (node.classList.contains('enable')));
                         if (input) /* has other active node connecting */ {
-                            console.warn(`input: [${input.map((node) => node.name).join(', ')}]`);
+                            const sibling = [this.proto.import, this.proto.export].every((arr) => arr?.includes(packet.router.name) ?? true);
                             response = this.proto.import ? (
                                 logs_reachable ?? this.transmit({
                                     gateway: this.importGate.filter((gate) => gate.toward.some((node) => node.classList.contains('enable'))),
@@ -814,7 +814,7 @@ class NODE extends UNIT{
                                     packet: new Packet({
                                         task: 'reachable?',
                                         src: packet.src,
-                                        ignore: (input.length > 1) ? [packet.router, ...packet.ignore] : packet.ignore,
+                                        ignore: sibling ? [this, ...packet.ignore] : packet.ignore,
                                         RID: packet.RID
                                     })
                                 })
@@ -1852,7 +1852,7 @@ const database = {
         "Flyby Jab": {
             "name": "Flyby Jab",
             "level": 1,
-            "import": ["Air Mastery"],
+            "import": ["Air Mastery", "Flaming Uppercut"],
             "export": ["Iron Lungs", "Flaming Uppercut"],
             "cost": 1,
             "axis": [6, 15],
@@ -1861,7 +1861,7 @@ const database = {
         "Flaming Uppercut": {
             "name": "Flaming Uppercut",
             "level": 2,
-            "import": ["Fire Mastery"],
+            "import": ["Fire Mastery", "Flyby Jab"],
             "export": ["Iron Lungs", "Flyby Jab"],
             "cost": 2,
             "axis": [8, 15],
